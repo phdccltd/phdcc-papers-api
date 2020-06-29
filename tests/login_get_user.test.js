@@ -10,28 +10,37 @@ const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.acc
 
 const app = require('../app')
 
-describe('LOGIN', () => {
-  it('Check correct login succeeds', async () => {
+describe('USER', () => {
+  it('Check login and then get user', async () => {
     const initresult = await testhelper.waitUntilInited(app)
     console.log('initresult', initresult)
     if (initresult !== 1) {
       expect(initresult).toBe(1)
     } else {
-      const res = await request(app)
+      const res1 = await request(app)
         .post('/user/login')
         .send({
           username: 'jo',
           password: 'asecret',
         })
-      console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
+      console.log(res1.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
+      const rv1 = res1.body.ret === 0 && typeof res1.body.token === 'string'
+      const token = res1.body.token
+
+      const res2 = await request(app)
+        .get('/user')
+        .set('authorization', 'bearer ' + token)
+      console.log(res2.body) // 
+      const rv2 = _.isEqual(res2.body, { ret: 0, user: { id: 1, name: 'Jo', username: 'jo', super: true } })
 
       spyclog.mockRestore()
       spycerror.mockRestore()
       console.log('All console output\n', testhelper.accumulogged())
 
-      expect(res.statusCode).toEqual(200)
-      const rv = res.body.ret === 0 && typeof res.body.token==='string'
-      expect(rv).toBe(true)
+      expect(res1.statusCode).toEqual(200)
+      expect(rv1).toBe(true)
+      expect(res2.statusCode).toEqual(200)
+      expect(rv2).toBe(true)
     }
   })
 })

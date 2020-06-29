@@ -2,17 +2,13 @@
 // https://www.npmjs.com/package/supertest
 
 const _ = require('lodash/core')
-
+const request = require('supertest')
 const testhelper = require('./testhelper')
-
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
 
-const request = require('supertest')
-console.log("START")
 const app = require('../app')
-console.log("STARTED")
 
 describe('LOGIN', () => {
   it('Check incorrect login fails', async () => {
@@ -35,7 +31,6 @@ describe('LOGIN', () => {
 
       expect(res.statusCode).toEqual(200)
       const rv = _.isEqual(res.body, { ret: 1, status: 'Incorrect password' })
-      console.log('rv', rv)
       expect(rv).toBe(true)
     }
   })

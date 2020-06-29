@@ -10,28 +10,26 @@ const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.acc
 
 const app = require('../app')
 
-describe('LOGIN', () => {
-  it('Check correct login succeeds', async () => {
+describe('USER', () => {
+  it('Fail when not logged in', async () => {
     const initresult = await testhelper.waitUntilInited(app)
     console.log('initresult', initresult)
     if (initresult !== 1) {
       expect(initresult).toBe(1)
     } else {
       const res = await request(app)
-        .post('/user/login')
-        .send({
-          username: 'jo',
-          password: 'asecret',
-        })
-      console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
+        .get('/user')
+      console.log(res.body) // 
 
       spyclog.mockRestore()
       spycerror.mockRestore()
       console.log('All console output\n', testhelper.accumulogged())
 
       expect(res.statusCode).toEqual(200)
-      const rv = res.body.ret === 0 && typeof res.body.token==='string'
+      const rv = _.isEqual(res.body, { ret: 1, status: 'Not logged in' })
       expect(rv).toBe(true)
+
+
     }
   })
 })

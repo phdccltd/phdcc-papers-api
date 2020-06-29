@@ -1,5 +1,3 @@
-//const fc = require('filecompare');
-
 const output = []
 function accumulog(...err) {
   let line = ''
@@ -17,19 +15,6 @@ function accumulogged() {
   return output.join("\n")
 }
 
-async function checkFilesEqual(path1, path2) {
-  const areFilesEqual = new Promise((resolve, reject) => {
-    fc(path1, path2, isEqual => {
-        resolve(isEqual)
-      })
-  })
-  if (!await areFilesEqual) {
-    console.log('FILES NOT EQUAL', path1, path2)
-    return -1
-  }
-  return 1
-}
-
 function waitUntilInited(app) {
   return new Promise(resolve => {
     function wait() {
@@ -42,4 +27,4 @@ function waitUntilInited(app) {
 }
 
 
-module.exports = { checkFilesEqual, accumulog, accumulogged, waitUntilInited }
+module.exports = { accumulog, accumulogged, waitUntilInited }
