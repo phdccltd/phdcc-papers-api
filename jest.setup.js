@@ -1,1 +1,4 @@
-//jest.setTimeout(30000)
+// CALLED BEFORE EACH TEST
+// NOT CURRENTLY USED
+
+console.log('JEST SETUP')

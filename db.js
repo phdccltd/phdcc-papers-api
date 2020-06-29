@@ -5,35 +5,46 @@ const logger = require('./logger')
 
 require('dotenv').config()
 
-const database = process.env.DATABASE
-const dbuser = process.env.DBUSER
-const dbpass = process.env.DBPASS
+let sequelize = null
 
-const sequelize = new Sequelize(database, dbuser, dbpass, {
-  host: 'localhost',
-  dialect: 'mysql',
-  operatorsAliases: false,
+if (process.env.TESTING) {
 
-  //logging: logger.log,  // This causes sequelize error for related objects: Converting circular structure to JSON
-  logging: logger.log1, // Only logs first parameter to avoid above error
+  sequelize = new Sequelize('sqlite::memory:', {
+    logging: logger.logdb1, // Only logs first parameter to avoid above error
+    define: {
+      timestamps: true, // true by default so as to add the timestamp attributes (updatedAt, createdAt)
+      dateStrings: true,
+    }
+  })
 
-  define: {
-    timestamps: false, // true by default so as to add the timestamp attributes (updatedAt, createdAt)
-    dateStrings: true,
-  },
+} else {
 
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
-  },
-})
+  const database = process.env.DATABASE
+  const dbuser = process.env.DBUSER
+  const dbpass = process.env.DBPASS
+
+  sequelize = new Sequelize(database, dbuser, dbpass, {
+    host: 'localhost',
+    dialect: 'mysql',
+    operatorsAliases: '0',
+
+    //logging: logger.log,  // This causes sequelize error for related objects: Converting circular structure to JSON
+    logging: logger.logdb1, // Only logs first parameter to avoid above error
+
+    define: {
+      timestamps: true, // true by default so as to add the timestamp attributes (updatedAt, createdAt)
+      dateStrings: true,
+    },
+
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+  })
+}
 
 module.exports = {
-  sequelize,
-  database, // these needed by session
-  dbuser,
-  dbpass,
-  //connect: connect
+  sequelize
 }

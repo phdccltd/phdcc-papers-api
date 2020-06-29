@@ -1,57 +1,160 @@
-
+const process = require('process')
 const express = require('express')
-//const session = require('express-session')
-//const MySQLStore = require('express-mysql-session')(session)
+const cors = require('cors')  // https://github.com/expressjs/cors
 const bodyParser = require('body-parser')
 const createError = require('http-errors')
 const path = require('path')
+const nodemailer = require('nodemailer')
+const bcrypt = require('bcrypt')
+const saltRounds = 10
+
+const db = require('./db')
+const models = require('./models')
+const logger = require('./logger')
+const utils = require('./utils')
+
+var now = new Date();
+global.starttime = now.toISOString()
+
+logger.log('PAPERS STARTING: ', global.starttime, process.pid, 'LOGMODE', process.env.LOGMODE)
 
 // Create express instance
 const app = express()
+app.set('sites', [])
 
-/*var options = {
-  host: 'localhost',
-  port: 3306,
-  user: process.env.DATABASE,
-  password: process.env.DBUSER,
-  database: process.env.DBPASS
+app.options('*', cors()) // include before other routes
+app.use(cors())
+
+app.set('init', false)
+app.set('initresult', 0)
+async function checkDatabases() {
+  try {
+    await db.sequelize.authenticate()
+    console.log('Connection has been established successfully.')
+
+    // TODO??: Replace with migrations https://sequelize.org/master/manual/migrations.html
+    await db.sequelize.sync({ alter: true });
+    console.log("All models were synchronized successfully")
+    await models.logs.create({ msg: 'Started' })
+    console.log("Logged start")
+
+    logger.setModels(models) // Let logger log to db logs, if enabled
+
+    if (process.env.TESTING) {
+      const sites = await models.sites.findAll()
+      console.log('sites', sites.length)
+      if (sites.length === 0) {
+        const settings = {}
+        let params = {
+          url: '',
+          name: 'Test site',
+          settings: JSON.stringify(settings)
+        }
+        await models.sites.create(params)
+        console.log("mock site created")
+      }
+
+      const users = await models.users.findAll()
+      if (users.length === 0) {
+        const params = {
+          name: 'Jo',
+          username: 'jo',
+          password: await bcrypt.hash('asecret', saltRounds),
+          super: true
+        }
+        const user = await models.users.create(params);
+        if (!user) return routes.giveup(req, res, 'user not created')
+        console.log("User created", params.name)
+      }
+    }
+
+    // Make clean site info available to router
+    const sites = []
+    for (const sitedb of await models.sites.findAll()) {
+      //console.log("sitedb", sitedb)
+      try {
+        const settings = JSON.parse(sitedb.settings)
+        const site = { id: sitedb.id, url: sitedb.url, name: sitedb.name, settings: settings }
+        sites.push(site)
+      } catch (e) {
+        console.error('SYNTAX ERROR IN settings for site', sitedb.id, sitedb.settings)
+        if (!process.env.TESTING) {
+          process.exit(1)
+        }
+      }
+    }
+    if (sites.length == 0) {
+      console.error('NO SITES IN DATABASE SO EXITING')
+      if (!process.env.TESTING) {
+        process.exit(2)
+      }
+    }
+    app.set('sites', sites)
+    //console.log("app.sites", app.get('sites'))
+
+    //"transport-from": "root@phdcc.co.uk", "admin-email": "cc+papersdev@phdcc.com"
+    // Use first site to set mail transport
+    const site = sites[0]
+    const settings = sites[0].settings
+    if (site.settings['transport-sendmail'] && site.settings['transport-newline'] && site.settings['transport-path'] && site.settings['email-from']) {
+      try {
+        const transporter = nodemailer.createTransport({
+          sendmail: site.settings['transport-sendmail'],
+          newline: site.settings['transport-newline'],
+          path: site.settings['transport-path']
+        })
+        app.set('transporter', transporter)
+      } catch (e) {
+        logger.log('Cannot create mail transport')
+      }
+    } else {
+      logger.log('Mail transport parameters not specified')
+    }
+    const transporter = app.get('transporter')
+    if (transporter && site.settings['admin-email']) {
+      utils.async_mail(app, site.settings['admin-email'], site.name + " API RESTARTED", 'Server time: ' + global.starttime)
+    }
+    app.set('initresult', 1)
+  } catch (error) {
+    console.error('Database init error:', error)
+    app.set('initresult', 2)
+    if (!process.env.TESTING) {
+      process.exit(3)
+    }
+  }
 }
-const sessionStore = new MySQLStore(options) // Does connection persist or need closing??
-
-app.use(session({ // must be before routes are use-d
-  key: 'confapp',
-  secret: process.env.COOKIESECRET,
-  store: sessionStore,
-  resave: false,
-  saveUninitialized: false
-}))*/
+checkDatabases()
 
 app.use(bodyParser.urlencoded({ extended: false }))
+app.use(express.json())
 
 app.use(function (req, res, next) {
-  console.log("===Route:", req.url)
+  const userip = req.headers['x-forwarded-for'] // x-forwarded-server
+  console.log('====================================')
+  logger.log(userip, "+++Route:", process.env.BASEURL, req.url)
+  //console.log(req.headers)
   next()
 })
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Require API routes
-const apiRouter = require('./routes/api')
-app.use('/api', apiRouter)
+const apiRouter = require('./routes')
+app.use(apiRouter.router)
+
 //app.use('/', indexRouter)
 
 // catch everything else
 app.use(function (req, res, next) {
-  //logger.log("404:", req.url)
-  console.log("Unrouted request:", req.url)
+  logger.log("Unrouted request:", req.url)
   next(createError(404, 'Unrecognised request'))
 })
 
 // Handle all errors ie from above or exceptions
 app.use(function (err, req, res, next) {
   // set locals, only providing error in development
-  console.log("ERROR");
-  console.log(req.app.get('env'));
+  console.log('ERROR', err.message)
+  //console.log(req.app.get('env'));
   //console.log(err);
   //res.locals.message = err.message;
   //res.locals.error = {};
