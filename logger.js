@@ -3,6 +3,7 @@
 const fs = require('fs')
 const path = require('path')
 const rfs = require('rotating-file-stream')
+const utils = require('./utils')
 
 const logToConsole = process.env.LOGMODE=='console'
 
@@ -39,7 +40,9 @@ function log() {
   } catch (e) {
     console.log('logger.log error',e)
   }
+  return argstring
 }
+module.exports.log = log
 
 function logdb1() {   // Only logs first parameter to avoid sequelize log error: Converting circular structure to JSON
   if (process.env.LOGSQL && process.env.LOGSQL.toLowerCase()=='true') {
@@ -48,15 +51,18 @@ function logdb1() {   // Only logs first parameter to avoid sequelize log error:
     }
   }
 }
+module.exports.logdb1 = logdb1
+
+function error() {
+  const argstring = log(arguments)
+  utils.async_mail(false, utils.getSiteName() + ' error ' + arguments[0], argstring)
+}
+module.exports.error = error
 
 function setModels(m) {
   models = m
 }
+module.exports.setModels = setModels
 
 log("STARTED")
 
-module.exports = {
-  setModels: setModels,
-  log: log,
-  logdb1: logdb1
-}

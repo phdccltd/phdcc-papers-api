@@ -1,9 +1,14 @@
 const logger = require('./logger')
 
+let transport = false
+let fromEmail = false
+let adminEmail = false
+let sitename = false
+
 //////////////////////
 // Report error but don't call next
 function exterminate(req, res, err) {
-  logger.log("EXTERMINATE", err)
+  logger.error("EXTERMINATE", err)
   res.status(200).json({ ret: 1, status: err.message })
   return false;
 }
@@ -16,16 +21,30 @@ function giveup(req, res, msg) {
   return false
 }
 
+//////////////////////
+function setMailTransport(_transport, _fromEmail, _adminEmail, _sitename) {
+  transport = _transport
+  fromEmail = _fromEmail
+  adminEmail = _adminEmail
+  sitename = _sitename
+}
 
-function async_mail(app, toEmail, subject, message) {
-  const transporter = app.get('transporter')
-  if (!transporter) {
-    logger.log('No transport to send mail')
+//////////////////////
+function getSiteName() {
+  return sitename
+}
+
+//////////////////////
+function async_mail(toEmail, subject, message) {
+  if (!transport || !fromEmail) {
+    console.log(transport)
+    console.log(fromEmail)
     return
   }
-  const site = app.get('sites')[0]
+  if (!toEmail) toEmail = fromEmail
+  
   const params = {
-    from: site.settings['email-from'],
+    from: fromEmail,
     to: toEmail,
     subject: subject,
     text: message
@@ -33,7 +52,7 @@ function async_mail(app, toEmail, subject, message) {
   params.replyTo = toEmail
   //if (bccEmail) params.bcc = bccEmail
 
-  transporter.sendMail(params, (err, info) => {
+  transport.sendMail(params, (err, info) => {
     if (err) {
       logger.log("Send mail fail", subject, err);
       return;
@@ -45,5 +64,7 @@ function async_mail(app, toEmail, subject, message) {
 module.exports = {
   exterminate,
   giveup,
-  async_mail
+  async_mail,
+  setMailTransport,
+  getSiteName
 }

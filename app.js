@@ -98,21 +98,22 @@ async function checkDatabases() {
     const settings = sites[0].settings
     if (site.settings['transport-sendmail'] && site.settings['transport-newline'] && site.settings['transport-path'] && site.settings['email-from']) {
       try {
-        const transporter = nodemailer.createTransport({
+        const transport = nodemailer.createTransport({
           sendmail: site.settings['transport-sendmail'],
           newline: site.settings['transport-newline'],
           path: site.settings['transport-path']
         })
-        app.set('transporter', transporter)
+        app.set('transport', transport)
       } catch (e) {
         logger.log('Cannot create mail transport')
       }
     } else {
       logger.log('Mail transport parameters not specified')
     }
-    const transporter = app.get('transporter')
-    if (transporter && site.settings['admin-email']) {
-      utils.async_mail(app, site.settings['admin-email'], site.name + " API RESTARTED", 'Server time: ' + global.starttime)
+    const transport = app.get('transport')
+    if (transport && site.settings['admin-email']) {
+      utils.setMailTransport(transport, site.settings['email-from'], site.settings['admin-email'], site.name)
+      utils.async_mail( false, site.name + " API RESTARTED", 'Server time: ' + global.starttime)
     }
     app.set('initresult', 1)
   } catch (error) {
@@ -146,7 +147,7 @@ app.use(apiRouter.router)
 
 // catch everything else
 app.use(function (req, res, next) {
-  logger.log("Unrouted request:", req.url)
+  logger.error("Unrouted request:", req.url)
   next(createError(404, 'Unrecognised request'))
 })
 
