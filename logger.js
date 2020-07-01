@@ -19,8 +19,8 @@ const logstream = rfs.createStream('confapp.log', {
 })
 
 function log() {
-  const now = new Date()
-  logstream.write(now.toISOString())
+  const now = (new Date()).toISOString()
+  logstream.write(now)
   const argstring = []
   for (const i in arguments) {
     argstring.push(JSON.stringify(arguments[i]))
@@ -29,7 +29,7 @@ function log() {
   logstream.write(allargstring)
   logstream.write('\n')
 
-  if (logToConsole) console.log(allargstring)
+  if (logToConsole) console.log(now, allargstring)
 
   try {
     if (models) {
