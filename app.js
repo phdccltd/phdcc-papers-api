@@ -59,6 +59,7 @@ async function checkDatabases() {
         const params = {
           name: 'Jo',
           username: 'jo',
+          email: 'jo@example.com',
           password: await bcrypt.hash('asecret', saltRounds),
           super: true
         }
