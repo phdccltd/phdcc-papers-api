@@ -26,7 +26,7 @@ router.use(function (req, res, next) {
 
   // If production, then don't allow vanilla web requests
   if (req.app.get('env')=='production') {
-    if (!req.xhr) return utils.giveup(req, res, 'Non-XHR requests not permitted')
+    //if (!req.xhr) return utils.giveup(req, res, 'Non-XHR requests not permitted')
   }
 
   // req.baseUrl is eg /user/login for call at /api/user/login

@@ -8,12 +8,14 @@ const testhelper = require('./testhelper')
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
 
+process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 const app = require('../app')
 
 describe('LOGIN', () => {
   it('Check correct login succeeds', async () => {
     const initresult = await testhelper.waitUntilInited(app)
     console.log('initresult', initresult)
+    
     if (initresult !== 1) {
       expect(initresult).toBe(1)
     } else {
@@ -22,6 +24,7 @@ describe('LOGIN', () => {
         .send({
           username: 'jo',
           password: 'asecret',
+          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS
         })
       console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
 

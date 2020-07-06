@@ -8,6 +8,7 @@ const testhelper = require('./testhelper')
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
 
+process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 const app = require('../app')
 
 describe('LOGIN', () => {
@@ -22,6 +23,7 @@ describe('LOGIN', () => {
         .send({
           username: 'jo',
           password: 'wrongsecret',
+          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS,
         })
       console.log(res.body)
 

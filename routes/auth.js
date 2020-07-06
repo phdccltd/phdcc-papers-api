@@ -7,6 +7,7 @@ const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const bcrypt = require('bcrypt')
 const saltRounds = 10
+const needle = require('needle')
 
 const JWTstrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
@@ -62,37 +63,63 @@ passport.use(new JWTstrategy({
 //////////////////////
 /* POST: HANDLE LOGIN ATTEMPT, using given passport */
 function login(req, res, next) {
-  //console.log("post login", req.body['username'])
-  passport.authenticate('login',  // Calls login function above which fills in user (or err)
-    async (err, user, info) => {
-      try {
-        //console.log("authenticate OVER:", err, info)
-        if (info) {
-          //logger.log("login authenticate info", user, info.message)
-          logger.log("login authenticate info", info.message)
-        } else info = ''
 
-        if (err || !user) {
-          if (!err) err = new Error('Login Error')
-          return utils.giveup(req, res, err.message)
-        }
+  function authenticate() {
+    //console.log("post login", req.body['username'])
+    passport.authenticate('login',  // Calls login function above which fills in user (or err)
+      async (err, user, info) => {
+        try {
+          //console.log("authenticate OVER:", err, info)
+          if (info) {
+            //logger.log("login authenticate info", user, info.message)
+            logger.log("login authenticate info", info.message)
+          } else info = ''
 
-        req.logIn(user, { session: false }, async (err) => {
-          if (err) {
-            console.log("req.logIn err", err)
+          if (err || !user) {
+            if (!err) err = new Error('Login Error')
             return utils.giveup(req, res, err.message)
           }
-          logger.log("LOGGED IN", user.username, user.id)
-          const ppuser = { id: user.id, name: user.name, username: user.username, super: user.super }
-          const token = jwt.sign({ ppuser }, process.env.JWT_SECRET)
-          return res.json({ ret: 0, token })
-        })
-      } catch (error) {
-        console.log("login exception", error)
-        utils.exterminate(req, res, error)
+
+          req.logIn(user, { session: false }, async (err) => {
+            if (err) {
+              console.log("req.logIn err", err)
+              return utils.giveup(req, res, err.message)
+            }
+            logger.log("LOGGED IN", user.username, user.id)
+            const ppuser = { id: user.id, name: user.name, username: user.username, super: user.super }
+            const token = jwt.sign({ ppuser }, process.env.JWT_SECRET)
+            return res.json({ ret: 0, token })
+          })
+        } catch (error) {
+          console.log("login exception", error)
+          utils.exterminate(req, res, error)
+        }
       }
+    )(req, res, next)
+  }
+
+  const recaptchaResponseToken = req.body['g-recaptcha-response']
+  if (recaptchaResponseToken === undefined || recaptchaResponseToken === '' || recaptchaResponseToken === null) {
+    return utils.giveup(req, res, 'Please select captcha first')
+  }
+
+  if (recaptchaResponseToken === process.env.RECAPTCHA_BYPASS) {
+    authenticate()
+    return
+  }
+
+  const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + process.env.RECAPTCHA_SECRET_KEY + "&response=" + recaptchaResponseToken + "&remoteip=" + req.userip
+
+  needle.get(verificationURL, function (error, response, body) {
+    console.log("recaptchad", body)
+
+    if (body.success !== undefined && !body.success) {
+      return utils.giveup(req, res, 'Failed captcha verification')
     }
-  )(req, res, next)
+
+    authenticate()
+
+  })
 }
 
 //////////////////////
