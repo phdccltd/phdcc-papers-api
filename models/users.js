@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       name: { type: Sequelize.STRING, allowNull: false, defaultValue: '' },
       username: { type: Sequelize.STRING(50), allowNull: false, unique: true },
       password: { type: Sequelize.STRING, allowNull: false },
+      email: { type: Sequelize.STRING, allowNull: false },
       lastlogin: { type: Sequelize.DATE, allowNull: true },
       super: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
     },

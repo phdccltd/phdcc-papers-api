@@ -64,6 +64,10 @@ passport.use(new JWTstrategy({
 /* POST: HANDLE LOGIN ATTEMPT, using given passport */
 function login(req, res, next) {
 
+  if (!('username' in req.body) || (req.body.username.trim().length === 0)) return utils.giveup(req, res, 'username not given')
+  if (!('password' in req.body) || (req.body.password.trim().length === 0)) return utils.giveup(req, res, 'password not given')
+  if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+
   function authenticate() {
     //console.log("post login", req.body['username'])
     passport.authenticate('login',  // Calls login function above which fills in user (or err)
@@ -99,6 +103,90 @@ function login(req, res, next) {
   }
 
   const recaptchaResponseToken = req.body['g-recaptcha-response']
+  if (recaptchaResponseToken === process.env.RECAPTCHA_BYPASS) {
+    authenticate()
+    return
+  }
+
+  const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + process.env.RECAPTCHA_SECRET_KEY + "&response=" + recaptchaResponseToken + "&remoteip=" + req.userip
+
+  needle.get(verificationURL, function (error, response, body) {
+    console.log("recaptchad", body)
+
+    if (body.success !== undefined && !body.success) {
+      return utils.giveup(req, res, 'Failed captcha verification')
+    }
+
+    authenticate()
+
+  })
+}
+
+//////////////////////
+/* POST: HANDLE REGISTER ATTEMPT, using given passport */
+async function register(req, res, next) {
+
+  console.log('register')
+  if (!('username' in req.body) || (req.body.username.trim().length === 0)) return utils.giveup(req, res, 'username not given')
+  const username = req.body.username.trim()
+  let name = username
+  if (('name' in req.body) && (req.body.name.trim().length > 0)) {
+    name = req.body.name.trim()
+  }
+  if (!('password' in req.body) || (req.body.password.trim().length === 0)) return utils.giveup(req, res, 'password not given')
+  if (!('email' in req.body) || (req.body.email.trim().length === 0)) return utils.giveup(req, res, 'email not given')
+  //if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+
+  console.log('register', name)
+
+  const params = {
+    name: name,
+    username: username,
+    password: await bcrypt.hash(req.body.password.trim(), saltRounds),
+    email: req.body.email.trim(),
+  }
+  const user = await models.users.create(params);
+  if (!user) return utils.giveup(req, res, 'user not created')
+
+  return utils.giveup(req, res, 'user created')
+
+  /*function authenticate() {
+    //console.log("post authenticate", req.body['username'])
+    passport.authenticate('login',  // Calls login function above which fills in user (or err)
+      async (err, user, info) => {
+        try {
+          //console.log("authenticate OVER:", err, info)
+          if (info) {
+            //logger.log("login authenticate info", user, info.message)
+            logger.log("login authenticate info", info.message)
+          } else info = ''
+
+          if (err || !user) {
+            if (!err) err = new Error('Login Error')
+            return utils.giveup(req, res, err.message)
+          }
+
+          req.logIn(user, { session: false }, async (err) => {
+            if (err) {
+              console.log("req.logIn err", err)
+              return utils.giveup(req, res, err.message)
+            }
+            logger.log("LOGGED IN", user.username, user.id)
+            const ppuser = { id: user.id, name: user.name, username: user.username, super: user.super }
+            const token = jwt.sign({ ppuser }, process.env.JWT_SECRET)
+            return res.json({ ret: 0, token })
+          })
+        } catch (error) {
+          console.log("login exception", error)
+          utils.exterminate(req, res, error)
+        }
+      }
+    )(req, res, next)
+  }
+
+  authenticate()*/
+
+  /*const recaptchaResponseToken = req.body['g-recaptcha-response']
   if (recaptchaResponseToken === undefined || recaptchaResponseToken === '' || recaptchaResponseToken === null) {
     return utils.giveup(req, res, 'Please select captcha first')
   }
@@ -119,7 +207,7 @@ function login(req, res, next) {
 
     authenticate()
 
-  })
+  })*/
 }
 
 //////////////////////
@@ -169,6 +257,7 @@ function getuser(req, res) {
 module.exports = {
   passport: passport,
   login: login,
+  register: register,
   logout: logout,
   getuser: getuser,
   loaduser: loaduser

@@ -64,6 +64,10 @@ router.use(function (req, res, next) {
 /* POST: HANDLE LOGIN ATTEMPT */
 router.post('/user/login', auth.login)
 
+//////////////////////
+/* POST: HANDLE REGISTER ATTEMPT */
+router.post('/user/register', auth.register)
+
 /* ALL: CHECK LOGGED IN */
 // Must be logged in from now on
 router.use(auth.loaduser)
