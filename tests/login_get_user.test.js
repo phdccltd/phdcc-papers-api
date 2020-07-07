@@ -33,7 +33,7 @@ describe('USER', () => {
         .get('/user')
         .set('authorization', 'bearer ' + token)
       console.log(res2.body) // 
-      const rv2 = _.isEqual(res2.body, { ret: 0, user: { id: 1, name: 'Jo', username: 'jo', super: true } })
+      const rv2 = _.isEqual(res2.body, { ret: 0, status: 'OK', user: { id: 1, name: 'Jo', username: 'jo', super: true } })
 
       spyclog.mockRestore()
       spycerror.mockRestore()

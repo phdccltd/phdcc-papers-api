@@ -114,7 +114,7 @@ async function checkDatabases() {
     const transport = app.get('transport')
     if (transport && site.settings['admin-email']) {
       utils.setMailTransport(transport, site.settings['email-from'], site.settings['admin-email'], site.name)
-      utils.async_mail( false, site.name + " API RESTARTED", 'Server time: ' + global.starttime)
+      utils.async_mail( false, site.name + ". API RESTARTED", 'Server time: ' + global.starttime)
     }
     app.set('initresult', 1)
   } catch (error) {

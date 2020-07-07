@@ -22,6 +22,17 @@ function giveup(req, res, msg) {
 }
 
 //////////////////////
+// Return OK and don't call next
+function returnOK(req, res, msg, field) {
+  const rv = { ret: 0 }
+  if (typeof field === 'undefined') field = 'status'
+  if (field !== 'status') rv.status = 'OK'
+  rv[field] = msg
+  res.status(200).json(rv)
+  return false
+}
+
+//////////////////////
 function setMailTransport(_transport, _fromEmail, _adminEmail, _sitename) {
   transport = _transport
   fromEmail = _fromEmail
@@ -64,6 +75,7 @@ function async_mail(toEmail, subject, message) {
 module.exports = {
   exterminate,
   giveup,
+  returnOK,
   async_mail,
   setMailTransport,
   getSiteName
