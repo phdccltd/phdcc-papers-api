@@ -31,26 +31,5 @@ Object.keys(dbs).forEach((modelName) => {
 
 dbs.sequelize = sequelize
 
-dbs.users.belongsToMany(dbs.confs, {
-  as: 'Conferences',
-  through: dbs.userconfs,
-  foreignKey: 'userid'
-}) // becomes user.getConferences
-dbs.confs.belongsToMany(dbs.users, {
-  as: 'Users',
-  through: dbs.userconfs,
-  foreignKey: 'cid'
-}) // becomes conf.getUsers
-
-// Add confs.siteId
-dbs.sites.hasMany(dbs.confs, { onDelete: 'RESTRICT' })  // One site has many conferences: site.getConferences
-dbs.confs.belongsTo(dbs.sites)  // Each conference has one site: conf.getSite
-
-// Add players.teamId
-//dbs.teams.hasMany(dbs.players, { onDelete: 'RESTRICT' }) // One team has many players: team.getPlayers
-//dbs.players.belongsTo(dbs.teams)  // Each player has one team: player.getTeam
-
-//Team.hasMany(Player);
-//Player.belongsTo(Team);
 
 module.exports = dbs

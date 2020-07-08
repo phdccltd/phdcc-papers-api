@@ -1,5 +1,7 @@
-// await conf.getUsers made available in index.js belongsToMany
-// await conf.hasUser(req.user)
+//  Created in confs.js:
+//    conf.siteid:
+//      site.getConfs
+//      conf.getSite
 
 const Sequelize = require('sequelize')
 
@@ -11,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     settings: { type: Sequelize.TEXT, allowNull: true } // JSON-encoded: Recaptcha-Site-key, Recaptcha-Secret-key
   })
 
-  sites.associate = function (models) {}
+  //sites.associate = function (models) {}
 
   return sites
 }

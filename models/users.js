@@ -1,5 +1,7 @@
-// await user.getConferences made available in index.js belongsToMany
-// await user.hasConference(conf)
+//  Created in userconfs.js:
+//      conf.getUsers
+//      conf.hasUser(req.user)
+//      user.getConferences
 
 const Sequelize = require('sequelize')
 
@@ -26,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   )
 
-  users.associate = function (models) {}
+  //users.associate = function (dbs) {}
 
   return users
 }
