@@ -1,7 +1,7 @@
 //  Created after all models made
-//    confId:
-//      conf.getFlows
-//      flow.getConf
+//    pubId:
+//      pub.getFlows
+//      flow.getPub
 
 const Sequelize = require('sequelize')
 
@@ -12,9 +12,9 @@ module.exports = (sequelize, DataTypes) => {
   })
 
   flows.associate = function (dbs) {
-    // Adds flows.confId Sequelize.INTEGER allowNull:false
-    dbs.confs.hasMany(dbs.flows, { onDelete: 'RESTRICT' })  // Cannot delete conf while flows exist
-    dbs.flows.belongsTo(dbs.confs)
+    // Adds flows.pubId Sequelize.INTEGER allowNull:false
+    dbs.pubs.hasMany(dbs.flows, { onDelete: 'RESTRICT' })  // Cannot delete pub while flows exist
+    dbs.flows.belongsTo(dbs.pubs)
  }
 
   return flows

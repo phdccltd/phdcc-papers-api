@@ -31,5 +31,16 @@ Object.keys(dbs).forEach((modelName) => {
 
 dbs.sequelize = sequelize
 
+dbs.sanitise = (model, dbobj) => {
+  if (model.fields) {
+    const sanobj = {}
+    Object.keys(model.fields).forEach((field) => {
+      sanobj[field] = dbobj[field]
+    })
+    return sanobj
+  }
+  return dbobj
+}
+
 
 module.exports = dbs

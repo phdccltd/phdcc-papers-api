@@ -226,6 +226,7 @@ function loaduser(req, res, next) {
           logger.log('Stale login', ppuser.id)
           return utils.giveup(req, res, 'Stale login')
         }
+        req.user = user
         const newppuser = { id: user.id, name: user.name, username: user.username, super: user.super }
         if (!_.isEqual(newppuser, ppuser)) {
           console.log('AUTH LOADUSER ppuser refreshed', newppuser, ppuser)

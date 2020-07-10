@@ -7,7 +7,7 @@ const logger = require('../logger')
 const utils = require('../utils')
 
 const auth = require('./auth')
-const apiusersRouter = require('./users')
+const pubsRouter = require('./pubs')
 
 const router = Router()
 
@@ -79,7 +79,8 @@ router.delete('/user/logout', auth.logout)
 router.use('/user', auth.getuser)
 
 //////////////////////
-router.use(apiusersRouter)
+// /pubs/*
+router.use(pubsRouter)
 
 //////////////////////
 module.exports = {

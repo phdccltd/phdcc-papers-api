@@ -1,7 +1,7 @@
-//  Created in userconfs.js:
-//      conf.getUsers
-//      conf.hasUser(req.user)
-//      user.getConferences
+//  Created in userpubs.js:
+//      pub.getUsers
+//      pub.hasUser(req.user)
+//      user.getPublications
 
 const Sequelize = require('sequelize')
 

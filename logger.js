@@ -13,7 +13,7 @@ const logDirectory = path.join(__dirname, 'log')
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)  // ensure log directory exists
 
 // Create our own log
-const logstream = rfs.createStream('confapp.log', {
+const logstream = rfs.createStream('papersapp.log', {
   interval: '1d', // rotate daily
   path: logDirectory
 })

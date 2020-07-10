@@ -1,7 +1,7 @@
 //  Created after all models made
 //    flowId:
 //      flow.getFlowStages
-//      flowstage.getConf
+//      flowstage.getFlow
 
 const Sequelize = require('sequelize')
 
@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
   })
 
   flowstages.associate = function (dbs) {
-    // Adds flowstages.confId Sequelize.INTEGER allowNull:false
+    // Adds flowstages.flowId Sequelize.INTEGER allowNull:false
     dbs.flows.hasMany(dbs.flowstages, { onDelete: 'RESTRICT' })  // Cannot delete flow while flowstages exist
     dbs.flowstages.belongsTo(dbs.flows)
  }

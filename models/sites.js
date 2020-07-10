@@ -1,7 +1,7 @@
-//  Created in confs.js:
-//    conf.siteid:
-//      site.getConfs
-//      conf.getSite
+//  Created in pubs.js:
+//    pub.siteid:
+//      site.getPubs
+//      pub.getSite
 
 const Sequelize = require('sequelize')
 

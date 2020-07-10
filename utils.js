@@ -72,6 +72,9 @@ function async_mail(toEmail, subject, message) {
   })
 
 }
+
+//////////////////////
+
 module.exports = {
   exterminate,
   giveup,
