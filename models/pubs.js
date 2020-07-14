@@ -1,7 +1,7 @@
 //  Created in userpubs.js:
 //      pub.getUsers
 //      pub.hasUser(req.user)
-//      user.getpuberences
+//      user.getPublicationspuberences
 
 //  Created after all models made
 //    siteid:

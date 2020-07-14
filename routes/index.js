@@ -8,6 +8,7 @@ const utils = require('../utils')
 
 const auth = require('./auth')
 const pubsRouter = require('./pubs')
+const submitsRouter = require('./submits')
 
 const router = Router()
 
@@ -84,6 +85,10 @@ router.post('/user', auth.saveuser)
 //////////////////////
 // /pubs/*
 router.use(pubsRouter)
+
+//////////////////////
+// /submits/*
+router.use(submitsRouter)
 
 //////////////////////
 module.exports = {

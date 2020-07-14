@@ -34,6 +34,7 @@ dbs.sequelize = sequelize
 dbs.sanitise = (model, dbobj) => {
   if (model.fields) {
     const sanobj = {}
+    sanobj.id = dbobj.id
     Object.keys(model.fields).forEach((field) => {
       sanobj[field] = dbobj[field]
     })

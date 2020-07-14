@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     dbs.pubs.belongsToMany(dbs.users, {
       as: 'Users',
       through: dbs.userpubs,
-      foreignKey: 'cid'
+      foreignKey: 'pubid'
     }) // becomes pub.getUsers
   }
 
