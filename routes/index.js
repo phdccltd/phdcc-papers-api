@@ -76,7 +76,10 @@ router.use(auth.loaduser)
 router.delete('/user/logout', auth.logout)
 
 /* GET: USER */
-router.use('/user', auth.getuser)
+router.get('/user', auth.getuser)
+
+/* POST+PATCH: USER */
+router.post('/user', auth.saveuser)
 
 //////////////////////
 // /pubs/*

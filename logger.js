@@ -40,7 +40,7 @@ function log() {
   } catch (e) {
     console.log('logger.log error',e)
   }
-  return argstring
+  return allargstring
 }
 module.exports.log = log
 
@@ -54,8 +54,8 @@ function logdb1() {   // Only logs first parameter to avoid sequelize log error:
 module.exports.logdb1 = logdb1
 
 function error() {
-  const argstring = log(arguments)
-  utils.async_mail(false, utils.getSiteName() + ' error ' + arguments[0], argstring)
+  const allargstring = log(arguments)
+  utils.async_mail(false, utils.getSiteName() + ' error ' + arguments[0], allargstring)
 }
 module.exports.error = error
 

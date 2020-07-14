@@ -1,4 +1,4 @@
-// `user` is real, `ppuser' is the JWT user in token
+// `user` is real, `ppuser' is the JWT user in token only with 'id'
 
 const { Router } = require('express')
 
@@ -9,8 +9,8 @@ const bcrypt = require('bcrypt')
 const saltRounds = 10
 const needle = require('needle')
 
-const JWTstrategy = require('passport-jwt').Strategy;
-const ExtractJWT = require('passport-jwt').ExtractJwt;
+const JWTstrategy = require('passport-jwt').Strategy
+const ExtractJWT = require('passport-jwt').ExtractJwt
 const jwt = require('jsonwebtoken')
 
 const models = require('../models')
@@ -34,7 +34,7 @@ passport.use('login', new LocalStrategy({
       await user.save()
       done(null, user, { message: 'Logged in Successfully' })
     } catch (error) {
-      return done(error);
+      return done(error)
     }
   }
 ))
@@ -52,9 +52,9 @@ passport.use(new JWTstrategy({
       }*/
 }, async (decoded_token, done) => { // Only called if JWT verifies
   try {
-    //console.log("JWTstrategy", decoded_token) // { ppuser: { id: 1, name: 'Chris', username: 'chris, super: true }, iat: 1593427250 }
+    //console.log("JWTstrategy", decoded_token) // { ppuser: { id: 1 }, iat: 1593427250 }
     //Pass the user details to the next middleware
-    return done(null, decoded_token.ppuser);
+    return done(null, decoded_token.ppuser)
   } catch (error) {
     done(error)
   }
@@ -93,7 +93,7 @@ function login(req, res, next) {
               return utils.giveup(req, res, err.message)
             }
             logger.log("LOGGED IN", user.username, user.id)
-            const ppuser = { id: user.id, name: user.name, username: user.username, super: user.super }
+            const ppuser = { id: user.id }
             const token = jwt.sign({ ppuser }, process.env.JWT_SECRET)
             utils.returnOK(req, res, token, 'token')
           })
@@ -172,7 +172,7 @@ async function register(req, res, next) {
       }
 
       // Create user now
-      const user = await models.users.create(params);
+      const user = await models.users.create(params)
       if (!user) return utils.giveup(req, res, 'user not created')
 
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET)
@@ -227,12 +227,12 @@ function loaduser(req, res, next) {
           return utils.giveup(req, res, 'Stale login')
         }
         req.user = user
-        const newppuser = { id: user.id, name: user.name, username: user.username, super: user.super }
+        const newppuser = { id: user.id }
         if (!_.isEqual(newppuser, ppuser)) {
           console.log('AUTH LOADUSER ppuser refreshed', newppuser, ppuser)
         }
         req.ppuser = newppuser
-        logger.log('User is', req.ppuser.id, req.ppuser.username)
+        logger.log('User is', req.ppuser.id, req.user.username, req.user.name)
         next()
         return
       }
@@ -244,7 +244,7 @@ function loaduser(req, res, next) {
 
 /* DELETE: LOGOUT */
 function logout(req, res) {
-  logger.log("Logging out " + req.ppuser.username)
+  logger.log("Logging out ", req.ppuser.id, req.user.username)
   req.logout()
   utils.returnOK(req, res, 'Logged out')
 }
@@ -253,7 +253,46 @@ function logout(req, res) {
 function getuser(req, res) {
   logger.log("getuser")
   if (!req.ppuser) return utils.giveup(req, res, 'Not logged in unexpectedly')
-  utils.returnOK(req, res, req.ppuser, 'user')
+  console.log(req.ppuser)
+  const rvuser = {
+    id: req.user.id,
+    username: req.user.username,
+    name: req.user.name,
+    super: req.user.super,
+  }
+  utils.returnOK(req, res, rvuser, 'user')
+}
+
+/* POST+PATCH: SAVEUSER */
+async function saveuser(req, res, next) {
+  if (req.headers['x-http-method-override'] !== 'PATCH') {
+    console.log("NOT saveuser")
+    next()
+    return
+  }
+  console.log("saveuser")
+
+  try {
+    if (!req.ppuser) return utils.giveup(req, res, 'Not logged in unexpectedly')
+
+    let name = false
+    if (('name' in req.body) && (req.body.name.trim().length > 0)) name = req.body.name.trim()
+    let password = false
+    if (('password' in req.body) && (req.body.password.trim().length > 0)) password = req.body.password.trim()
+    if (password) {
+      password = await bcrypt.hash(password, saltRounds)
+    }
+
+    if (!name && !password) return utils.giveup(req, res, 'No changed user params')
+    if (name) req.user.name = name
+    if (password) req.user.password = password
+    await req.user.save()
+    utils.returnOK(req, res, 'User updated')
+    console.log("saveuser DONE OK")
+  } catch (error) {
+    console.log(error)
+    return utils.exterminate(req, res, error)
+  }
 }
 
 module.exports = {
@@ -262,6 +301,7 @@ module.exports = {
   register: register,
   logout: logout,
   getuser: getuser,
+  saveuser: saveuser,
   loaduser: loaduser
 }
 
