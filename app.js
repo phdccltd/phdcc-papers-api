@@ -44,11 +44,11 @@ async function checkDatabases() {
       const sites = await models.sites.findAll()
       console.log('sites', sites.length)
       if (sites.length === 0) {
-        const settings = {}
         let params = {
           url: '',
           name: 'Test site',
-          settings: JSON.stringify(settings)
+          privatesettings: JSON.stringify({}),
+          publicsettings: JSON.stringify({}),
         }
         await models.sites.create(params)
         console.log("mock site created")
@@ -74,11 +74,12 @@ async function checkDatabases() {
     for (const sitedb of await models.sites.findAll()) {
       //console.log("sitedb", sitedb)
       try {
-        const settings = JSON.parse(sitedb.settings)
-        const site = { id: sitedb.id, url: sitedb.url, name: sitedb.name, settings: settings }
+        const privatesettings = JSON.parse(sitedb.privatesettings)
+        const publicsettings = JSON.parse(sitedb.publicsettings)
+        const site = {id: sitedb.id, url: sitedb.url, name: sitedb.name, privatesettings: privatesettings ? privatesettings : {}, publicsettings: publicsettings ? publicsettings : {} }
         sites.push(site)
       } catch (e) {
-        console.error('SYNTAX ERROR IN settings for site', sitedb.id, sitedb.settings)
+        console.error('SYNTAX ERROR IN settings for site', sitedb.id, sitedb.privatesettings, sitedb.publicsettings)
         if (!process.env.TESTING) {
           process.exit(1)
         }
@@ -96,13 +97,13 @@ async function checkDatabases() {
     //"transport-from": "root@phdcc.co.uk", "admin-email": "cc+papersdev@phdcc.com"
     // Use first site to set mail transport
     const site = sites[0]
-    const settings = sites[0].settings
-    if (site.settings['transport-sendmail'] && site.settings['transport-newline'] && site.settings['transport-path'] && site.settings['email-from']) {
+    const privatesettings = site.privatesettings
+    if ('transport-sendmail' in privatesettings && 'transport-newline' in privatesettings && 'transport-path' in privatesettings && 'email-from' in privatesettings) {
       try {
         const transport = nodemailer.createTransport({
-          sendmail: site.settings['transport-sendmail'],
-          newline: site.settings['transport-newline'],
-          path: site.settings['transport-path']
+          sendmail: privatesettings['transport-sendmail'],
+          newline: privatesettings['transport-newline'],
+          path: privatesettings['transport-path']
         })
         app.set('transport', transport)
       } catch (e) {
@@ -112,8 +113,8 @@ async function checkDatabases() {
       logger.log('Mail transport parameters not specified')
     }
     const transport = app.get('transport')
-    if (transport && site.settings['admin-email']) {
-      utils.setMailTransport(transport, site.settings['email-from'], site.settings['admin-email'], site.name)
+    if (transport && privatesettings['admin-email']) {
+      utils.setMailTransport(transport, privatesettings['email-from'], privatesettings['admin-email'], site.name)
       utils.async_mail( false, site.name + ". API RESTARTED", 'Server time: ' + global.starttime)
     }
     app.set('initresult', 1)

@@ -52,7 +52,7 @@ function async_mail(toEmail, subject, message) {
     console.log(fromEmail)
     return
   }
-  if (!toEmail) toEmail = fromEmail
+  if (!toEmail) toEmail = adminEmail
   
   const params = {
     from: fromEmail,

@@ -254,11 +254,13 @@ function getuser(req, res) {
   logger.log("getuser")
   if (!req.ppuser) return utils.giveup(req, res, 'Not logged in unexpectedly')
   console.log(req.ppuser)
+
   const rvuser = {
     id: req.user.id,
     username: req.user.username,
     name: req.user.name,
     super: req.user.super,
+    publicsettings: req.site.publicsettings,
   }
   utils.returnOK(req, res, rvuser, 'user')
 }

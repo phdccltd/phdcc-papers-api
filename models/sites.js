@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
     // id, createdAt and updatedAt: added automatically
     url: { type: Sequelize.STRING, allowNull: false },
     name: { type: Sequelize.STRING(50), allowNull: false },
-    settings: { type: Sequelize.TEXT, allowNull: true } // JSON-encoded: Recaptcha-Site-key, Recaptcha-Secret-key
+    privatesettings: { type: Sequelize.TEXT, allowNull: true }, // JSON-encoded: Recaptcha-Secret-key
+    publicsettings: { type: Sequelize.TEXT, allowNull: true } // JSON-encoded: Recaptcha-Site-key
   })
 
   //sites.associate = function (models) {}
