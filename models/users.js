@@ -6,16 +6,17 @@
 const Sequelize = require('sequelize')
 
 module.exports = (sequelize, DataTypes) => {
-  const users = sequelize.define(
-    'users',
-    {
-      // id, createdAt and updatedAt: added automatically
-      name: { type: Sequelize.STRING, allowNull: false, defaultValue: '' },
-      username: { type: Sequelize.STRING(50), allowNull: false, unique: true },
+  const fields = {
+    // id, createdAt and updatedAt: added automatically
+    name: { type: Sequelize.STRING, allowNull: false, defaultValue: '' },
+    username: { type: Sequelize.STRING(50), allowNull: false, unique: true },
+    email: { type: Sequelize.STRING, allowNull: false },
+    lastlogin: { type: Sequelize.DATE, allowNull: true },
+    super: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+  }
+  const users = sequelize.define('users', {
       password: { type: Sequelize.STRING, allowNull: false },
-      email: { type: Sequelize.STRING, allowNull: false },
-      lastlogin: { type: Sequelize.DATE, allowNull: true },
-      super: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+      ...fields
     },
     {
       getterMethods: {
@@ -27,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     }
   )
+  users.fields = fields
 
   //users.associate = function (dbs) {}
 

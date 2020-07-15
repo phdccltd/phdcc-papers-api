@@ -7,10 +7,12 @@
 const Sequelize = require('sequelize')
 
 module.exports = (sequelize, DataTypes) => {
-  const flowacceptings = sequelize.define('flowacceptings', {
+  const fields = {
     // id, createdAt and updatedAt: added automatically
     open: { type: DataTypes.BOOLEAN, allowNull: false },
-  })
+  }
+  const flowacceptings = sequelize.define('flowacceptings', fields)
+  flowacceptings.fields = fields
 
   flowacceptings.associate = function (dbs) {
     // Adds flowacceptings.flowId Sequelize.INTEGER allowNull:false

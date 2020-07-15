@@ -6,12 +6,14 @@
 const Sequelize = require('sequelize')
 
 module.exports = (sequelize, DataTypes) => {
-  const flowstatuses = sequelize.define('flowstatuses', {
+  const fields = {
     // id, createdAt and updatedAt: added automatically
     weight: { type: Sequelize.INTEGER, allowNull: false },
     status: { type: Sequelize.STRING(50), allowNull: false },
     ended: { type: DataTypes.BOOLEAN, allowNull: false },
-  })
+  }
+  const flowstatuses = sequelize.define('flowstatuses', fields)
+  flowstatuses.fields = fields
 
   flowstatuses.associate = function (dbs) {
     // Adds flowstatuses.flowId Sequelize.INTEGER allowNull:false

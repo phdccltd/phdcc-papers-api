@@ -9,11 +9,13 @@
 const Sequelize = require('sequelize')
 
 module.exports = (sequelize, DataTypes) => {
-  const submits = sequelize.define('submits', {
+  const fields = {
     // id, createdAt and updatedAt: added automatically
     name: { type: Sequelize.STRING, allowNull: false },
     startdt: { type: Sequelize.DATE, allowNull: false },
-  })
+  }
+  const submits = sequelize.define('submits', fields)
+  submits.fields = fields
 
   submits.associate = function (dbs) {
     // Adds submits.flowId Sequelize.INTEGER allowNull:false

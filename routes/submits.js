@@ -18,8 +18,18 @@ router.get('/submits/:pubid', async function (req, res, next) {
     const dbflows = await dbpub.getFlows()
     const flows = []
     for (const dbflow of dbflows) {
-      flows.push(models.sanitise(models.flows, dbflow))
+      const flow = models.sanitise(models.flows, dbflow)
+      console.log('flow', flow.name)
+      flow.submits = []
+      const dbsubmits = await dbflow.getSubmits()
+      for (const dbsubmit of dbsubmits) {
+        console.log('submit', dbsubmit.name)
+        flow.submits.push(models.sanitise(models.submits, dbsubmit))
+      }
+      console.log('flow=', flow)
+      flows.push(flow)
     }
+
     utils.returnOK(req, res, flows, 'flows')
 /*    const order = {
       order: [
