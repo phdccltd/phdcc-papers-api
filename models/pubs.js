@@ -25,8 +25,8 @@ module.exports = (sequelize, DataTypes) => {
 
   pubs.associate = function (dbs) {
     // Adds pubs.siteId Sequelize.INTEGER allowNull:false
-    dbs.sites.hasMany(dbs.pubs, { onDelete: 'RESTRICT' })  // Cannot delete site while pubs exist
-    dbs.pubs.belongsTo(dbs.sites)
+    dbs.sites.hasMany(dbs.pubs, { foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete site while pubs exist
+    dbs.pubs.belongsTo(dbs.sites, { foreignKey: { allowNull: false }})
     dbs.pubs.fields.siteId = true
   }
 

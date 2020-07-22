@@ -17,8 +17,8 @@ module.exports = (sequelize, DataTypes) => {
 
   flowstatuses.associate = function (dbs) {
     // Adds flowstatuses.flowId Sequelize.INTEGER allowNull:false
-    dbs.flows.hasMany(dbs.flowstatuses, { onDelete: 'RESTRICT' })  // Cannot delete flow while flowstatuses exist
-    dbs.flowstatuses.belongsTo(dbs.flows)
+    dbs.flows.hasMany(dbs.flowstatuses, { as: 'FlowStatuses', foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete flow while flowstatuses exist
+    dbs.flowstatuses.belongsTo(dbs.flows, { foreignKey: { allowNull: false }})
  }
 
   return flowstatuses

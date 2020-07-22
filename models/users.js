@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     email: { type: Sequelize.STRING, allowNull: false },
     lastlogin: { type: Sequelize.DATE, allowNull: true },
     super: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+    deleted: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
   }
   const users = sequelize.define('users', {
       password: { type: Sequelize.STRING, allowNull: false },

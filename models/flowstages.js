@@ -8,6 +8,7 @@ const Sequelize = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
+    weight: { type: Sequelize.INTEGER, allowNull: false },
     name: { type: Sequelize.STRING(50), allowNull: false },
   }
   const flowstages = sequelize.define('flowstages', fields)
@@ -15,8 +16,8 @@ module.exports = (sequelize, DataTypes) => {
 
   flowstages.associate = function (dbs) {
     // Adds flowstages.flowId Sequelize.INTEGER allowNull:false
-    dbs.flows.hasMany(dbs.flowstages, { onDelete: 'RESTRICT' })  // Cannot delete flow while flowstages exist
-    dbs.flowstages.belongsTo(dbs.flows)
+    dbs.flows.hasMany(dbs.flowstages, { as: 'FlowStages', foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete flow while flowstages exist
+    dbs.flowstages.belongsTo(dbs.flows, { foreignKey: { allowNull: false }})
  }
 
   return flowstages

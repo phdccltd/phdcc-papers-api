@@ -6,11 +6,11 @@ const router = Router()
 
 /* GET submits for publication. */
 router.get('/submits/:pubid', async function (req, res, next) {
-  console.log('GET /submits')
-
   try {
     const pubid = parseInt(req.params.pubid)
-    console.log('GET /submits', pubid)
+    console.log('GET /submits', pubid, req.user.id)
+
+    if (!Number.isInteger(req.user.id)) return utils.giveup(req, res, 'Invalid req.user.id')
 
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
@@ -19,14 +19,40 @@ router.get('/submits/:pubid', async function (req, res, next) {
     const flows = []
     for (const dbflow of dbflows) {
       const flow = models.sanitise(models.flows, dbflow)
-      console.log('flow', flow.name)
+      //console.log('flow', flow.name)
       flow.submits = []
-      const dbsubmits = await dbflow.getSubmits()
+      const dbsubmits = await dbflow.getSubmits({
+        where: {
+          userId: req.user.id
+        }
+      })
       for (const dbsubmit of dbsubmits) {
-        console.log('submit', dbsubmit.name)
+        //console.log('submit', dbsubmit.name)
         flow.submits.push(models.sanitise(models.submits, dbsubmit))
       }
-      console.log('flow=', flow)
+      flow.statuses = []
+      const dbstatuses = await dbflow.getFlowStatuses()
+      for (const dbstatus of dbstatuses) {
+        //console.log('dbstatus', dbstatus.status)
+        flow.statuses.push(models.sanitise(models.flowstatuses, dbstatus))
+      }
+      flow.acceptings = []
+      const dbacceptings = await dbflow.getFlowAcceptings()
+      for (const dbaccepting of dbacceptings) {
+        //console.log('dbaccepting', dbaccepting.open)
+        flow.acceptings.push(models.sanitise(models.flowacceptings, dbaccepting))
+      }
+      flow.stages = []
+      const dbstages = await dbflow.getFlowStages({
+        order: [
+          ['weight', 'ASC']
+        ]
+      })
+      for (const dbstage of dbstages) {
+        //console.log('dbstage', dbstage.open)
+        flow.stages.push(models.sanitise(models.flowstages, dbstage))
+      }
+      //console.log('flow=', flow)
       flows.push(flow)
     }
 

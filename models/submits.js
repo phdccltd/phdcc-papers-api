@@ -19,11 +19,11 @@ module.exports = (sequelize, DataTypes) => {
 
   submits.associate = function (dbs) {
     // Adds submits.flowId Sequelize.INTEGER allowNull:false
-    dbs.flows.hasMany(dbs.submits, { onDelete: 'RESTRICT' })  // Cannot delete flow while submits exist
-    dbs.submits.belongsTo(dbs.flows)
+    dbs.flows.hasMany(dbs.submits, { foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete flow while submits exist
+    dbs.submits.belongsTo(dbs.flows, { foreignKey: { allowNull: false }})
     // Adds submits.userId Sequelize.INTEGER allowNull:false
-    dbs.users.hasMany(dbs.submits, { onDelete: 'RESTRICT' })  // Cannot delete user while submits exist
-    dbs.submits.belongsTo(dbs.users)
+    dbs.users.hasMany(dbs.submits, { foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete user while submits exist
+    dbs.submits.belongsTo(dbs.users, { foreignKey: { allowNull: false }})
  }
 
   return submits
