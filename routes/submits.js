@@ -61,6 +61,17 @@ router.get('/submits/:pubid', async function (req, res, next) {
         for (const dbentry of dbentries) {
           submit.entries.push(models.sanitise(models.entries, dbentry))
         }
+
+        const dbstatuses = await dbsubmit.getStatuses({
+          order: [
+            ['id', 'ASC']
+          ]
+        })
+        submit.statuses = []
+        for (const dbstatus of dbstatuses) {
+          submit.statuses.push(models.sanitise(models.submitstatuses, dbstatus))
+        }
+
         flow.submits.push(submit)
       }
       //console.log('flow=', flow)
