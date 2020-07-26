@@ -1,3 +1,4 @@
+const _ = require('lodash/core')
 const { Router } = require('express')
 const models = require('../models')
 const utils = require('../utils')
@@ -26,10 +27,6 @@ router.get('/submits/:pubid', async function (req, res, next) {
           userId: req.user.id
         }
       })
-      for (const dbsubmit of dbsubmits) {
-        //console.log('submit', dbsubmit.name)
-        flow.submits.push(models.sanitise(models.submits, dbsubmit))
-      }
       flow.statuses = []
       const dbstatuses = await dbflow.getFlowStatuses()
       for (const dbstatus of dbstatuses) {
@@ -51,6 +48,25 @@ router.get('/submits/:pubid', async function (req, res, next) {
       for (const dbstage of dbstages) {
         //console.log('dbstage', dbstage.open)
         flow.stages.push(models.sanitise(models.flowstages, dbstage))
+      }
+      for (const dbsubmit of dbsubmits) {
+        //console.log('submit', dbsubmit.name)
+        const submit = models.sanitise(models.submits, dbsubmit)
+        const dbentries = await dbsubmit.getEntries()
+        submit.entries = []
+        for (const dbentry of dbentries) {
+          //console.log('dbentry', dbentry)
+          submit.entries.push(models.sanitise(models.entries, dbentry))
+        }
+        submit.entries.sort((a, b) => {
+          console.log('entry', a.flowstageId, b.flowstageId)
+          const stagea = _.find(flow.stages, stage => { return stage.id === a.flowstageId })
+          const stageb = _.find(flow.stages, stage => { return stage.id === b.flowstageId })
+          //console.log('weight', stagea.weight, stageb.weight, stagea.weight - stageb.weight)
+          return stagea.weight - stageb.weight
+        })
+        //console.log('submit.entries=', submit.entries)
+        flow.submits.push(submit)
       }
       //console.log('flow=', flow)
       flows.push(flow)
