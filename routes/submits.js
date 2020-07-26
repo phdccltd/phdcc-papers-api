@@ -62,10 +62,8 @@ router.get('/submits/:pubid', async function (req, res, next) {
           console.log('entry', a.flowstageId, b.flowstageId)
           const stagea = _.find(flow.stages, stage => { return stage.id === a.flowstageId })
           const stageb = _.find(flow.stages, stage => { return stage.id === b.flowstageId })
-          //console.log('weight', stagea.weight, stageb.weight, stagea.weight - stageb.weight)
           return stagea.weight - stageb.weight
         })
-        //console.log('submit.entries=', submit.entries)
         flow.submits.push(submit)
       }
       //console.log('flow=', flow)
