@@ -3,6 +3,7 @@
 //      flow.getFlowAccepting
 //      flowaccepting.getFlow
 //    flowstageId:
+//    flowstatusId:
 
 const Sequelize = require('sequelize')
 
@@ -12,11 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     open: { type: DataTypes.BOOLEAN, allowNull: false },
   }
   const flowacceptings = sequelize.define('flowacceptings', fields)
-  flowacceptings.fields = {
-    flowstageId: true,
-    flowstatusId: true,
-    ...fields
-  }
+  flowacceptings.fields = fields
 
   flowacceptings.associate = function (dbs) {
     // Adds flowacceptings.flowId Sequelize.INTEGER allowNull:false
@@ -28,7 +25,10 @@ module.exports = (sequelize, DataTypes) => {
     // Adds flowacceptings.flowstatusId Sequelize.INTEGER allowNull:true
     dbs.flowstatuses.hasMany(dbs.flowacceptings, { foreignKey: { allowNull: true }, onDelete: 'RESTRICT' })  // Cannot delete flowstatus while flowacceptings exist
     dbs.flowacceptings.belongsTo(dbs.flowstatuses, { foreignKey: { allowNull: true } })
-  }
+
+    dbs.flowacceptings.fields.flowstageId = true
+    dbs.flowacceptings.fields.flowstatusId = true
+}
 
   return flowacceptings
 }

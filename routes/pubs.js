@@ -33,7 +33,7 @@ router.get('/pubs', async function (req, res, next) {
 })
 
 
-/* GET pub by ID. */
+/* GET pub by ID. */ // NO NEED!
 router.get('/pubs/:id', async function (req, res, next) {
   // TODO: Check access - is user allowed to access this publication?
   const id = parseInt(req.params.id)

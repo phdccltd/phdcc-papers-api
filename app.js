@@ -76,7 +76,7 @@ async function checkDatabases() {
       try {
         const privatesettings = JSON.parse(sitedb.privatesettings)
         const publicsettings = JSON.parse(sitedb.publicsettings)
-        const site = {id: sitedb.id, url: sitedb.url, name: sitedb.name, privatesettings: privatesettings ? privatesettings : {}, publicsettings: publicsettings ? publicsettings : {} }
+        const site = { id: sitedb.id, url: sitedb.url, name: sitedb.name, privatesettings: privatesettings ? privatesettings : {}, publicsettings: publicsettings ? publicsettings : {} }
         sites.push(site)
       } catch (e) {
         console.error('SYNTAX ERROR IN settings for site', sitedb.id, sitedb.privatesettings, sitedb.publicsettings)

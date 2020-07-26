@@ -9,6 +9,7 @@ const utils = require('../utils')
 const auth = require('./auth')
 const pubsRouter = require('./pubs')
 const submitsRouter = require('./submits')
+const sitepagesRouter = require('./sitepages')
 
 const router = Router()
 
@@ -60,6 +61,9 @@ router.use(function (req, res, next) {
     next()
   }
 });
+
+/* GET: SITEPAGES */
+router.use(sitepagesRouter)
 
 //////////////////////
 /* POST: HANDLE LOGIN ATTEMPT */

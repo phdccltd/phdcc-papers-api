@@ -261,6 +261,7 @@ function getuser(req, res) {
     name: req.user.name,
     super: req.user.super,
     publicsettings: req.site.publicsettings,
+    sitepages: req.site.sitepages,
   }
   utils.returnOK(req, res, rvuser, 'user')
 }
