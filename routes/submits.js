@@ -50,20 +50,17 @@ router.get('/submits/:pubid', async function (req, res, next) {
         flow.stages.push(models.sanitise(models.flowstages, dbstage))
       }
       for (const dbsubmit of dbsubmits) {
-        //console.log('submit', dbsubmit.name)
         const submit = models.sanitise(models.submits, dbsubmit)
-        const dbentries = await dbsubmit.getEntries()
+        const dbentries = await dbsubmit.getEntries({
+          include: { model: models.flowstages },
+          order: [
+            [models.flowstages, 'weight', 'ASC'],
+          ]
+        })
         submit.entries = []
         for (const dbentry of dbentries) {
-          //console.log('dbentry', dbentry)
           submit.entries.push(models.sanitise(models.entries, dbentry))
         }
-        submit.entries.sort((a, b) => {
-          console.log('entry', a.flowstageId, b.flowstageId)
-          const stagea = _.find(flow.stages, stage => { return stage.id === a.flowstageId })
-          const stageb = _.find(flow.stages, stage => { return stage.id === b.flowstageId })
-          return stagea.weight - stageb.weight
-        })
         flow.submits.push(submit)
       }
       //console.log('flow=', flow)
