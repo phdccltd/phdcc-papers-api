@@ -1,15 +1,81 @@
-const _ = require('lodash/core')
 const { Router } = require('express')
 const models = require('../models')
 const utils = require('../utils')
 
 const router = Router()
 
+/* GET entry */
+router.get('/submits/entry/:entryid', async function (req, res, next) {
+  try {
+    const entryid = parseInt(req.params.entryid)
+    console.log('GET /submits/entry/', entryid, req.user.id)
+
+    if (!Number.isInteger(req.user.id)) return utils.giveup(req, res, 'Invalid req.user.id')
+
+    const dbentry = await models.entries.findByPk(entryid)
+    if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
+
+    const dbsubmit = await models.submits.findByPk(dbentry.submitId)
+    if (!dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
+
+    if (dbsubmit.userId !== req.user.id) return utils.giveup(req, res, 'Not your submit entry')
+
+
+    const entry = models.sanitise(models.entries, dbentry)
+    
+    const dbentryvalues = await dbentry.getEntryValues()
+    entry.values = []
+    for (const dbentryvalue of dbentryvalues) {
+      const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
+      entry.values.push(entryvalue)
+    }
+
+    const dbformfields = await models.formfields.findAll({
+      where: {
+        formtypeid: dbentry.flowstageId
+      },
+      order: [
+        ['weight', 'ASC']
+      ]
+    })
+    entry.fields = []
+    entry.publookups = []
+    for (const dbformfield of dbformfields) {
+      const formfield = models.sanitise(models.formfields, dbformfield)
+      entry.fields.push(formfield)
+      if (dbformfield.publookupId) {
+        const publookup = entry.publookups.find(pl => pl.id === dbformfield.publookupId)
+        if (!publookup) {
+          const dbpublookup = await models.publookups.findByPk(dbformfield.publookupId)
+          if (!dbpublookup) return utils.giveup(req, res, 'Duff dbformfield.publookupId found' + dbformfield.publookupId)
+          const publookup = models.sanitise(models.publookups, dbpublookup)
+          const dbpublookupvalues = await dbpublookup.getPubLookupValues({
+            order: [
+              ['weight', 'ASC']
+            ]
+          })
+          publookup.values = []
+          for (const dbpublookupvalue of dbpublookupvalues) {
+            const publookupvalue = models.sanitise(models.publookupvalues, dbpublookupvalue)
+            publookup.values.push(publookupvalue)
+          }
+          entry.publookups.push(publookup)
+        }
+      }
+    }
+
+    //console.log('entry', entry)
+    utils.returnOK(req, res, entry, 'entry')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+})
+
 /* GET submits for publication. */
-router.get('/submits/:pubid', async function (req, res, next) {
+router.get('/submits/pub/:pubid', async function (req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
-    console.log('GET /submits', pubid, req.user.id)
+    console.log('GET /submits/pub/', pubid, req.user.id)
 
     if (!Number.isInteger(req.user.id)) return utils.giveup(req, res, 'Invalid req.user.id')
 

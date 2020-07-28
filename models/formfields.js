@@ -1,0 +1,29 @@
+//  Created after all models made
+
+const Sequelize = require('sequelize')
+
+module.exports = (sequelize, DataTypes) => {
+  const fields = {
+    // id, createdAt and updatedAt: added automatically
+    formtype: { type: Sequelize.INTEGER, allowNull: false },
+    formtypeid: { type: Sequelize.INTEGER, allowNull: false },
+    label: { type: Sequelize.STRING, allowNull: false },
+    help: { type: Sequelize.STRING, allowNull: false },
+    weight: { type: Sequelize.INTEGER, allowNull: false },
+    type: { type: Sequelize.STRING, allowNull: false },
+    required: { type: DataTypes.BOOLEAN, allowNull: false },
+    requiredif: { type: Sequelize.STRING, allowNull: false },
+    maxwords: { type: Sequelize.INTEGER, allowNull: true },
+    maxchars: { type: Sequelize.INTEGER, allowNull: true },
+  }
+  const formfields = sequelize.define('formfields', fields)
+  formfields.fields = fields
+
+  formfields.associate = function (dbs) {
+    // Adds formfields.publookupid Sequelize.INTEGER allowNull:true
+    dbs.publookups.hasMany(dbs.formfields, { foreignKey: { allowNull: true }, onDelete: 'RESTRICT' })  // Cannot delete pub while publookups exist
+    dbs.formfields.belongsTo(dbs.publookups, { foreignKey: { allowNull: true } })
+  }
+
+  return formfields
+}
