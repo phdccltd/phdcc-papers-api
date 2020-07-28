@@ -23,8 +23,8 @@ module.exports = (sequelize, DataTypes) => {
     dbs.entries.hasMany(dbs.entryvalues, { as: 'EntryValues', foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete entry while entryvalues exist
     dbs.entryvalues.belongsTo(dbs.entries, { foreignKey: { allowNull: false } })
 
-    dbs.entries.fields.formfieldId = true
-    dbs.entries.fields.entryId = true
+    dbs.entryvalues.fields.formfieldId = true
+    dbs.entryvalues.fields.entryId = true
 }
 
   return entryvalues
