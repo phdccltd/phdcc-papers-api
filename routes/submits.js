@@ -4,7 +4,7 @@ const utils = require('../utils')
 
 const router = Router()
 
-/* GET entry */
+/* GET entry and associated formfields */
 router.get('/submits/entry/:entryid', async function (req, res, next) {
   try {
     const entryid = parseInt(req.params.entryid)
@@ -33,6 +33,56 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     const dbformfields = await models.formfields.findAll({
       where: {
         formtypeid: dbentry.flowstageId
+      },
+      order: [
+        ['weight', 'ASC']
+      ]
+    })
+    entry.fields = []
+    entry.publookups = []
+    for (const dbformfield of dbformfields) {
+      const formfield = models.sanitise(models.formfields, dbformfield)
+      entry.fields.push(formfield)
+      if (dbformfield.publookupId) {
+        const publookup = entry.publookups.find(pl => pl.id === dbformfield.publookupId)
+        if (!publookup) {
+          const dbpublookup = await models.publookups.findByPk(dbformfield.publookupId)
+          if (!dbpublookup) return utils.giveup(req, res, 'Duff dbformfield.publookupId found' + dbformfield.publookupId)
+          const publookup = models.sanitise(models.publookups, dbpublookup)
+          const dbpublookupvalues = await dbpublookup.getPubLookupValues({
+            order: [
+              ['weight', 'ASC']
+            ]
+          })
+          publookup.values = []
+          for (const dbpublookupvalue of dbpublookupvalues) {
+            const publookupvalue = models.sanitise(models.publookupvalues, dbpublookupvalue)
+            publookup.values.push(publookupvalue)
+          }
+          entry.publookups.push(publookup)
+        }
+      }
+    }
+
+    //console.log('entry', entry)
+    utils.returnOK(req, res, entry, 'entry')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+})
+
+/* GET formfields for specified flowstageId*/
+router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
+  try {
+    const flowstageId = parseInt(req.params.flowstageId)
+    console.log('GET /submits/formfields/', flowstageId, req.user.id)
+
+    if (!Number.isInteger(req.user.id)) return utils.giveup(req, res, 'Invalid req.user.id')
+
+    const entry = {}
+    const dbformfields = await models.formfields.findAll({
+      where: {
+        formtypeid: flowstageId
       },
       order: [
         ['weight', 'ASC']
