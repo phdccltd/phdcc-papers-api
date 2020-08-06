@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
     weight: { type: Sequelize.INTEGER, allowNull: false },
-    name: { type: Sequelize.STRING, allowNull: false },
+    text: { type: Sequelize.STRING, allowNull: false },
   }
   const publookupvalues = sequelize.define('publookupvalues', fields)
   publookupvalues.fields = fields
