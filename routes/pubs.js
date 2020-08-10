@@ -1,4 +1,5 @@
 const { Router } = require('express')
+const Sequelize = require('sequelize')
 const models = require('../models')
 const utils = require('../utils')
 
@@ -22,9 +23,27 @@ router.get('/pubs', async function (req, res, next) {
       dbpubs = await req.user.getPublications(order)
     }
 
+    // Sanitise and get associated publookups/publookupvalues
     const pubs = []
     for (const dbpub of dbpubs) {
-      pubs.push(models.sanitise(models.pubs, dbpub))
+      const pub = models.sanitise(models.pubs, dbpub)
+      pub.publookups = []
+      const dbpublookups = await dbpub.getPubLookups()
+      for (const dbpublookup of dbpublookups) {
+        const publookup = models.sanitise(models.publookups, dbpublookup)
+        const dbpublookupvalues = await dbpublookup.getPubLookupValues({
+          order: [
+            ['weight', 'ASC']
+          ]
+        })
+        publookup.values = []
+        for (const dbpublookupvalue of dbpublookupvalues) {
+          const publookupvalue = models.sanitise(models.publookupvalues, dbpublookupvalue)
+          publookup.values.push(publookupvalue)
+        }
+        pub.publookups.push(publookup)
+      }
+      pubs.push(pub)
     }
     utils.returnOK(req, res, pubs, 'pubs')
   } catch (e) {

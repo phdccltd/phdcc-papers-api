@@ -43,25 +43,6 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     for (const dbformfield of dbformfields) {
       const formfield = models.sanitise(models.formfields, dbformfield)
       entry.fields.push(formfield)
-      if (dbformfield.publookupId) {
-        const publookup = entry.publookups.find(pl => pl.id === dbformfield.publookupId)
-        if (!publookup) {
-          const dbpublookup = await models.publookups.findByPk(dbformfield.publookupId)
-          if (!dbpublookup) return utils.giveup(req, res, 'Duff dbformfield.publookupId found' + dbformfield.publookupId)
-          const publookup = models.sanitise(models.publookups, dbpublookup)
-          const dbpublookupvalues = await dbpublookup.getPubLookupValues({
-            order: [
-              ['weight', 'ASC']
-            ]
-          })
-          publookup.values = []
-          for (const dbpublookupvalue of dbpublookupvalues) {
-            const publookupvalue = models.sanitise(models.publookupvalues, dbpublookupvalue)
-            publookup.values.push(publookupvalue)
-          }
-          entry.publookups.push(publookup)
-        }
-      }
     }
 
     //console.log('entry', entry)
@@ -93,25 +74,6 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
     for (const dbformfield of dbformfields) {
       const formfield = models.sanitise(models.formfields, dbformfield)
       entry.fields.push(formfield)
-      if (dbformfield.publookupId) {
-        const publookup = entry.publookups.find(pl => pl.id === dbformfield.publookupId)
-        if (!publookup) {
-          const dbpublookup = await models.publookups.findByPk(dbformfield.publookupId)
-          if (!dbpublookup) return utils.giveup(req, res, 'Duff dbformfield.publookupId found' + dbformfield.publookupId)
-          const publookup = models.sanitise(models.publookups, dbpublookup)
-          const dbpublookupvalues = await dbpublookup.getPubLookupValues({
-            order: [
-              ['weight', 'ASC']
-            ]
-          })
-          publookup.values = []
-          for (const dbpublookupvalue of dbpublookupvalues) {
-            const publookupvalue = models.sanitise(models.publookupvalues, dbpublookupvalue)
-            publookup.values.push(publookupvalue)
-          }
-          entry.publookups.push(publookup)
-        }
-      }
     }
 
     //console.log('entry', entry)
