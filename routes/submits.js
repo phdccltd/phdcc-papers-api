@@ -3,7 +3,7 @@ const models = require('../models')
 const utils = require('../utils')
 const multer = require('multer')
 const fs = require('fs')
-const path = require('path')
+const mime = require('mime-types')
 
 const upload = multer({ dest: '/tmp/papers/' })
 
@@ -120,15 +120,15 @@ router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, ne
 
     if (dbentryvalue.file === null) return utils.giveup(req, res, 'No file for that entry')
 
-    // https://expressjs.com/en/api.html#res.sendFile
-    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    const ContentType = mime.lookup(dbentryvalue.file)
+    //console.log('ContentType', ContentType)
     const filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
     var options = {
       root: filesdir,
       dotfiles: 'deny',
-      //headers: {
-      //  'x-timestamp': Date.now(),
-      //}
+      headers: {
+        'Content-Type': ContentType,
+      }
     }
     res.sendFile(dbentryvalue.file, options)
 
