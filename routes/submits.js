@@ -1,8 +1,141 @@
 const { Router } = require('express')
 const models = require('../models')
 const utils = require('../utils')
+const multer = require('multer')
+const fs = require('fs')
+const path = require('path')
+
+const upload = multer({ dest: '/tmp/papers/' })
 
 const router = Router()
+
+/* POST add entry
+    Get FormData using https://www.npmjs.com/package/multer
+    This copes with files but means that form values are all (JSON) strings which will need parsed if an object
+
+    multer uplod sets req.file eg as follows:
+    { fieldname: 'file',
+      originalname: 'Damsons.doc',
+      encoding: '7bit',
+      mimetype: 'application/msword',
+      destination: '/tmp/papers/',
+      filename: 'ce0060fb35a0c91555c7d24136a58581',
+      path: '/tmp/papers/ce0060fb35a0c91555c7d24136a58581',
+      size: 38912 }
+*/
+router.post('/submits/entry', upload.single('file'), async function (req, res, next) {
+  try {
+    //console.log('x-http-method-override', req.headers['x-http-method-override'])
+    //console.log('/submits/entry req.body', req.body)
+    //console.log('/submits/entry req.file', req.file)
+
+    const filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
+    //console.log('/submits/entry filesdir', filesdir)
+
+    const now = new Date()
+    const entry = {
+      dt: now,
+      submitId: req.body.submitid,
+      flowstageId: req.body.stageid
+    }
+    const dbentry = await models.entries.create(entry);
+    if (!dbentry) return utils.giveup(req, res, 'Could not create entry')
+    //const dbentry = {id:999}
+    console.log('CREATED entry', dbentry.id)
+
+    let filepath = null
+    if (req.file) {
+      if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
+      // Move file to filesdir/<siteid>/<pubid>/<flowid>/<submitid>/<entryid>/
+      filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.body.submitid + '/' + dbentry.id
+      fs.mkdirSync(filesdir + filepath, { recursive: true })
+      filepath += '/' + req.file.originalname
+      fs.renameSync(req.file.path, filesdir + filepath)
+    }
+
+    for (const sv of req.body.values) {
+      const v = JSON.parse(sv)
+      if (v.file) v.file = filepath
+      const entryvalue = {
+        entryId: dbentry.id,
+        formfieldId: v.formfieldid,
+        string: v.string,
+        text: v.text,
+        integer: v.integer,
+        file: v.file,
+      }
+      const dbentryvalue = await models.entryvalues.create(entryvalue);
+      if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
+      console.log('CREATED entryvalue', dbentryvalue.id)
+    }
+
+    utils.returnOK(req, res, dbentry.id, 'id')
+  } catch (e) {
+  utils.giveup(req, res, e.message)
+}
+})
+  // PUT change whole entry
+  // PATCH change part of entry
+  // DELETE delete entry
+
+async function deleteEntry(req, res, next) {
+  try {
+    console.log('deleteEntry', req.params.entryid)
+    let affectedRows = await models.entryvalues.destroy({ where: { entryId: req.params.entryid } });
+    affectedRows = await models.entries.destroy({ where: { id: req.params.entryid } });
+    const ok = affectedRows === 1
+    utils.returnOK(req, res, ok, 'ok')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+}
+
+
+/* POST DELETE entry*/
+router.post('/submits/entry/:entryid', async function (req, res, next) {
+  if (req.headers['x-http-method-override'] === 'DELETE') {
+    deleteEntry(req, res, next)
+    return
+  }
+  utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
+})
+
+/* GET file for entry formfield */
+router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, next) {
+  try {
+    const entryid = parseInt(req.params.entryid)
+    const entryvalueid = parseInt(req.params.entryvalueid)
+    console.log('GET /submits/entry/ file', entryid, entryvalueid, req.user.id)
+    if (!Number.isInteger(req.user.id)) return utils.giveup(req, res, 'Invalid req.user.id')
+
+    const dbentry = await models.entries.findByPk(entryid)
+    if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
+
+    const dbentryvalue = await models.entryvalues.findByPk(entryvalueid)
+    if (!dbentryvalue) return utils.giveup(req, res, 'Invalid entryvalueid')
+
+    const refEntry = await dbentryvalue.getEntry()
+    if (!refEntry) return utils.giveup(req, res, 'Invalid refEntry')
+    if (refEntry.id!==entryid) return utils.giveup(req, res, 'Invalid refEntry.')
+
+    if (dbentryvalue.file === null) return utils.giveup(req, res, 'No file for that entry')
+
+    // https://expressjs.com/en/api.html#res.sendFile
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    const filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
+    var options = {
+      root: filesdir,
+      dotfiles: 'deny',
+      //headers: {
+      //  'x-timestamp': Date.now(),
+      //}
+    }
+    res.sendFile(dbentryvalue.file, options)
+
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+})
 
 /* GET entry and associated formfields */
 router.get('/submits/entry/:entryid', async function (req, res, next) {
