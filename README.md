@@ -1,6 +1,6 @@
 # phdcc-papers-api
 
-API for the [PHDCC conference abstract and paper submission and review system](https://www.phdcc.com/papers/).
+API for the **Papers** [PHDCC journal/conference abstract and paper submission and review system](https://www.phdcc.com/papers/).
 
 This API is intended for use in conjunction with [phdcc-papers](https://github.com/chriscant/phdcc-papers).
 
@@ -37,7 +37,7 @@ Include /etc/letsencrypt/options-ssl-apache.conf
 ```
 
 
-Create a `.env` text file with the following secret
+Create a `.env` text file with the following secrets
 
 ```PORT=portno
 DATABASE='dbname'
