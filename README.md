@@ -1,12 +1,12 @@
-# nuxt.papers
+# phdcc-papers-api
 
 API for conference abstract and paper submission and review system
 
-This API is intended fgor use in conjunction with (phdcc-papers)[https://github.com/chriscant/phdcc-papers]
+This API is intended for use in conjunction with [phdcc-papers](https://github.com/chriscant/phdcc-papers).
 
 This nodejs API code can be set up to listen for web requests on an internal port.
 The public-facing server for a website will use a proxy to pass requests at `/api` to the API port.
-Example Apache config for the API and the main website running (phdcc-papers)[https://github.com/chriscant/phdcc-papers].
+This isn example Apache conf for the API and the main website [phdcc-papers](https://github.com/chriscant/phdcc-papers).
 
 ```<IfModule mod_ssl.c>
 <VirtualHost *:443>
@@ -33,7 +33,8 @@ SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
 SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
 Include /etc/letsencrypt/options-ssl-apache.conf
 </VirtualHost>
-</IfModule>```
+</IfModule>
+```
 
 
 Create a `.env` text file with the following secret
