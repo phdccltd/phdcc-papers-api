@@ -1,4 +1,3 @@
-// http://localhost:9000/api/users
 process.env.STANDALONE = true
 require('dotenv').config()
 console.log('process.env.NODE_ENV', process.env.NODE_ENV)
