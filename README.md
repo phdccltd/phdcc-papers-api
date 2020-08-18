@@ -1,6 +1,6 @@
 # phdcc-papers-api
 
-API for conference abstract and paper submission and review system
+API for the [PHDCC conference abstract and paper submission and review system](https://www.phdcc.com/papers/).
 
 This API is intended for use in conjunction with [phdcc-papers](https://github.com/chriscant/phdcc-papers).
 
@@ -43,7 +43,7 @@ Create a `.env` text file with the following secret
 DATABASE='dbname'
 DBUSER='dbuser'
 DBPASS='dbpassword'
-LOGSQL=false - sety to true if you want all sequelize SQL logged
+LOGSQL=false - set to true if you want all sequelize SQL logged
 LOGMODE=console - if you want logger output to the console
 BASEURL=/api
 JWT_SECRET='Secret used in authentication'
