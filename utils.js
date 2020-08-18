@@ -8,7 +8,7 @@ let sitename = false
 //////////////////////
 // Report error but don't call next
 function exterminate(req, res, err) {
-  logger.error("EXTERMINATE", err)
+  logger.error4req(req, "EXTERMINATE", err)
   res.status(200).json({ ret: 1, status: err.message })
   return false;
 }
@@ -16,7 +16,7 @@ function exterminate(req, res, err) {
 //////////////////////
 // Report error but don't call next
 function giveup(req, res, msg) {
-  logger.log('GIVEUP', msg)
+  logger.log4req(req, 'GIVEUP', msg)
   res.status(200).json({ ret: 1, status: msg })
   return false
 }

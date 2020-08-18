@@ -19,10 +19,44 @@ const logstream = rfs.createStream('papersapp.log', {
 })
 
 function log() {
+  return logfull('info', false, ...arguments)
+}
+module.exports.log = log
+
+// warn4req(req,messages)
+function warn4req() {
+  return logfull('warning', ...arguments)
+}
+module.exports.warn4req = warn4req
+
+// log4req(req,messages)
+function log4req() {
+  return logfull('info', ...arguments)
+}
+module.exports.log4req = log4req
+
+// logfull(level,req,messages)
+function logfull() {
+  let userip = null
+  let userid = null
+  let level = null
+  let originalUrl = null
+  if (arguments.length >= 1) {
+    level = arguments[0]
+    if (level !== 'info' && level !== 'warning' && level !== 'error') level = null
+  }
+  if (arguments.length >= 2) {
+    const req = arguments[1]
+    if (req) {
+      userip = req.headers['x-forwarded-for'] // x-forwarded-server
+      if (req.user) userid = req.user.id
+      originalUrl = req.originalUrl
+    }
+  }
   const now = (new Date()).toISOString()
   logstream.write(now)
   const argstring = []
-  for (const i in arguments) {
+  for (let i = 2; i < arguments.length; i++) {
     argstring.push(JSON.stringify(arguments[i]))
   }
   const allargstring = argstring.join(' ')
@@ -34,7 +68,13 @@ function log() {
   try {
     if (models) {
       if (allargstring.indexOf('`logs`') === -1) {  // Don't log to db writing to the logs!
-        models.logs.create({ msg: allargstring })
+        models.logs.create({
+          ip: userip,
+          userid: userid,
+          level: level,
+          url: originalUrl,
+          msg: allargstring
+        })
       }
     }
   } catch (e) {
@@ -42,7 +82,7 @@ function log() {
   }
   return allargstring
 }
-module.exports.log = log
+module.exports.logfull = logfull
 
 function logdb1() {   // Only logs first parameter to avoid sequelize log error: Converting circular structure to JSON
   if (process.env.LOGSQL && process.env.LOGSQL.toLowerCase()=='true') {
@@ -53,16 +93,23 @@ function logdb1() {   // Only logs first parameter to avoid sequelize log error:
 }
 module.exports.logdb1 = logdb1
 
+// error(messages)
 function error() {
-  const allargstring = log(arguments)
-  utils.async_mail(false, utils.getSiteName() + ' error ' + arguments[0], allargstring)
+  error4req(false, ...arguments)
 }
 module.exports.error = error
+
+// error4req(req,messages)
+function error4req() {
+  const allargstring = logfull('error', ...arguments)
+  utils.async_mail(false, utils.getSiteName() + ' error ' + arguments[1], allargstring)
+}
+module.exports.error4req = error4req
 
 function setModels(m) {
   models = m
 }
 module.exports.setModels = setModels
 
-log("STARTED")
+log('LOGGER LOADED')
 

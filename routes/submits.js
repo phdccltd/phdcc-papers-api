@@ -3,15 +3,20 @@ const models = require('../models')
 const utils = require('../utils')
 const multer = require('multer')
 const fs = require('fs')
+const path = require('path')
 const mime = require('mime-types')
+const logger = require('../logger')
 
-const upload = multer({ dest: '/tmp/papers/' })
+const TMPDIR = '/tmp/papers/'
+const TMPDIRARCHIVE = '/tmp/papers/archive'  // Without final slash.  Deleted files go here (to be deleted on server reboot)
+
+const upload = multer({ dest: TMPDIR })
 
 const router = Router()
 
 /* POST add entry
     Get FormData using https://www.npmjs.com/package/multer
-    This copes with files but means that form values are all (JSON) strings which will need parsed if an object
+    This copes with ONE file but means that form values are all (JSON) strings which will need parsed if an object
 
     multer uplod sets req.file eg as follows:
     { fieldname: 'file',
@@ -25,12 +30,10 @@ const router = Router()
 */
 router.post('/submits/entry', upload.single('file'), async function (req, res, next) {
   try {
-    //console.log('x-http-method-override', req.headers['x-http-method-override'])
     //console.log('/submits/entry req.body', req.body)
     //console.log('/submits/entry req.file', req.file)
 
-    const filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
-    //console.log('/submits/entry filesdir', filesdir)
+    const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
 
     const now = new Date()
     const entry = {
@@ -40,8 +43,7 @@ router.post('/submits/entry', upload.single('file'), async function (req, res, n
     }
     const dbentry = await models.entries.create(entry);
     if (!dbentry) return utils.giveup(req, res, 'Could not create entry')
-    //const dbentry = {id:999}
-    console.log('CREATED entry', dbentry.id)
+    logger.log4req(req, 'CREATED entry', dbentry.id)
 
     let filepath = null
     if (req.file) {
@@ -51,6 +53,7 @@ router.post('/submits/entry', upload.single('file'), async function (req, res, n
       fs.mkdirSync(filesdir + filepath, { recursive: true })
       filepath += '/' + req.file.originalname
       fs.renameSync(req.file.path, filesdir + filepath)
+      logger.log4req(req, 'Uploaded file', filesdir + filepath)
     }
 
     for (const sv of req.body.values) {
@@ -66,7 +69,7 @@ router.post('/submits/entry', upload.single('file'), async function (req, res, n
       }
       const dbentryvalue = await models.entryvalues.create(entryvalue);
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
-      console.log('CREATED entryvalue', dbentryvalue.id)
+      logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
     }
 
     utils.returnOK(req, res, dbentry.id, 'id')
@@ -81,8 +84,52 @@ router.post('/submits/entry', upload.single('file'), async function (req, res, n
 async function deleteEntry(req, res, next) {
   try {
     console.log('deleteEntry', req.params.entryid)
-    let affectedRows = await models.entryvalues.destroy({ where: { entryId: req.params.entryid } });
-    affectedRows = await models.entries.destroy({ where: { id: req.params.entryid } });
+
+    // Find entry and entryvalues; move any files to TMPDIRARCHIVE
+    const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+
+    const entryid = parseInt(req.params.entryid)
+    const dbentry = await models.entries.findByPk(entryid)
+    if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
+
+    const dbentryvalues = await dbentry.getEntryValues()
+    for (const dbentryvalue of dbentryvalues) {
+      if (dbentryvalue.file != null) {
+        let base = path.dirname(dbentryvalue.file)
+        const filename = path.basename(dbentryvalue.file)
+        //console.log('base', base, filename)
+        fs.mkdirSync(TMPDIRARCHIVE + base, { recursive: true })
+        const frompath = filesdir + dbentryvalue.file
+        if (!fs.existsSync(frompath)) {
+          logger.warn4req(req, 'FILE DOES NOT EXIST', frompath)
+        } else {
+          try {
+            fs.renameSync(frompath, TMPDIRARCHIVE + dbentryvalue.file)
+            logger.log4req(req, 'Archived file', frompath, TMPDIRARCHIVE + dbentryvalue.file)
+          } catch (e) {
+            logger.warn4req(req, 'COULD NOT MOVE', frompath, 'TO', TMPDIRARCHIVE + dbentryvalue.file)
+          }
+        }
+        // Delete any empty directories, down through hieracrhy
+        while (base !== '/') {
+          try {
+            fs.rmdirSync(filesdir+base)
+            logger.log4req(req, 'Removed directory', filesdir + base)
+          } catch (e) {
+            break
+          }
+          const dirname = path.basename(base)
+          base = path.dirname(base)
+        }
+      }
+    }
+
+    // Finally delete the entryvalues and entry
+    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } });
+    logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
+    affectedRows = await models.entries.destroy({ where: { id: entryid } });
+    logger.log4req(req, 'Deleted entry', entryid, affectedRows)
+
     const ok = affectedRows === 1
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
@@ -131,7 +178,7 @@ router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, ne
       }
     }
     res.sendFile(dbentryvalue.file, options)
-
+    logger.log4req(req, 'Sending file', dbentryvalue.file)
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
@@ -152,7 +199,6 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     if (!dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
 
     if (dbsubmit.userId !== req.user.id) return utils.giveup(req, res, 'Not your submit entry')
-
 
     const entry = models.sanitise(models.entries, dbentry)
     
@@ -179,6 +225,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     }
 
     //console.log('entry', entry)
+    logger.log4req(req, 'Returning entry', entryid)
     utils.returnOK(req, res, entry, 'entry')
   } catch (e) {
     utils.giveup(req, res, e.message)
@@ -210,6 +257,7 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
     }
 
     //console.log('entry', entry)
+    logger.log4req(req, 'Returning formfields', flowstageId)
     utils.returnOK(req, res, entry, 'entry')
   } catch (e) {
     utils.giveup(req, res, e.message)
@@ -289,26 +337,8 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
       flows.push(flow)
     }
 
+    logger.log4req(req, 'Returning flows', pubid)
     utils.returnOK(req, res, flows, 'flows')
-/*    const order = {
-      order: [
-        ['startdate', 'ASC']
-      ]
-    }
-    let dbsubmits = false
-    if (req.user.super) {
-      dbsubmits = await models.submits.findAll(order)
-    } else {
-      // TODO: CHECK ACCESS RIGHTS???
-      pub.getFlows
-      const dbpubs = await req.user.getPublications(order)
-    }
-
-    const submits = []
-    for (const dbsubmit of dbsubmits) {
-      submits.push(models.sanitise(models.submits, dbsubmit))
-    }
-    utils.returnOK(req, res, submits, 'submits')*/
   } catch (e) {
     utils.giveup(req, res, e.message)
   }

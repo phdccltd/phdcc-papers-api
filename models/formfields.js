@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     type: { type: Sequelize.STRING, allowNull: false },
     required: { type: DataTypes.BOOLEAN, allowNull: false },
     requiredif: { type: Sequelize.STRING, allowNull: false },
+    allowedfiletypes: { type: Sequelize.STRING, allowNull: true },
     maxwords: { type: Sequelize.INTEGER, allowNull: true },
     maxchars: { type: Sequelize.INTEGER, allowNull: true },
   }

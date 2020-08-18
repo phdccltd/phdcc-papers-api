@@ -135,7 +135,7 @@ app.use(function (req, res, next) {
   const userip = req.headers['x-forwarded-for'] // x-forwarded-server
   req.userip = userip
   console.log('=== ', req.url)
-  logger.log(userip, "+++Route:", process.env.BASEURL, req.url)
+  logger.log4req(req, "+++Route:", process.env.BASEURL, req.url)
   //console.log(req.headers)
   next()
 })
@@ -151,7 +151,7 @@ app.use(apiRouter.router)
 // catch everything else
 app.use(function (req, res, next) {
   console.log('UNROUTED', req.url, req.method, req.headers)
-  logger.error("Unrouted request:", req.url)
+  logger.error4req("Unrouted request:", req.url)
   next(createError(404, 'Unrecognised request'))
 })
 

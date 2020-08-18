@@ -76,7 +76,7 @@ function login(req, res, next) {
           //console.log("authenticate OVER:", err, info)
           if (info) {
             //logger.log("login authenticate info", user, info.message)
-            logger.log("login authenticate info", info.message)
+            logger.log4req(req, "login authenticate info", info.message)
           } else info = ''
 
           if (err || !user) {
@@ -92,7 +92,7 @@ function login(req, res, next) {
               console.log("req.logIn err", err)
               return utils.giveup(req, res, err.message)
             }
-            logger.log("LOGGED IN", user.username, user.id)
+            logger.log4req(req, 'LOGGED IN', user.username, user.id)
             const ppuser = { id: user.id }
             const token = jwt.sign({ ppuser }, process.env.JWT_SECRET)
             utils.returnOK(req, res, token, 'token')
@@ -223,7 +223,7 @@ function loaduser(req, res, next) {
         // DOUBLE-CHECK THAT USER OK?
         const user = await models.users.findByPk(ppuser.id)
         if (!user) {
-          logger.log('Stale login', ppuser.id)
+          logger.log4req(req, 'Stale login', ppuser.id)
           return utils.giveup(req, res, 'Stale login')
         }
         req.user = user
@@ -232,11 +232,11 @@ function loaduser(req, res, next) {
           console.log('AUTH LOADUSER ppuser refreshed', newppuser, ppuser)
         }
         req.ppuser = newppuser
-        logger.log('User is', req.ppuser.id, req.user.username, req.user.name)
+        logger.log4req(req, 'User is', req.ppuser.id, req.user.username, req.user.name)
         next()
         return
       }
-      logger.log('LOGIN TOKEN FAIL', err, info)
+      logger.log4req(req, 'LOGIN TOKEN FAIL', err, info)
       return utils.giveup(req, res, 'Not logged in')
     }
   )(req, res, next)
@@ -244,14 +244,14 @@ function loaduser(req, res, next) {
 
 /* DELETE: LOGOUT */
 function logout(req, res) {
-  logger.log("Logging out ", req.ppuser.id, req.user.username)
+  logger.log4req(req, "Logging out ", req.ppuser.id, req.user.username)
   req.logout()
   utils.returnOK(req, res, 'Logged out')
 }
 
 /* GET: GETUSER */
 function getuser(req, res) {
-  logger.log("getuser")
+  logger.log4req(req, "getuser")
   if (!req.ppuser) return utils.giveup(req, res, 'Not logged in unexpectedly')
   console.log(req.ppuser)
 
