@@ -14,6 +14,26 @@ const upload = multer({ dest: TMPDIR })
 
 const router = Router()
 
+  // PUT change whole entry
+  // PATCH change part of entry
+  // DELETE delete entry
+
+/* ************************ */
+/* POST DELETE and PUT entry */
+router.post('/submits/entry/:entryid', upload.single('file'), async function (req, res, next) {
+  //console.log('/submits/entry/id ', req.headers['x-http-method-override'])
+  if (req.headers['x-http-method-override'] === 'PUT') {
+    editEntry(req, res, next)
+    return
+  }
+  if (req.headers['x-http-method-override'] === 'DELETE') {
+    deleteEntry(req, res, next)
+    return
+  }
+  utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
+})
+
+/* ************************ */
 /* POST add entry
     Get FormData using https://www.npmjs.com/package/multer
     This copes with ONE file but means that form values are all (JSON) strings which will need parsed if an object
@@ -30,9 +50,6 @@ const router = Router()
 */
 router.post('/submits/entry', upload.single('file'), async function (req, res, next) {
   try {
-    //console.log('/submits/entry req.body', req.body)
-    //console.log('/submits/entry req.file', req.file)
-
     const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
 
     const now = new Date()
@@ -77,10 +94,86 @@ router.post('/submits/entry', upload.single('file'), async function (req, res, n
   utils.giveup(req, res, e.message)
 }
 })
-  // PUT change whole entry
-  // PATCH change part of entry
-  // DELETE delete entry
 
+/* ************************ */
+/* POST PUT edit entry */
+async function editEntry(req, res, next) {
+  try {
+    console.log('editEntry', req.params.entryid)
+    const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+
+    // Don't need to change anything in entry ie leave creation dt alone
+    const entryid = parseInt(req.params.entryid)
+    const dbentry = await models.entries.findByPk(entryid)
+    if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
+
+    // If replacement file given
+    let filepath = null
+    if (req.file) {
+      if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
+
+      // Find any existing file
+      const dbentryvalues = await dbentry.getEntryValues()
+      let existingfile = false
+      for (const dbentryvalue of dbentryvalues) {
+        if (dbentryvalue.file != null) {
+          existingfile = dbentryvalue.file
+          break
+        }
+      }
+      if (existingfile) {
+        const existingpath = filesdir + existingfile
+        if (fs.existsSync(existingpath)) {
+          const archivepath = TMPDIRARCHIVE + existingpath
+          if (fs.existsSync(archivepath)) {
+            // Do we need to delete?
+            console.log('editEntry archivepath exists')
+          }
+          let archivedir = path.dirname(archivepath)
+          // Make archive dir
+          fs.mkdirSync(archivedir, { recursive: true })
+          // Move existing file to archive
+          fs.renameSync(existingpath, archivepath)
+        }
+      }
+
+      filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.body.submitid + '/' + dbentry.id
+      fs.mkdirSync(filesdir + filepath, { recursive: true })
+      filepath += '/' + req.file.originalname
+      fs.renameSync(req.file.path, filesdir + filepath)
+      logger.log4req(req, 'Uploaded file', filesdir + filepath)
+    }
+
+    // OK: Now delete any existing entryvalues
+    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } });
+    logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
+
+    // And then store the new ones
+    for (const sv of req.body.values) {
+      const v = JSON.parse(sv)
+      if (v.file && filepath) v.file = filepath
+      else if (v.existingfile) v.file = v.existingfile
+      const entryvalue = {
+        entryId: dbentry.id,
+        formfieldId: v.formfieldid,
+        string: v.string,
+        text: v.text,
+        integer: v.integer,
+        file: v.file,
+      }
+      const dbentryvalue = await models.entryvalues.create(entryvalue);
+      if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
+      logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
+    }
+    logger.log4req(req, "entry's values updated", dbentry.id)
+    utils.returnOK(req, res, dbentry.id, 'id')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+}
+
+/* ************************ */
+/* POST DELETE entry */
 async function deleteEntry(req, res, next) {
   try {
     console.log('deleteEntry', req.params.entryid)
@@ -97,7 +190,6 @@ async function deleteEntry(req, res, next) {
       if (dbentryvalue.file != null) {
         let base = path.dirname(dbentryvalue.file)
         const filename = path.basename(dbentryvalue.file)
-        //console.log('base', base, filename)
         fs.mkdirSync(TMPDIRARCHIVE + base, { recursive: true })
         const frompath = filesdir + dbentryvalue.file
         if (!fs.existsSync(frompath)) {
@@ -137,16 +229,7 @@ async function deleteEntry(req, res, next) {
   }
 }
 
-
-/* POST DELETE entry*/
-router.post('/submits/entry/:entryid', async function (req, res, next) {
-  if (req.headers['x-http-method-override'] === 'DELETE') {
-    deleteEntry(req, res, next)
-    return
-  }
-  utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
-})
-
+/* ************************ */
 /* GET file for entry formfield */
 router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, next) {
   try {
@@ -168,7 +251,6 @@ router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, ne
     if (dbentryvalue.file === null) return utils.giveup(req, res, 'No file for that entry')
 
     const ContentType = mime.lookup(dbentryvalue.file)
-    //console.log('ContentType', ContentType)
     const filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
     var options = {
       root: filesdir,
@@ -184,6 +266,7 @@ router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, ne
   }
 })
 
+/* ************************ */
 /* GET entry and associated formfields */
 router.get('/submits/entry/:entryid', async function (req, res, next) {
   try {
@@ -232,6 +315,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
   }
 })
 
+/* ************************ */
 /* GET formfields for specified flowstageId*/
 router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
   try {
@@ -264,6 +348,7 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
   }
 })
 
+/* ************************ */
 /* GET submits for publication. */
 router.get('/submits/pub/:pubid', async function (req, res, next) {
   try {
@@ -279,7 +364,6 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
     const flows = []
     for (const dbflow of dbflows) {
       const flow = models.sanitise(models.flows, dbflow)
-      //console.log('flow', flow.name)
       flow.submits = []
       const dbsubmits = await dbflow.getSubmits({
         where: {
@@ -289,13 +373,11 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
       flow.statuses = []
       const dbstatuses = await dbflow.getFlowStatuses()
       for (const dbstatus of dbstatuses) {
-        //console.log('dbstatus', dbstatus.status)
         flow.statuses.push(models.sanitise(models.flowstatuses, dbstatus))
       }
       flow.acceptings = []
       const dbacceptings = await dbflow.getFlowAcceptings()
       for (const dbaccepting of dbacceptings) {
-        //console.log('dbaccepting', dbaccepting.open)
         flow.acceptings.push(models.sanitise(models.flowacceptings, dbaccepting))
       }
       flow.stages = []
@@ -305,7 +387,6 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         ]
       })
       for (const dbstage of dbstages) {
-        //console.log('dbstage', dbstage.open)
         flow.stages.push(models.sanitise(models.flowstages, dbstage))
       }
       for (const dbsubmit of dbsubmits) {
@@ -333,7 +414,6 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
 
         flow.submits.push(submit)
       }
-      //console.log('flow=', flow)
       flows.push(flow)
     }
 
