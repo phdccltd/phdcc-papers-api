@@ -27,7 +27,9 @@ router.post('/submits/entry/:entryid', upload.single('file'), async function (re
     return
   }
   if (req.headers['x-http-method-override'] === 'DELETE') {
-    deleteEntry(req, res, next)
+    req.entryid = req.params.entryid
+    const ok = deleteEntry(req, res, next)
+    utils.returnOK(req, res, ok, 'ok')
     return
   }
   utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
@@ -44,7 +46,7 @@ async function addEntry(req, res, next) {
       submitId: req.submitId,
       flowstageId: req.body.stageid
     }
-    const dbentry = await models.entries.create(entry);
+    const dbentry = await models.entries.create(entry)
     if (!dbentry) return utils.giveup(req, res, 'Could not create entry')
     logger.log4req(req, 'CREATED entry', dbentry.id)
 
@@ -70,7 +72,7 @@ async function addEntry(req, res, next) {
         integer: v.integer,
         file: v.file,
       }
-      const dbentryvalue = await models.entryvalues.create(entryvalue);
+      const dbentryvalue = await models.entryvalues.create(entryvalue)
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
       logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
     }
@@ -181,7 +183,7 @@ async function editEntry(req, res, next) {
     }
 
     // OK: Now delete any existing entryvalues
-    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } });
+    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } })
     logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
 
     // And then store the new ones
@@ -197,7 +199,7 @@ async function editEntry(req, res, next) {
         integer: v.integer,
         file: v.file,
       }
-      const dbentryvalue = await models.entryvalues.create(entryvalue);
+      const dbentryvalue = await models.entryvalues.create(entryvalue)
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
       logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
     }
@@ -212,12 +214,12 @@ async function editEntry(req, res, next) {
 /* POST DELETE entry */
 async function deleteEntry(req, res, next) {
   try {
-    console.log('deleteEntry', req.params.entryid)
+    console.log('deleteEntry', req.entryid)
 
     // Find entry and entryvalues; move any files to TMPDIRARCHIVE
     const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
 
-    const entryid = parseInt(req.params.entryid)
+    const entryid = parseInt(req.entryid)
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
@@ -253,13 +255,13 @@ async function deleteEntry(req, res, next) {
     }
 
     // Finally delete the entryvalues and entry
-    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } });
+    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } })
     logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
-    affectedRows = await models.entries.destroy({ where: { id: entryid } });
+    affectedRows = await models.entries.destroy({ where: { id: entryid } })
     logger.log4req(req, 'Deleted entry', entryid, affectedRows)
 
     const ok = affectedRows === 1
-    utils.returnOK(req, res, ok, 'ok')
+    return ok
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
@@ -460,8 +462,37 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
   }
 })
 
+/* ************************ */
+/* POST DELETE submit */
+router.post('/submits/:submitid', async function (req, res, next) {
+  try {
+    console.log('delete submit', req.params.submitid, req.headers['x-http-method-override'])
+    if (req.headers['x-http-method-override'] !== 'DELETE') return utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
 
-/* GET submit by ID. 
+    const submitid = parseInt(req.params.submitid)
+    const dbsubmit = await models.submits.findByPk(submitid)
+    if (!dbsubmit) return utils.giveup(req, res, "submit not found")
+
+    const dbentries = await dbsubmit.getEntries()
+    for (const dbentry of dbentries) {
+      console.log('To delete entry', dbentry.id)
+      req.entryid = dbentry.id
+      const ok = await deleteEntry(req, res, next)
+      if (!ok) return
+    }
+
+    console.log('To delete submit', submitid)
+    let affectedRows = await models.submits.destroy({ where: { id: submitid } })
+    const ok = affectedRows === 1
+    utils.returnOK(req, res, ok, 'ok')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+})
+
+/* ************************ */
+
+/* GET submit by ID.
 router.get('/submits/:id', async function (req, res, next) {
   // TODO: Check access - is user allowed to access this submission?
   const id = parseInt(req.params.id)
@@ -477,20 +508,20 @@ router.get('/submits/:id', async function (req, res, next) {
 
 /*
 app.get('/', (req, res) => {
-  return res.send('Received a GET HTTP method');
-});
+  return res.send('Received a GET HTTP method')
+})
 
 app.post('/', (req, res) => {
-  return res.send('Received a POST HTTP method');
-});
+  return res.send('Received a POST HTTP method')
+})
 
 app.put('/', (req, res) => {
-  return res.send('Received a PUT HTTP method');
-});
+  return res.send('Received a PUT HTTP method')
+})
 
 app.delete('/', (req, res) => {
-  return res.send('Received a DELETE HTTP method');
-});
+  return res.send('Received a DELETE HTTP method')
+})
 */
 
 module.exports = router

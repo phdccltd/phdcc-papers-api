@@ -29,7 +29,7 @@ function returnOK(req, res, msg, field) {
   if (field !== 'status') rv.status = 'OK'
   rv[field] = msg
   res.status(200).json(rv)
-  return false
+  return true
 }
 
 //////////////////////
