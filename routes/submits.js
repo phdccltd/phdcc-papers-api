@@ -34,28 +34,14 @@ router.post('/submits/entry/:entryid', upload.single('file'), async function (re
 })
 
 /* ************************ */
-/* POST add entry
-    Get FormData using https://www.npmjs.com/package/multer
-    This copes with ONE file but means that form values are all (JSON) strings which will need parsed if an object
-
-    multer uplod sets req.file eg as follows:
-    { fieldname: 'file',
-      originalname: 'Damsons.doc',
-      encoding: '7bit',
-      mimetype: 'application/msword',
-      destination: '/tmp/papers/',
-      filename: 'ce0060fb35a0c91555c7d24136a58581',
-      path: '/tmp/papers/ce0060fb35a0c91555c7d24136a58581',
-      size: 38912 }
-*/
-router.post('/submits/entry', upload.single('file'), async function (req, res, next) {
+async function addEntry(req, res, next) {
   try {
     const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
 
     const now = new Date()
     const entry = {
       dt: now,
-      submitId: req.body.submitid,
+      submitId: req.submitId,
       flowstageId: req.body.stageid
     }
     const dbentry = await models.entries.create(entry);
@@ -88,11 +74,61 @@ router.post('/submits/entry', upload.single('file'), async function (req, res, n
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
       logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
     }
-
-    utils.returnOK(req, res, dbentry.id, 'id')
+    const rv = {
+      id: dbentry.id,
+      submitid: req.submitId,
+    }
+    utils.returnOK(req, res, rv, 'rv')
   } catch (e) {
-  utils.giveup(req, res, e.message)
+    utils.giveup(req, res, e.message)
+  }
 }
+/* ************************ */
+/* POST add entry
+    Get FormData using https://www.npmjs.com/package/multer
+    This copes with ONE file but means that form values are all (JSON) strings which will need parsed if an object
+
+    multer uplod sets req.file eg as follows:
+    { fieldname: 'file',
+      originalname: 'Damsons.doc',
+      encoding: '7bit',
+      mimetype: 'application/msword',
+      destination: '/tmp/papers/',
+      filename: 'ce0060fb35a0c91555c7d24136a58581',
+      path: '/tmp/papers/ce0060fb35a0c91555c7d24136a58581',
+      size: 38912 }
+*/
+router.post('/submits/entry', upload.single('file'), async function (req, res, next) {
+  req.submitId = req.body.submitid
+  addEntry(req, res, next)
+})
+
+/* ************************ */
+/* POST add submit entry */
+router.post('/submits/submit/:flowid', upload.single('file'), async function (req, res, next) {
+  try {
+    console.log('addSubmitEntry', req.params.flowid)
+
+    const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+    const flowid = parseInt(req.params.flowid)
+
+    const now = new Date()
+    const submit = {
+      flowId: flowid,
+      userId: req.user.id,
+      name: req.body.title,
+      startdt: now
+    }
+    console.log('addSubmitEntry submit', submit)
+    const dbsubmit = await models.submits.create(submit)
+    if (!dbsubmit) return utils.giveup(req, res, 'Could not create submit')
+    logger.log4req(req, 'CREATED submit', dbsubmit.id)
+
+    req.submitId = dbsubmit.id
+    addEntry(req, res, next)
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
 })
 
 /* ************************ */
