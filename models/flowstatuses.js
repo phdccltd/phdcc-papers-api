@@ -11,6 +11,9 @@ module.exports = (sequelize, DataTypes) => {
     weight: { type: Sequelize.INTEGER, allowNull: false },
     status: { type: Sequelize.STRING(50), allowNull: false },
     ended: { type: DataTypes.BOOLEAN, allowNull: false },
+    // Don't bother making as FK:
+    submittedflowstageId: { type: Sequelize.INTEGER, allowNull: true },  // If this type of entry submitted, add this status
+    cansubmitflowstageId: { type: Sequelize.INTEGER, allowNull: true },  // If at this status, then this stage can be submitted
   }
   const flowstatuses = sequelize.define('flowstatuses', fields)
   flowstatuses.fields = fields

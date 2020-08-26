@@ -63,6 +63,7 @@ async function addEntry(req, res, next) {
 
     for (const sv of req.body.values) {
       const v = JSON.parse(sv)
+      if (v.string && v.string.length > 255) v.string = v.string.substring(0, 255)
       if (v.file) v.file = filepath
       const entryvalue = {
         entryId: dbentry.id,
@@ -76,11 +77,31 @@ async function addEntry(req, res, next) {
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
       logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
     }
+
     const rv = {
       id: dbentry.id,
       submitid: req.submitId,
     }
-    utils.returnOK(req, res, rv, 'rv')
+
+    // Add to submitstatuses
+    //console.log('addSubmitEntry flowstageid', req.body.stageid)
+    const flowstage = await models.flowstages.findByPk(req.body.stageid)
+    if (!flowstage) return utils.giveup(req, res, 'flowstageid not found: ' + req.body.stageid)
+
+    const flowstatuses = await models.flowstatuses.findAll({ where: { submittedflowstageId: req.body.stageid } })
+    for (const flowstatus of flowstatuses) {
+      const submitstatus = {
+        submitId: rv.submitid,
+        flowstatusId: flowstatus.id,
+      }
+      //console.log('addSubmitEntry submitstatus', submitstatus)
+      const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
+      if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
+      logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
+    }
+
+    // Return OK
+    return rv
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
@@ -102,11 +123,13 @@ async function addEntry(req, res, next) {
 */
 router.post('/submits/entry', upload.single('file'), async function (req, res, next) {
   req.submitId = req.body.submitid
-  addEntry(req, res, next)
+  const rv = await addEntry(req, res, next)
+  if (!rv) return
+  utils.returnOK(req, res, rv, 'rv')
 })
 
 /* ************************ */
-/* POST add submit entry */
+/* POST add new submit with first entry */
 router.post('/submits/submit/:flowid', upload.single('file'), async function (req, res, next) {
   try {
     console.log('addSubmitEntry', req.params.flowid)
@@ -126,8 +149,16 @@ router.post('/submits/submit/:flowid', upload.single('file'), async function (re
     if (!dbsubmit) return utils.giveup(req, res, 'Could not create submit')
     logger.log4req(req, 'CREATED submit', dbsubmit.id)
 
+
     req.submitId = dbsubmit.id
-    addEntry(req, res, next)
+    const rv = await addEntry(req, res, next)
+    if (!rv) return
+
+    // Send mails
+
+
+    // All done
+    utils.returnOK(req, res, rv, 'rv')
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
@@ -189,6 +220,7 @@ async function editEntry(req, res, next) {
     // And then store the new ones
     for (const sv of req.body.values) {
       const v = JSON.parse(sv)
+      if (v.string && v.string.length > 255) v.string = v.string.substring(0,255)
       if (v.file && filepath) v.file = filepath
       else if (v.existingfile) v.file = v.existingfile
       const entryvalue = {
@@ -475,13 +507,13 @@ router.post('/submits/:submitid', async function (req, res, next) {
 
     const dbentries = await dbsubmit.getEntries()
     for (const dbentry of dbentries) {
-      console.log('To delete entry', dbentry.id)
+      //console.log('To delete entry', dbentry.id)
       req.entryid = dbentry.id
       const ok = await deleteEntry(req, res, next)
       if (!ok) return
     }
 
-    console.log('To delete submit', submitid)
+    //console.log('To delete submit', submitid)
     let affectedRows = await models.submits.destroy({ where: { id: submitid } })
     const ok = affectedRows === 1
     utils.returnOK(req, res, ok, 'ok')
