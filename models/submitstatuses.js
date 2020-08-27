@@ -9,6 +9,7 @@ const Sequelize = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
+    dt: { type: Sequelize.DATE, allowNull: false },
   }
   const submitstatuses = sequelize.define('submitstatuses', fields)
   submitstatuses.fields = fields

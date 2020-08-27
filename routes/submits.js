@@ -90,7 +90,9 @@ async function addEntry(req, res, next) {
 
     const flowstatuses = await models.flowstatuses.findAll({ where: { submittedflowstageId: req.body.stageid } })
     for (const flowstatus of flowstatuses) {
+      const now = new Date()
       const submitstatus = {
+        dt: now,
         submitId: rv.submitid,
         flowstatusId: flowstatus.id,
       }
@@ -472,9 +474,10 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           submit.entries.push(models.sanitise(models.entries, dbentry))
         }
 
+        // TODO: Only return ones with visibletoauthor set to author
         const dbstatuses = await dbsubmit.getStatuses({
           order: [
-            ['id', 'ASC']
+            ['id', 'DESC']
           ]
         })
         submit.statuses = []
