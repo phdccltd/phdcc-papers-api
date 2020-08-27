@@ -442,7 +442,11 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         }
       })
       flow.statuses = []
-      const dbstatuses = await dbflow.getFlowStatuses()
+      const dbstatuses = await dbflow.getFlowStatuses({
+        order: [
+          ['weight', 'ASC']
+        ]
+      })
       for (const dbstatus of dbstatuses) {
         flow.statuses.push(models.sanitise(models.flowstatuses, dbstatus))
       }
@@ -556,7 +560,7 @@ async function editSubmitTitle(req, res, next) {
     dbsubmit.name = req.body.newtitle
     await dbsubmit.save()
 
-    logger.log4req(req, 'Edited submit title', submitid, newtitle)
+    logger.log4req(req, 'Edited submit title', submitid, req.body.newtitle)
 
     const ok = true
     utils.returnOK(req, res, ok, 'ok')

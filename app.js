@@ -100,14 +100,36 @@ async function checkDatabases() {
     const privatesettings = site.privatesettings
     if ('transport-sendmail' in privatesettings && 'transport-newline' in privatesettings && 'transport-path' in privatesettings && 'email-from' in privatesettings) {
       try {
-        const transport = nodemailer.createTransport({
-          sendmail: privatesettings['transport-sendmail'],
-          newline: privatesettings['transport-newline'],
-          path: privatesettings['transport-path']
-        })
-        app.set('transport', transport)
+        if (privatesettings['transport-sendmail']) {
+          const transport = nodemailer.createTransport({
+            sendmail: privatesettings['transport-sendmail'],
+            newline: privatesettings['transport-newline'],
+            path: privatesettings['transport-path']
+          })
+          app.set('transport', transport)
+        } else { // SMTP
+          const transportOptions = {
+            host: privatesettings['transport-host'],
+          }
+          if (privatesettings['transport-port']) transportOptions.port = privatesettings['transport-port']
+          if (privatesettings['transport-pool']) transportOptions.pool = privatesettings['transport-pool']
+          if (privatesettings['transport-secure']) {
+            transportOptions.secure = privatesettings['transport-secure']
+            transportOptions.auth = {
+              user: privatesettings['transport-auth-user'],
+              pass: privatesettings['transport-auth-pass'],
+            }
+          }
+          console.log('transportOptions', transportOptions)
+          const transport = nodemailer.createTransport(transportOptions)
+          if (transport) {
+            const rv = await transport.verify()
+            console.log('transport verify', rv)
+            app.set('transport', transport)
+          }
+        }
       } catch (e) {
-        logger.log('Cannot create mail transport')
+        logger.log('Cannot create mail transport', e.message)
       }
     } else {
       logger.log('Mail transport parameters not specified')
