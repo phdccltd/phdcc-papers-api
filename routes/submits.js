@@ -151,12 +151,11 @@ router.post('/submits/submit/:flowid', upload.single('file'), async function (re
     if (!dbsubmit) return utils.giveup(req, res, 'Could not create submit')
     logger.log4req(req, 'CREATED submit', dbsubmit.id)
 
-
     req.submitId = dbsubmit.id
     const rv = await addEntry(req, res, next)
     if (!rv) return
 
-    // Send mails
+    // Send mails TODO
 
 
     // All done
@@ -564,6 +563,60 @@ async function editSubmitTitle(req, res, next) {
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
+}
+/* ************************ */
+/* POST DELETE submit status or POST new submit status */
+router.post('/submits/status/:id', async function (req, res, next) {
+  if (req.headers['x-http-method-override'] === 'DELETE') {
+    await deleteSubmitStatus(req, res, next)
+    return
+  }
+  if (req.headers['x-http-method-override'] === 'POST') {
+    await addSubmitStatus(req, res, next)
+    return
+  }
+  utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
+})
+
+/* ************************ */
+/* POST DELETE submit status*/
+async function deleteSubmitStatus(req, res, next) {
+  console.log('deleteSubmitStatus', req.params.id)
+
+  const submitstatusid = parseInt(req.params.id)
+  const dbsubmitstatus = await models.submitstatuses.findByPk(submitstatusid)
+  if (!dbsubmitstatus) return utils.giveup(req, res, "submitstatus not found")
+
+  const affectedRows = await models.submitstatuses.destroy({ where: { id: submitstatusid } })
+  logger.log4req(req, 'Deleted submit status', submitstatusid, affectedRows)
+
+  const ok = affectedRows === 1
+  utils.returnOK(req, res, ok, 'ok')
+}
+
+/* ************************ */
+/* POST POST add submit status*/
+async function addSubmitStatus(req, res, next) {
+  const submitid = parseInt(req.params.id)
+  const newstatusid = parseInt(req.body.newstatusid)
+  console.log('addSubmitStatus', submitid, newstatusid)
+
+  const dbsubmit = await models.submits.findByPk(submitid)
+  if (!dbsubmit) return utils.giveup(req, res, 'Submit not found')
+
+  const now = new Date()
+  const submitstatus = {
+    dt: now,
+    submitId: submitid,
+    flowstatusId: newstatusid
+  }
+  const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
+  if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
+  const newsubmitstatus = models.sanitise(models.submitstatuses, dbsubmitstatus)
+
+  logger.log4req(req, 'Created submit status', submitid, newstatusid, dbsubmitstatus.id)
+
+  utils.returnOK(req, res, newsubmitstatus, 'submitstatus')
 }
 
 /* ************************ */
