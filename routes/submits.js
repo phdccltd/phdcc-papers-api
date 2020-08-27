@@ -23,12 +23,12 @@ const router = Router()
 router.post('/submits/entry/:entryid', upload.single('file'), async function (req, res, next) {
   //console.log('/submits/entry/id ', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'PUT') {
-    editEntry(req, res, next)
+    await editEntry(req, res, next)
     return
   }
   if (req.headers['x-http-method-override'] === 'DELETE') {
     req.entryid = req.params.entryid
-    const ok = deleteEntry(req, res, next)
+    const ok = await deleteEntry(req, res, next)
     utils.returnOK(req, res, ok, 'ok')
     return
   }
@@ -495,32 +495,73 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
 })
 
 /* ************************ */
-/* POST DELETE submit */
+/* POST DELETE submit or PATCH submit title*/
 router.post('/submits/:submitid', async function (req, res, next) {
+  if (req.headers['x-http-method-override'] === 'PATCH') {
+    await editSubmitTitle(req, res, next)
+    return
+  }
+  if (req.headers['x-http-method-override'] === 'DELETE') {
+    await deleteSubmit(req, res, next)
+    return
+  }
+  utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
+})
+
+/* ************************ */
+/* POST DELETE submit */
+async function deleteSubmit(req, res, next) {
   try {
-    console.log('delete submit', req.params.submitid, req.headers['x-http-method-override'])
-    if (req.headers['x-http-method-override'] !== 'DELETE') return utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
+    //console.log('delete submit', req.params.submitid)
 
     const submitid = parseInt(req.params.submitid)
     const dbsubmit = await models.submits.findByPk(submitid)
     if (!dbsubmit) return utils.giveup(req, res, "submit not found")
 
+    // Delete entries and their contents
     const dbentries = await dbsubmit.getEntries()
     for (const dbentry of dbentries) {
-      //console.log('To delete entry', dbentry.id)
       req.entryid = dbentry.id
       const ok = await deleteEntry(req, res, next)
       if (!ok) return
     }
 
-    //console.log('To delete submit', submitid)
-    let affectedRows = await models.submits.destroy({ where: { id: submitid } })
+    // Delete statuses
+    let affectedRows = await models.submitstatuses.destroy({ where: { submitId: submitid } })
+
+    // Delete submit
+    affectedRows = await models.submits.destroy({ where: { id: submitid } })
+
+    logger.log4req(req, 'Deleted submit', submitid, affectedRows)
+
     const ok = affectedRows === 1
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
-})
+}
+
+/* ************************ */
+/* PATCH edit submit title */
+async function editSubmitTitle(req, res, next) {
+  try {
+    console.log('changeSubmitTitle', req.params.submitid, req.body.newtitle)
+
+    const submitid = parseInt(req.params.submitid)
+    const dbsubmit = await models.submits.findByPk(submitid)
+    if (!dbsubmit) return utils.giveup(req, res, "submit not found")
+
+    dbsubmit.name = req.body.newtitle
+    await dbsubmit.save()
+
+    logger.log4req(req, 'Edited submit title', submitid, newtitle)
+
+    const ok = true
+    utils.returnOK(req, res, ok, 'ok')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+}
 
 /* ************************ */
 
