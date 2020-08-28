@@ -20,7 +20,7 @@ const router = Router()
 
 /* ************************ */
 /* POST DELETE and PUT entry */
-router.post('/submits/entry/:entryid', upload.single('file'), async function (req, res, next) {
+router.post('/submits/entry/:entryid', upload.array('files'), async function (req, res, next) {
   //console.log('/submits/entry/id ', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'PUT') {
     await editEntry(req, res, next)
@@ -50,21 +50,36 @@ async function addEntry(req, res, next) {
     if (!dbentry) return utils.giveup(req, res, 'Could not create entry')
     logger.log4req(req, 'CREATED entry', dbentry.id)
 
-    let filepath = null
-    if (req.file) {
-      if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
+    if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
+    for (const file of req.files) {
+      //console.log("FILE", file)
+      const hyphenpos = file.originalname.indexOf('-')
+      if (hyphenpos === -1) return utils.giveup(req, res, 'Bad file originalname format')
+      file.formfieldid = parseInt(file.originalname.substring(0, hyphenpos))
+      file.originalname = file.originalname.substring(hyphenpos+1)
+
       // Move file to filesdir/<siteid>/<pubid>/<flowid>/<submitid>/<entryid>/
-      filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.body.submitid + '/' + dbentry.id
+      let filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.body.submitid + '/' + dbentry.id
       fs.mkdirSync(filesdir + filepath, { recursive: true })
-      filepath += '/' + req.file.originalname
-      fs.renameSync(req.file.path, filesdir + filepath)
+      filepath += '/' + file.originalname
+      fs.renameSync(file.path, filesdir + filepath)
+      file.filepath = filepath
       logger.log4req(req, 'Uploaded file', filesdir + filepath)
     }
 
     for (const sv of req.body.values) {
       const v = JSON.parse(sv)
       if (v.string && v.string.length > 255) v.string = v.string.substring(0, 255)
-      if (v.file) v.file = filepath
+      if (v.file) {
+        let found = false
+        for (const file of req.files) {
+          if (v.formfieldid == file.formfieldid) {
+            v.file = file.filepath
+            found = true
+          }
+        }
+        if (!found) return utils.giveup(req, res, 'entry value file not found: ' + v.formfieldid)
+      }
       const entryvalue = {
         entryId: dbentry.id,
         formfieldId: v.formfieldid,
@@ -113,17 +128,17 @@ async function addEntry(req, res, next) {
     Get FormData using https://www.npmjs.com/package/multer
     This copes with ONE file but means that form values are all (JSON) strings which will need parsed if an object
 
-    multer uplod sets req.file eg as follows:
-    { fieldname: 'file',
+    multer upload sets req.files eg as follows:
+    [{ fieldname: 'file',
       originalname: 'Damsons.doc',
       encoding: '7bit',
       mimetype: 'application/msword',
       destination: '/tmp/papers/',
       filename: 'ce0060fb35a0c91555c7d24136a58581',
       path: '/tmp/papers/ce0060fb35a0c91555c7d24136a58581',
-      size: 38912 }
+      size: 38912 }]
 */
-router.post('/submits/entry', upload.single('file'), async function (req, res, next) {
+router.post('/submits/entry', upload.array('files'), async function (req, res, next) {
   req.submitId = req.body.submitid
   const rv = await addEntry(req, res, next)
   if (!rv) return
@@ -132,7 +147,7 @@ router.post('/submits/entry', upload.single('file'), async function (req, res, n
 
 /* ************************ */
 /* POST add new submit with first entry */
-router.post('/submits/submit/:flowid', upload.single('file'), async function (req, res, next) {
+router.post('/submits/submit/:flowid', upload.array('files'), async function (req, res, next) {
   try {
     console.log('addSubmitEntry', req.params.flowid)
 
@@ -177,16 +192,20 @@ async function editEntry(req, res, next) {
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
-    // If replacement file given
-    let filepath = null
-    if (req.file) {
-      if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
+    // If replacement files given
+    if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
+    for (const file of req.files) {
+      //console.log('editEntry',file)
+      const hyphenpos = file.originalname.indexOf('-')
+      if (hyphenpos === -1) return utils.giveup(req, res, 'Bad file originalname format')
+      file.formfieldid = parseInt(file.originalname.substring(0, hyphenpos))
+      file.originalname = file.originalname.substring(hyphenpos + 1)
 
       // Find any existing file
       const dbentryvalues = await dbentry.getEntryValues()
       let existingfile = false
       for (const dbentryvalue of dbentryvalues) {
-        if (dbentryvalue.file != null) {
+        if (dbentryvalue.file != null && dbentryvalue.formfieldId === file.formfieldid) {
           existingfile = dbentryvalue.file
           break
         }
@@ -207,10 +226,11 @@ async function editEntry(req, res, next) {
         }
       }
 
-      filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.body.submitid + '/' + dbentry.id
+      let filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.body.submitid + '/' + dbentry.id
       fs.mkdirSync(filesdir + filepath, { recursive: true })
-      filepath += '/' + req.file.originalname
-      fs.renameSync(req.file.path, filesdir + filepath)
+      filepath += '/' + file.originalname
+      fs.renameSync(file.path, filesdir + filepath)
+      file.filepath = filepath
       logger.log4req(req, 'Uploaded file', filesdir + filepath)
     }
 
@@ -222,7 +242,16 @@ async function editEntry(req, res, next) {
     for (const sv of req.body.values) {
       const v = JSON.parse(sv)
       if (v.string && v.string.length > 255) v.string = v.string.substring(0,255)
-      if (v.file && filepath) v.file = filepath
+      if (v.file) {
+        let found = false
+        for (const file of req.files) {
+          if (v.formfieldid == file.formfieldid) {
+            v.file = file.filepath
+            found = true
+          }
+        }
+        if (!found) return utils.giveup(req, res, 'entry value file not found: ' + v.formfieldid)
+      }
       else if (v.existingfile) v.file = v.existingfile
       const entryvalue = {
         entryId: dbentry.id,

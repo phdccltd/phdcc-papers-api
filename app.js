@@ -38,6 +38,14 @@ async function checkDatabases() {
     await models.logs.create({ msg: 'Started' })
     console.log("Logged start")
 
+    // Get rid of any excess INDEXES
+    try {
+      const [results, metadata] = await db.sequelize.query('ALTER TABLE `users` DROP INDEX `username_2`;')
+      //console.log('DROP users index 2 ', results, metadata)
+    } catch (e) {
+      // Ignore any errors
+    }
+
     logger.setModels(models) // Let logger log to db logs, if enabled
 
     if (process.env.TESTING) {
