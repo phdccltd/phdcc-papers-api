@@ -100,21 +100,30 @@ async function addEntry(req, res, next) {
 
     // Add to submitstatuses
     //console.log('addSubmitEntry flowstageid', req.body.stageid)
-    const flowstage = await models.flowstages.findByPk(req.body.stageid)
-    if (!flowstage) return utils.giveup(req, res, 'flowstageid not found: ' + req.body.stageid)
+    const dbflowstage = await models.flowstages.findByPk(req.body.stageid)
+    if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + req.body.stageid)
 
-    const flowstatuses = await models.flowstatuses.findAll({ where: { submittedflowstageId: req.body.stageid } })
-    for (const flowstatus of flowstatuses) {
+    const dbflowstatuses = await models.flowstatuses.findAll({ where: { submittedflowstageId: req.body.stageid } })
+    for (const dbflowstatus of dbflowstatuses) {
       const now = new Date()
       const submitstatus = {
         dt: now,
         submitId: rv.submitid,
-        flowstatusId: flowstatus.id,
+        flowstatusId: dbflowstatus.id,
       }
       //console.log('addSubmitEntry submitstatus', submitstatus)
       const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
+
+      const dbmailrules = await dbflowstatus.getFlowMailRules()
+      for (const dbmailrule of dbmailrules) {
+        console.log('addEntry dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.flowstatusId, dbmailrule.name, dbmailrule.sendToAuthor)
+        if (dbmailrule.sendToAuthor) {
+          const dbtemplate = await dbmailrule.getFlowmailtemplate()
+          console.log('addEntry dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject)
+        }
+      }
     }
 
     // Return OK
