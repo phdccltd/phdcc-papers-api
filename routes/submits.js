@@ -5,6 +5,7 @@ const multer = require('multer')
 const fs = require('fs')
 const path = require('path')
 const mime = require('mime-types')
+const Handlebars = require("handlebars")
 const logger = require('../logger')
 
 const TMPDIR = '/tmp/papers/'
@@ -130,7 +131,17 @@ async function addEntry(req, res, next) {
           const dbauthor = await req.dbsubmit.getUser()
           if (dbauthor) {
             console.log('dbauthor', dbauthor.id, dbauthor.email)
-            utils.async_mail(dbauthor.email, dbtemplate.subject, dbtemplate.body, dbtemplate.bcc)
+            let subject = Handlebars.compile(dbtemplate.subject)
+            let body = Handlebars.compile(dbtemplate.body)
+            
+            const data = {
+              submit: models.sanitise(models.submits, req.dbsubmit),
+              entry: models.sanitise(models.entries, dbentry),
+              user: models.sanitise(models.users, dbauthor),
+            }
+            subject = subject(data)
+            body = body(data)
+            utils.async_mail(dbauthor.email, subject, body, dbtemplate.bcc)
           }
         }
       }
