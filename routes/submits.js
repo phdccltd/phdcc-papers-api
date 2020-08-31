@@ -124,20 +124,34 @@ async function addEntry(req, res, next) {
 
       const dbmailrules = await dbflowstatus.getFlowMailRules()
       for (const dbmailrule of dbmailrules) {
-        console.log('addEntry dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.flowstatusId, dbmailrule.name, dbmailrule.sendToAuthor)
+        //console.log('addEntry dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.flowstatusId, dbmailrule.name, dbmailrule.sendToAuthor)
         if (dbmailrule.sendToAuthor) {
           const dbtemplate = await dbmailrule.getFlowmailtemplate()
-          console.log('addEntry dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject, dbtemplate.bcc)
+          //console.log('addEntry dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject, dbtemplate.bcc)
           const dbauthor = await req.dbsubmit.getUser()
           if (dbauthor) {
-            console.log('dbauthor', dbauthor.id, dbauthor.email)
+            //console.log('dbauthor', dbauthor.id, dbauthor.email)
             let subject = Handlebars.compile(dbtemplate.subject)
             let body = Handlebars.compile(dbtemplate.body)
-            
+
+            const entryout = models.sanitise(models.entries, dbentry)
+            for (const sv of req.body.values) {
+              const v = JSON.parse(sv)
+              let stringvalue = ''
+              if (v.string) stringvalue = v.string
+              else if (v.text) stringvalue = v.text
+              else if (v.integer) stringvalue = v.integer.toString()
+              else if (v.file) stringvalue = v.file
+              entryout['field_' + v.formfieldid] = stringvalue
+            }
+            console.log('entryout', entryout)
+
+            const now = (new Date()).toLocaleString()
             const data = {
               submit: models.sanitise(models.submits, req.dbsubmit),
-              entry: models.sanitise(models.entries, dbentry),
+              entry: entryout,
               user: models.sanitise(models.users, dbauthor),
+              now,
             }
             subject = subject(data)
             body = body(data)
