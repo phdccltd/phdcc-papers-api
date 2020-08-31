@@ -40,6 +40,11 @@ async function addEntry(req, res, next) {
   try {
     const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
 
+    if (!req.dbsubmit) {
+      req.dbsubmit = await models.submits.findByPk(req.submitId)
+      if (!req.dbsubmit) return utils.giveup(req, res, 'Could not find submit', req.submitId)
+    }
+
     const now = new Date()
     const entry = {
       dt: now,
@@ -121,7 +126,12 @@ async function addEntry(req, res, next) {
         console.log('addEntry dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.flowstatusId, dbmailrule.name, dbmailrule.sendToAuthor)
         if (dbmailrule.sendToAuthor) {
           const dbtemplate = await dbmailrule.getFlowmailtemplate()
-          console.log('addEntry dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject)
+          console.log('addEntry dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject, dbtemplate.bcc)
+          const dbauthor = await req.dbsubmit.getUser()
+          if (dbauthor) {
+            console.log('dbauthor', dbauthor.id, dbauthor.email)
+            utils.async_mail(dbauthor.email, dbtemplate.subject, dbtemplate.body, dbtemplate.bcc)
+          }
         }
       }
     }
@@ -176,6 +186,7 @@ router.post('/submits/submit/:flowid', upload.array('files'), async function (re
     logger.log4req(req, 'CREATED submit', dbsubmit.id)
 
     req.submitId = dbsubmit.id
+    req.dbsubmit = dbsubmit
     const rv = await addEntry(req, res, next)
     if (!rv) return
 

@@ -46,13 +46,14 @@ function getSiteName() {
 }
 
 //////////////////////
-function async_mail(toEmail, subject, message) {
+function async_mail(toEmail, subject, message, bccEmail) {
   if (!transport || !fromEmail) {
     console.log(transport)
     console.log(fromEmail)
     return
   }
   if (!toEmail) toEmail = adminEmail
+  if (typeof (bccEmail) === 'undefined') bccEmail = false
   
   const params = {
     from: fromEmail,
@@ -61,7 +62,7 @@ function async_mail(toEmail, subject, message) {
     text: message
   }
   params.replyTo = toEmail
-  //if (bccEmail) params.bcc = bccEmail
+  if (bccEmail) params.bcc = bccEmail
 
   transport.sendMail(params, (err, info) => {
     if (err) {
