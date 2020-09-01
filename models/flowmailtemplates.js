@@ -4,7 +4,7 @@ const Sequelize = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
-    name: { type: Sequelize.STRING(50), allowNull: false },
+    name: { type: Sequelize.STRING(100), allowNull: false },
     subject: { type: Sequelize.STRING, allowNull: false },
     body: { type: Sequelize.TEXT, allowNull: false },
     bcc: { type: Sequelize.STRING, allowNull: true },

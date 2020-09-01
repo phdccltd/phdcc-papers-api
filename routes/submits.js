@@ -106,9 +106,11 @@ async function addEntry(req, res, next) {
 
     // Add to submitstatuses
     //console.log('addSubmitEntry flowstageid', req.body.stageid)
+    // Find this flow stage
     const dbflowstage = await models.flowstages.findByPk(req.body.stageid)
     if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + req.body.stageid)
 
+    // Find flow status that should be set when this flow stage is submitted - usually just one
     const dbflowstatuses = await models.flowstatuses.findAll({ where: { submittedflowstageId: req.body.stageid } })
     for (const dbflowstatus of dbflowstatuses) {
       const now = new Date()
@@ -122,43 +124,8 @@ async function addEntry(req, res, next) {
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
 
-      const dbmailrules = await dbflowstatus.getFlowMailRules()
-      for (const dbmailrule of dbmailrules) {
-        //console.log('addEntry dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.flowstatusId, dbmailrule.name, dbmailrule.sendToAuthor)
-        if (dbmailrule.sendToAuthor) {
-          const dbtemplate = await dbmailrule.getFlowmailtemplate()
-          //console.log('addEntry dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject, dbtemplate.bcc)
-          const dbauthor = await req.dbsubmit.getUser()
-          if (dbauthor) {
-            //console.log('dbauthor', dbauthor.id, dbauthor.email)
-            let subject = Handlebars.compile(dbtemplate.subject)
-            let body = Handlebars.compile(dbtemplate.body)
-
-            const entryout = models.sanitise(models.entries, dbentry)
-            for (const sv of req.body.values) {
-              const v = JSON.parse(sv)
-              let stringvalue = ''
-              if (v.string) stringvalue = v.string
-              else if (v.text) stringvalue = v.text
-              else if (v.integer) stringvalue = v.integer.toString()
-              else if (v.file) stringvalue = v.file
-              entryout['field_' + v.formfieldid] = stringvalue
-            }
-            console.log('entryout', entryout)
-
-            const now = (new Date()).toLocaleString()
-            const data = {
-              submit: models.sanitise(models.submits, req.dbsubmit),
-              entry: entryout,
-              user: models.sanitise(models.users, dbauthor),
-              now,
-            }
-            subject = subject(data)
-            body = body(data)
-            utils.async_mail(dbauthor.email, subject, body, dbtemplate.bcc)
-          }
-        }
-      }
+      // Send out mails for this status
+      await sendOutMailsForStatus(req, dbflowstatus, dbentry)
     }
 
     // Return OK
@@ -679,8 +646,11 @@ async function addSubmitStatus(req, res, next) {
   const newstatusid = parseInt(req.body.newstatusid)
   console.log('addSubmitStatus', submitid, newstatusid)
 
-  const dbsubmit = await models.submits.findByPk(submitid)
-  if (!dbsubmit) return utils.giveup(req, res, 'Submit not found')
+  req.dbsubmit = await models.submits.findByPk(submitid)
+  if (!req.dbsubmit) return utils.giveup(req, res, 'Submit not found')
+
+  const dbflowstatus = await models.flowstatuses.findByPk(newstatusid)
+  if (!dbflowstatus) return utils.giveup(req, res, 'Flow status not found')
 
   const now = new Date()
   const submitstatus = {
@@ -694,7 +664,55 @@ async function addSubmitStatus(req, res, next) {
 
   logger.log4req(req, 'Created submit status', submitid, newstatusid, dbsubmitstatus.id)
 
+  // Send out mails for this status
+  await sendOutMailsForStatus(req, dbflowstatus, false)
+
   utils.returnOK(req, res, newsubmitstatus, 'submitstatus')
+}
+
+/* ************************ */
+
+async function sendOutMailsForStatus(req, dbflowstatus, dbentry) {
+  const dbmailrules = await dbflowstatus.getFlowMailRules()
+  for (const dbmailrule of dbmailrules) {
+    //console.log('sendOutMailsForStatus dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.flowstatusId, dbmailrule.name, dbmailrule.sendToAuthor)
+    if (dbmailrule.sendToAuthor) {
+      const dbtemplate = await dbmailrule.getFlowmailtemplate()
+      //console.log('sendOutMailsForStatus dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject, dbtemplate.bcc)
+      const dbauthor = await req.dbsubmit.getUser()
+      if (dbauthor) {
+        //console.log('dbauthor', dbauthor.id, dbauthor.email)
+        let subject = Handlebars.compile(dbtemplate.subject)
+        let body = Handlebars.compile(dbtemplate.body)
+
+        let entryout = false
+        if (dbentry) {
+          entryout = models.sanitise(models.entries, dbentry)
+          for (const sv of req.body.values) {
+            const v = JSON.parse(sv)
+            let stringvalue = ''
+            if (v.string) stringvalue = v.string
+            else if (v.text) stringvalue = v.text
+            else if (v.integer) stringvalue = v.integer.toString()
+            else if (v.file) stringvalue = v.file
+            entryout['field_' + v.formfieldid] = stringvalue
+          }
+        }
+        console.log('entryout', entryout)
+
+        const now = (new Date()).toLocaleString()
+        const data = {
+          submit: models.sanitise(models.submits, req.dbsubmit),
+          entry: entryout,
+          user: models.sanitise(models.users, dbauthor),
+          now,
+        }
+        subject = subject(data)
+        body = body(data)
+        utils.async_mail(dbauthor.email, subject, body, dbtemplate.bcc)
+      }
+    }
+  }
 }
 
 /* ************************ */
