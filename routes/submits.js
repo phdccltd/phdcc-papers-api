@@ -6,6 +6,7 @@ const fs = require('fs')
 const path = require('path')
 const mime = require('mime-types')
 const Handlebars = require("handlebars")
+const _ = require('lodash/core')
 const logger = require('../logger')
 
 const TMPDIR = '/tmp/papers/'
@@ -673,6 +674,16 @@ async function addSubmitStatus(req, res, next) {
 /* ************************ */
 
 async function sendOutMailsForStatus(req, dbflowstatus, dbentry) {
+
+  let dbformfields = false
+  if (dbentry) {
+    dbformfields = await models.formfields.findAll({ where: { formtypeid: dbentry.flowstageId } })
+    if (!dbformfields) {
+      logger.log4req(req, 'Could not find formfields so not sending mails', dbentry.flowstageId)
+      return
+    }
+  }
+
   const dbmailrules = await dbflowstatus.getFlowMailRules()
   for (const dbmailrule of dbmailrules) {
     //console.log('sendOutMailsForStatus dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.flowstatusId, dbmailrule.name, dbmailrule.sendToAuthor)
@@ -690,15 +701,33 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbentry) {
           entryout = models.sanitise(models.entries, dbentry)
           for (const sv of req.body.values) {
             const v = JSON.parse(sv)
+
+            const formfield = _.find(dbformfields, formfield => { return formfield.id === v.formfieldid })
+
             let stringvalue = ''
             if (v.string) stringvalue = v.string
             else if (v.text) stringvalue = v.text
             else if (v.integer) stringvalue = v.integer.toString()
             else if (v.file) stringvalue = v.file
+
+            if (formfield) {
+              if (formfield.type === 'yes' || formfield.type === 'yesno') {
+                stringvalue = v.integer ? 'Yes' : 'No'
+              } else if (formfield.type === 'lookup' || formfield.type === 'lookups') {
+                stringvalue = ''
+                const aselections = v.string.split(',')
+                for (const sel of aselections) {
+                  const dbpublookupvalue = await models.publookupvalues.findByPk(parseInt(sel))
+                  if (dbpublookupvalue) {
+                    stringvalue += dbpublookupvalue.text+' - '
+                  }
+                }
+              }
+            }
+
             entryout['field_' + v.formfieldid] = stringvalue
           }
         }
-        console.log('entryout', entryout)
 
         const now = (new Date()).toLocaleString()
         const data = {
