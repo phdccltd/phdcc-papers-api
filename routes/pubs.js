@@ -1,5 +1,6 @@
 const { Router } = require('express')
 const Sequelize = require('sequelize')
+const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
 
@@ -23,10 +24,32 @@ router.get('/pubs', async function (req, res, next) {
       dbpubs = await req.user.getPublications(order)
     }
 
+    // Get my roles in all publications
+    const dbmypubroles = await req.user.getRoles()
+
     // Sanitise and get associated publookups/publookupvalues
     const pubs = []
     for (const dbpub of dbpubs) {
       const pub = models.sanitise(models.pubs, dbpub)
+
+      // Set isowner and myroles for this publication
+      pub.isowner = false
+      pub.myroles = []
+      _.forEach(dbmypubroles, (dbmypubrole) => {
+        if (dbmypubrole.pubId === pub.id) {
+          const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
+          pub.myroles.push(mypubrole)
+          if (mypubrole.isowner) pub.isowner = true
+        }
+      })
+
+      pub.pubroles = []
+      const dbpubroles = await dbpub.getPubroles()
+      for (const dbpubrole of dbpubroles) {
+        const pubrole = models.sanitise(models.pubroles, dbpubrole)
+        pub.pubroles.push(pubrole)
+      }
+
       pub.publookups = []
       const dbpublookups = await dbpub.getPubLookups()
       for (const dbpublookup of dbpublookups) {
