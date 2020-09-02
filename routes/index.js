@@ -7,6 +7,7 @@ const logger = require('../logger')
 const utils = require('../utils')
 
 const auth = require('./auth')
+const users = require('./users')
 const pubsRouter = require('./pubs')
 const submitsRouter = require('./submits')
 const sitepagesRouter = require('./sitepages')
@@ -85,6 +86,9 @@ router.get('/user', auth.getuser)
 
 /* POST+PATCH: USER */
 router.post('/user', auth.saveuser)
+
+/* GET: GET PUB USERS */
+router.get('/users/pub/:pubid', users.getPubUsers)
 
 //////////////////////
 // /pubs/*

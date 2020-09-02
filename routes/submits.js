@@ -169,7 +169,7 @@ router.post('/submits/submit/:flowid', upload.array('files'), async function (re
     const now = new Date()
     const submit = {
       flowId: flowid,
-      userId: req.user.id,
+      userId: req.dbuser.id,
       name: req.body.title,
       startdt: now
     }
@@ -348,8 +348,8 @@ router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, ne
   try {
     const entryid = parseInt(req.params.entryid)
     const entryvalueid = parseInt(req.params.entryvalueid)
-    console.log('GET /submits/entry/ file', entryid, entryvalueid, req.user.id)
-    if (!Number.isInteger(req.user.id)) return utils.giveup(req, res, 'Invalid req.user.id')
+    console.log('GET /submits/entry/ file', entryid, entryvalueid, req.dbuser.id)
+    if (!Number.isInteger(req.dbuser.id)) return utils.giveup(req, res, 'Invalid req.user.id')
 
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
@@ -384,9 +384,9 @@ router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, ne
 router.get('/submits/entry/:entryid', async function (req, res, next) {
   try {
     const entryid = parseInt(req.params.entryid)
-    console.log('GET /submits/entry/', entryid, req.user.id)
+    console.log('GET /submits/entry/', entryid, req.dbuser.id)
 
-    if (!Number.isInteger(req.user.id)) return utils.giveup(req, res, 'Invalid req.user.id')
+    if (!Number.isInteger(req.dbuser.id)) return utils.giveup(req, res, 'Invalid req.user.id')
 
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
@@ -394,7 +394,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     const dbsubmit = await models.submits.findByPk(dbentry.submitId)
     if (!dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
 
-    if (dbsubmit.userId !== req.user.id) return utils.giveup(req, res, 'Not your submit entry')
+    if (dbsubmit.userId !== req.dbuser.id) return utils.giveup(req, res, 'Not your submit entry')
 
     const entry = models.sanitise(models.entries, dbentry)
     
@@ -433,9 +433,9 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
 router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
   try {
     const flowstageId = parseInt(req.params.flowstageId)
-    console.log('GET /submits/formfields/', flowstageId, req.user.id)
+    console.log('GET /submits/formfields/', flowstageId, req.dbuser.id)
 
-    if (!Number.isInteger(req.user.id)) return utils.giveup(req, res, 'Invalid req.user.id')
+    if (!Number.isInteger(req.dbuser.id)) return utils.giveup(req, res, 'Invalid req.user.id')
 
     const entry = {}
     const dbformfields = await models.formfields.findAll({
@@ -466,9 +466,9 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
 router.get('/submits/pub/:pubid', async function (req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
-    console.log('GET /submits/pub/', pubid, req.user.id)
+    console.log('GET /submits/pub/', pubid, req.dbuser.id)
 
-    if (!Number.isInteger(req.user.id)) return utils.giveup(req, res, 'Invalid req.user.id')
+    if (!Number.isInteger(req.dbuser.id)) return utils.giveup(req, res, 'Invalid req.user.id')
 
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
@@ -480,7 +480,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
       flow.submits = []
       const dbsubmits = await dbflow.getSubmits({
         where: {
-          userId: req.user.id
+          userId: req.dbuser.id
         }
       })
       flow.statuses = []

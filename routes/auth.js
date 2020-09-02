@@ -226,13 +226,13 @@ function loaduser(req, res, next) {
           logger.log4req(req, 'Stale login', ppuser.id)
           return utils.giveup(req, res, 'Stale login')
         }
-        req.user = user
+        req.dbuser = user
         const newppuser = { id: user.id }
         if (!_.isEqual(newppuser, ppuser)) {
           console.log('AUTH LOADUSER ppuser refreshed', newppuser, ppuser)
         }
         req.ppuser = newppuser
-        logger.log4req(req, 'User is', req.ppuser.id, req.user.username, req.user.name)
+        logger.log4req(req, 'User is', req.ppuser.id, req.dbuser.username, req.dbuser.name)
         next()
         return
       }
@@ -244,7 +244,7 @@ function loaduser(req, res, next) {
 
 /* DELETE: LOGOUT */
 function logout(req, res) {
-  logger.log4req(req, "Logging out ", req.ppuser.id, req.user.username)
+  logger.log4req(req, "Logging out ", req.ppuser.id, req.dbuser.username)
   req.logout()
   utils.returnOK(req, res, 'Logged out')
 }
@@ -256,10 +256,10 @@ function getuser(req, res) {
   console.log(req.ppuser)
 
   const rvuser = {
-    id: req.user.id,
-    username: req.user.username,
-    name: req.user.name,
-    super: req.user.super,
+    id: req.dbuser.id,
+    username: req.dbuser.username,
+    name: req.dbuser.name,
+    super: req.dbuser.super,
     publicsettings: req.site.publicsettings,
     sitepages: req.site.sitepages,
   }
@@ -287,9 +287,9 @@ async function saveuser(req, res, next) {
     }
 
     if (!name && !password) return utils.giveup(req, res, 'No changed user params')
-    if (name) req.user.name = name
-    if (password) req.user.password = password
-    await req.user.save()
+    if (name) req.dbuser.name = name
+    if (password) req.dbuser.password = password
+    await req.dbuser.save()
     utils.returnOK(req, res, 'User updated')
     console.log("saveuser DONE OK")
   } catch (error) {

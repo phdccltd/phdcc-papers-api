@@ -17,15 +17,15 @@ router.get('/pubs', async function (req, res, next) {
       ]
     }
     let dbpubs = false
-    if (req.user.super) {
+    if (req.dbuser.super) {
       dbpubs = await models.pubs.findAll(order)
     } else {
       // TODO: CHECK ACCESS RIGHTS???
-      dbpubs = await req.user.getPublications(order)
+      dbpubs = await req.dbuser.getPublications(order)
     }
 
     // Get my roles in all publications
-    const dbmypubroles = await req.user.getRoles()
+    const dbmypubroles = await req.dbuser.getRoles()
 
     // Sanitise and get associated publookups/publookupvalues
     const pubs = []
