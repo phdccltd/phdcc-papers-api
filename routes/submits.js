@@ -398,12 +398,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
 
     const entry = models.sanitise(models.entries, dbentry)
     
-    const dbentryvalues = await dbentry.getEntryValues()
-    entry.values = []
-    for (const dbentryvalue of dbentryvalues) {
-      const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
-      entry.values.push(entryvalue)
-    }
+    entry.values = models.sanitiselist(await dbentry.getEntryValues(), models.entryvalues)
 
     const dbformfields = await models.formfields.findAll({
       where: {
@@ -414,11 +409,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
       ]
     })
     entry.fields = []
-    entry.publookups = []
-    for (const dbformfield of dbformfields) {
-      const formfield = models.sanitise(models.formfields, dbformfield)
-      entry.fields.push(formfield)
-    }
+    entry.publookups = models.sanitiselist(dbformfields, models.formfields)
 
     //console.log('entry', entry)
     logger.log4req(req, 'Returning entry', entryid)
@@ -447,11 +438,7 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
       ]
     })
     entry.fields = []
-    entry.publookups = []
-    for (const dbformfield of dbformfields) {
-      const formfield = models.sanitise(models.formfields, dbformfield)
-      entry.fields.push(formfield)
-    }
+    entry.publookups = models.sanitiselist(dbformfields, models.formfields)
 
     //console.log('entry', entry)
     logger.log4req(req, 'Returning formfields', flowstageId)
@@ -483,29 +470,19 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           userId: req.dbuser.id
         }
       })
-      flow.statuses = []
       const dbstatuses = await dbflow.getFlowStatuses({
         order: [
           ['weight', 'ASC']
         ]
       })
-      for (const dbstatus of dbstatuses) {
-        flow.statuses.push(models.sanitise(models.flowstatuses, dbstatus))
-      }
-      flow.acceptings = []
-      const dbacceptings = await dbflow.getFlowAcceptings()
-      for (const dbaccepting of dbacceptings) {
-        flow.acceptings.push(models.sanitise(models.flowacceptings, dbaccepting))
-      }
-      flow.stages = []
+      flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
+      flow.acceptings = models.sanitiselist(await dbflow.getFlowAcceptings(), models.flowacceptings)
       const dbstages = await dbflow.getFlowStages({
         order: [
           ['weight', 'ASC']
         ]
       })
-      for (const dbstage of dbstages) {
-        flow.stages.push(models.sanitise(models.flowstages, dbstage))
-      }
+      flow.stages = models.sanitiselist(dbstages, models.flowstages)
       for (const dbsubmit of dbsubmits) {
         const submit = models.sanitise(models.submits, dbsubmit)
         const dbentries = await dbsubmit.getEntries({
@@ -514,10 +491,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
             [models.flowstages, 'weight', 'ASC'],
           ]
         })
-        submit.entries = []
-        for (const dbentry of dbentries) {
-          submit.entries.push(models.sanitise(models.entries, dbentry))
-        }
+        submit.entries = models.sanitiselist(dbentries, models.entries)
 
         // TODO: Only return ones with visibletoauthor set to author
         const dbstatuses = await dbsubmit.getStatuses({
@@ -525,10 +499,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
             ['id', 'DESC']
           ]
         })
-        submit.statuses = []
-        for (const dbstatus of dbstatuses) {
-          submit.statuses.push(models.sanitise(models.submitstatuses, dbstatus))
-        }
+        submit.statuses = models.sanitiselist(dbstatuses, models.submitstatuses)
 
         flow.submits.push(submit)
       }

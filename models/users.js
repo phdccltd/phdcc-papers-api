@@ -6,7 +6,7 @@
 const Sequelize = require('sequelize')
 
 module.exports = (sequelize, DataTypes) => {
-  const fields = {
+  const fields = { // Don't include password here - so it doesn't appear in sanitised version
     // id, createdAt and updatedAt: added automatically
     name: { type: Sequelize.STRING, allowNull: false, defaultValue: '' },
     username: { type: Sequelize.STRING(50), allowNull: false, unique: true },

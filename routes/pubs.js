@@ -43,12 +43,7 @@ router.get('/pubs', async function (req, res, next) {
         }
       })
 
-      pub.pubroles = []
-      const dbpubroles = await dbpub.getPubroles()
-      for (const dbpubrole of dbpubroles) {
-        const pubrole = models.sanitise(models.pubroles, dbpubrole)
-        pub.pubroles.push(pubrole)
-      }
+      pub.pubroles = models.sanitiselist(await dbpub.getPubroles(), models.pubroles)
 
       pub.publookups = []
       const dbpublookups = await dbpub.getPubLookups()
@@ -59,11 +54,7 @@ router.get('/pubs', async function (req, res, next) {
             ['weight', 'ASC']
           ]
         })
-        publookup.values = []
-        for (const dbpublookupvalue of dbpublookupvalues) {
-          const publookupvalue = models.sanitise(models.publookupvalues, dbpublookupvalue)
-          publookup.values.push(publookupvalue)
-        }
+        publookup.values = models.sanitiselist(dbpublookupvalues, models.publookupvalues)
         pub.publookups.push(publookup)
       }
       pubs.push(pub)

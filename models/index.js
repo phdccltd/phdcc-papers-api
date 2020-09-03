@@ -43,5 +43,13 @@ dbs.sanitise = (model, dbobj) => {
   return dbobj
 }
 
+dbs.sanitiselist = (dbthings, model) => {
+  const sanitisedlist = []
+  for (const dbthing of dbthings) {
+    const thing = dbs.sanitise(model, dbthing)
+    sanitisedlist.push(thing)
+  }
+  return sanitisedlist
+}
 
 module.exports = dbs
