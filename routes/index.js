@@ -87,6 +87,9 @@ router.get('/user', auth.getuser)
 /* POST+PATCH: USER */
 router.post('/user', auth.saveuser)
 
+/* POST_DELETE: REMOVE PUB USER ROLE */
+router.post('/users/pub/:pubid/:userid/:roleid', users.deleteUserRole)
+
 /* GET: GET PUB USERS */
 router.get('/users/pub/:pubid', users.getPubUsers)
 
