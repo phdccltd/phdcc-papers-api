@@ -148,7 +148,7 @@ async function getPubUsers(req, res, next) {
 
     // Get publication
     const dbpub = await models.pubs.findByPk(pubid)
-    if (!dbpub) return utils.giveup(req, res, 'Cannot found pubid ' + pubid)
+    if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
     // Get all roles available for publication
     const pubroles = models.sanitiselist(await dbpub.getPubroles(), models.pubroles)
