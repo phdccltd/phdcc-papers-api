@@ -7,10 +7,11 @@ const logger = require('../logger')
 const utils = require('../utils')
 
 const auth = require('./auth')
-const users = require('./users')
+const mailtemplatesRouter = require('./mailtemplates')
 const pubsRouter = require('./pubs')
-const submitsRouter = require('./submits')
 const sitepagesRouter = require('./sitepages')
+const submitsRouter = require('./submits')
+const users = require('./users')
 
 const router = Router()
 
@@ -100,6 +101,10 @@ router.get('/users/pub/:pubid', users.getPubUsers)
 //////////////////////
 // /pubs/*
 router.use(pubsRouter)
+
+//////////////////////
+// /mailtemplates/*
+router.use(mailtemplatesRouter)
 
 //////////////////////
 // /submits/*
