@@ -408,8 +408,8 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
         ['weight', 'ASC']
       ]
     })
-    entry.fields = []
-    entry.publookups = models.sanitiselist(dbformfields, models.formfields)
+    entry.fields = models.sanitiselist(dbformfields, models.formfields)
+    entry.publookups = []
 
     //console.log('entry', entry)
     logger.log4req(req, 'Returning entry', entryid)
@@ -437,8 +437,8 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
         ['weight', 'ASC']
       ]
     })
-    entry.fields = []
-    entry.publookups = models.sanitiselist(dbformfields, models.formfields)
+    entry.fields = models.sanitiselist(dbformfields, models.formfields)
+    entry.publookups = []
 
     //console.log('entry', entry)
     logger.log4req(req, 'Returning formfields', flowstageId)
