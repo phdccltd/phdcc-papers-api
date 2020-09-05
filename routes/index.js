@@ -7,6 +7,7 @@ const logger = require('../logger')
 const utils = require('../utils')
 
 const auth = require('./auth')
+const acceptingsRouter = require('./acceptings')
 const mailtemplatesRouter = require('./mailtemplates')
 const pubsRouter = require('./pubs')
 const sitepagesRouter = require('./sitepages')
@@ -105,6 +106,10 @@ router.use(pubsRouter)
 //////////////////////
 // /mailtemplates/*
 router.use(mailtemplatesRouter)
+
+//////////////////////
+// /acceptings/*
+router.use(acceptingsRouter)
 
 //////////////////////
 // /submits/*

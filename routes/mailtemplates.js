@@ -59,6 +59,7 @@ router.post('/mailtemplates/:flowid', async function (req, res, next) {
       if (!dbmailtemplate) return utils.giveup(req, res, 'Cannot find mailtemplate ' + templateid)
 
       const dbtemplatesflow = await dbmailtemplate.getFlow()
+      if (!dbtemplatesflow) return utils.giveup(req, res, 'Cannot find flow for mailtemplate')
       if (dbtemplatesflow.id !== flowid) return utils.giveup(req, res, 'Edit mailtemplate flowid mismatch ' + dbtemplatesflow.id + ' ' + flowid)
 
       dbmailtemplate.name = templatename
