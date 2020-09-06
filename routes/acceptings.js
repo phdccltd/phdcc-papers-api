@@ -3,6 +3,7 @@ const Sequelize = require('sequelize')
 const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
+const logger = require('../logger')
 
 const router = Router()
 
@@ -48,6 +49,8 @@ async function deleteAccepting(req, res, next){
 
     await dbaccepting.destroy()
 
+    logger.log4req(req, 'DELETED accepting', acceptingid)
+
     const ok = true
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
@@ -90,6 +93,7 @@ async function addEditAccepting(req, res, next){
       dbaccepting.flowstatusId = chosenstatus ? chosenstatus : null
 
       await dbaccepting.save()
+      logger.log4req(req, 'UPDATED accepting', acceptingid)
 
       ok = true
     } else {
@@ -104,6 +108,7 @@ async function addEditAccepting(req, res, next){
 
       const dbaccepting = await models.flowacceptings.create(params)
       if (!dbaccepting) return utils.giveup(req, res, 'accepting not created')
+      logger.log4req(req, 'CREATED new accepting', dbaccepting.id)
       ok = true
     }
 

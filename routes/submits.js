@@ -643,7 +643,7 @@ async function addSubmitStatus(req, res, next) {
 }
 
 /* ************************ */
-
+// req.dbsubmit must be set
 async function sendOutMailsForStatus(req, dbflowstatus, dbentry) {
 
   let dbformfields = false
@@ -657,10 +657,32 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbentry) {
 
   const dbmailrules = await dbflowstatus.getFlowMailRules()
   for (const dbmailrule of dbmailrules) {
-    //console.log('sendOutMailsForStatus dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.flowstatusId, dbmailrule.name, dbmailrule.sendToAuthor)
+    //console.log('sendOutMailsForStatus dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.flowstatusId, dbmailrule.name, dbmailrule.sendToAuthor, dbmailrule.bccToOwners)
+
+    const bccOwners = []
+    if (dbmailrule.bccToOwners) {
+      const dbflow = await req.dbsubmit.getFlow()
+      if (!dbflow) {
+        logger.log4req(req, 'Could not find flow so not sending mails')
+        return
+      }
+      const dbpub = await dbflow.getPub()
+      if (!dbpub) {
+        logger.log4req(req, 'Could not find pub so not sending mails')
+        return
+      }
+      const dbownerroles = await dbpub.getPubroles({ where: { isowner: true } })
+      for (const dbownerrole of dbownerroles) {
+        const dbownerusers = await dbownerrole.getUsers()
+        for (const dbowneruser of dbownerusers) {
+          bccOwners.push(dbowneruser.email)
+        }
+      }
+    }
+
     if (dbmailrule.sendToAuthor) {
       const dbtemplate = await dbmailrule.getFlowmailtemplate()
-      //console.log('sendOutMailsForStatus dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject, dbtemplate.bcc)
+      //console.log('sendOutMailsForStatus dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject)
       const dbauthor = await req.dbsubmit.getUser()
       if (dbauthor) {
         //console.log('dbauthor', dbauthor.id, dbauthor.email)
@@ -709,44 +731,10 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbentry) {
         }
         subject = subject(data)
         body = body(data)
-        utils.async_mail(dbauthor.email, subject, body, dbtemplate.bcc)
+        utils.async_mail(dbauthor.email, subject, body, bccOwners.join(','))
       }
     }
   }
 }
-
-/* ************************ */
-
-/* GET submit by ID.
-router.get('/submits/:id', async function (req, res, next) {
-  // TODO: Check access - is user allowed to access this submission?
-  const id = parseInt(req.params.id)
-  console.log('GET /submits', id)
-  const dbsubmit = await models.submits.findByPk(id)
-  if (dbsubmit) {
-    const submit = models.sanitise(models.submits, dbsubmit)
-    utils.returnOK(req, res, submit, 'submit')
-  } else {
-    utils.giveup(req, res, 'Invalid submits:id')
-  }
-})*/
-
-/*
-app.get('/', (req, res) => {
-  return res.send('Received a GET HTTP method')
-})
-
-app.post('/', (req, res) => {
-  return res.send('Received a POST HTTP method')
-})
-
-app.put('/', (req, res) => {
-  return res.send('Received a PUT HTTP method')
-})
-
-app.delete('/', (req, res) => {
-  return res.send('Received a DELETE HTTP method')
-})
-*/
 
 module.exports = router

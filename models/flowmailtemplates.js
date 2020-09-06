@@ -7,7 +7,6 @@ module.exports = (sequelize, DataTypes) => {
     name: { type: Sequelize.STRING(100), allowNull: false },
     subject: { type: Sequelize.STRING, allowNull: false },
     body: { type: Sequelize.TEXT, allowNull: false },
-    bcc: { type: Sequelize.STRING, allowNull: true },
   }
   const flowmailtemplates = sequelize.define('flowmailtemplates', fields)
   flowmailtemplates.fields = fields

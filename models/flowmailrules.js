@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     // id, createdAt and updatedAt: added automatically
     name: { type: Sequelize.STRING(50), allowNull: false },
     sendToAuthor: { type: DataTypes.BOOLEAN, allowNull: false },
-    sendToOwners: { type: DataTypes.BOOLEAN, allowNull: false },
+    bccToOwners: { type: DataTypes.BOOLEAN, allowNull: false },
   }
   const flowmailrules = sequelize.define('flowmailrules', fields)
   flowmailrules.fields = fields
