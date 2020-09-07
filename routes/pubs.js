@@ -20,7 +20,6 @@ router.get('/pubs', async function (req, res, next) {
     if (req.dbuser.super) {
       dbpubs = await models.pubs.findAll(order)
     } else {
-      // TODO: CHECK ACCESS RIGHTS???
       dbpubs = await req.dbuser.getPublications(order)
     }
 
@@ -65,38 +64,5 @@ router.get('/pubs', async function (req, res, next) {
   }
 })
 
-
-/* GET pub by ID. */
-/* NO NEED!
-router.get('/pubs/:id', async function (req, res, next) {
-  // TODO: Check access - is user allowed to access this publication?
-  const id = parseInt(req.params.id)
-  console.log('GET /pubs', id)
-  const dbpub = await models.pubs.findByPk(id)
-  if (dbpub) {
-    const pub = models.sanitise(models.pubs, dbpub)
-    utils.returnOK(req, res, pub, 'pub')
-  } else {
-    utils.giveup(req, res, 'Invalid pubs:id')
-  }
-})*/
-
-/*
-app.get('/', (req, res) => {
-  return res.send('Received a GET HTTP method');
-});
-
-app.post('/', (req, res) => {
-  return res.send('Received a POST HTTP method');
-});
-
-app.put('/', (req, res) => {
-  return res.send('Received a PUT HTTP method');
-});
-
-app.delete('/', (req, res) => {
-  return res.send('Received a DELETE HTTP method');
-});
-*/
 
 module.exports = router

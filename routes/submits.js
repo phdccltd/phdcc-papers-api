@@ -449,27 +449,60 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
 })
 
 /* ************************ */
-/* GET submits for publication. */
+/* GET submits for publication */
 router.get('/submits/pub/:pubid', async function (req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
-    console.log('GET /submits/pub/', pubid, req.dbuser.id)
+    console.log('GET /submits/pub/', pubid)
 
-    if (!Number.isInteger(req.dbuser.id)) return utils.giveup(req, res, 'Invalid req.user.id')
+    // Get my roles in all publications
+    const dbmypubroles = await req.dbuser.getRoles()
 
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
+
+    // Set isowner and myroles for this publication
+    let isowner = false
+    let onlyanauthor = false
+    const myroles = []
+    _.forEach(dbmypubroles, (dbmypubrole) => {
+      if (dbmypubrole.pubId === pubid) {
+        const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
+        myroles.push(mypubrole)
+        if (mypubrole.isowner) isowner = true
+        if (mypubrole.defaultrole) onlyanauthor = true // ie author
+      }
+    })
+    if (myroles.length >= 2) onlyanauthor = false
+    else if (myroles.length === 0) onlyanauthor = true
+    if (req.dbuser.super) {
+      onlyanauthor = false
+      isowner = true
+    }
 
     const dbflows = await dbpub.getFlows()
     const flows = []
     for (const dbflow of dbflows) {
       const flow = models.sanitise(models.flows, dbflow)
+      // Get all grades for this flow
+      const dbflowgrades = await dbflow.getFlowgrades()
+      flow.flowgrades = []
+      for (const dbflowgrade of dbflowgrades) {
+        const flowgrade = models.sanitise(models.flowgrades, dbflowgrade)
+        flowgrade.scores = models.sanitiselist(await dbflowgrade.getFlowgradescores(), models.flowgradescores)
+        flow.flowgrades.push(flowgrade)
+      }
       flow.submits = []
-      const dbsubmits = await dbflow.getSubmits({
-        where: {
-          userId: req.dbuser.id
-        }
-      })
+      let dbsubmits = false
+      if (onlyanauthor) {
+        dbsubmits = await dbflow.getSubmits({
+          where: {
+            userId: req.dbuser.id
+          }
+        })
+      } else { // Get all submits and filter
+        dbsubmits = await dbflow.getSubmits()
+      }
       const dbstatuses = await dbflow.getFlowStatuses({
         order: [
           ['weight', 'ASC']
@@ -485,6 +518,45 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
       flow.stages = models.sanitiselist(dbstages, models.flowstages)
       for (const dbsubmit of dbsubmits) {
         const submit = models.sanitise(models.submits, dbsubmit)
+        // If author: only return statuses with visibletoauthor
+        const dbstatuses = await dbsubmit.getStatuses({
+          order: [
+            ['id', 'DESC']
+          ]
+        })
+        submit.statuses = []
+        let currentstatus = false
+        for (const dbstatus of dbstatuses) {
+          const status = models.sanitise(models.submitstatuses, dbstatus)
+          if (onlyanauthor && !status.visibletoauthor) continue
+          submit.statuses.push(status)
+          if (!currentstatus) currentstatus = status
+        }
+        if (!currentstatus) { // If no statuses, then only return to owner
+          if (!isowner) continue
+        }
+
+        if (!onlyanauthor && !isowner) {
+          let includethissubmit = false
+          //console.log('submit', submit.userId, req.dbuser.id)
+          if (await req.dbuser.hasSubmit(dbsubmit)) { // If user is the submitter, then include
+            includethissubmit = true
+          }
+          for (const flowgrade of flow.flowgrades) {
+            //console.log('flowgrade', flowgrade.id, flowgrade.flowstatusId, currentstatus.flowstatusId)
+            if (flowgrade.flowstatusId === currentstatus.flowstatusId) {
+              if (flowgrade.visibletorole !== 0) {
+                const ihavethisrole = _.find(myroles, roles => { return roles.id === flowgrade.visibletorole })
+                if (ihavethisrole) {
+                  includethissubmit = true
+                }
+              }
+            }
+          }
+          if (!includethissubmit) continue
+        }
+
+
         const dbentries = await dbsubmit.getEntries({
           include: { model: models.flowstages },
           order: [
@@ -492,14 +564,6 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           ]
         })
         submit.entries = models.sanitiselist(dbentries, models.entries)
-
-        // TODO: Only return ones with visibletoauthor set to author
-        const dbstatuses = await dbsubmit.getStatuses({
-          order: [
-            ['id', 'DESC']
-          ]
-        })
-        submit.statuses = models.sanitiselist(dbstatuses, models.submitstatuses)
 
         flow.submits.push(submit)
       }
