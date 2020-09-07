@@ -13,7 +13,9 @@ module.exports = (sequelize, DataTypes) => {
     dbs.submitreviewers.belongsTo(dbs.submits, { foreignKey: { allowNull: false }})
 
     dbs.submitreviewers.belongsTo(dbs.users, { foreignKey: { allowNull: false } })
- }
+
+    //dbs.submitreviewers.fields.userId = true
+}
 
   return submitreviewers
 }
