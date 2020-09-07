@@ -562,6 +562,41 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           if (!isowner) continue
         }
 
+        submit.user = ''
+        submit.ismine = true
+        if (dbsubmit.userId !== req.dbuser.id) {
+          const dbauthor = await dbsubmit.getUser()
+          submit.user = dbauthor.name
+          submit.ismine = false
+        }
+
+        ////////// If mine, then add actions to Add next stage (if appropriate)
+        if (submit.ismine) {
+          console.log('currentstatus.flowstatusId', currentstatus.flowstatusId)
+          if (currentstatus.flowstatusId) {
+            const flowstatus = _.find(flow.statuses, (status) => { return status.id === currentstatus.flowstatusId })
+            if (flowstatus) {
+              console.log('flowstatus.cansubmitflowstageId', flowstatus.cansubmitflowstageId)
+              if (flowstatus.cansubmitflowstageId) {
+                const stage = _.find(flow.stages, (stage) => { return stage.id === flowstatus.cansubmitflowstageId })
+                if (stage) {
+                  const route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/add/' + flowstatus.cansubmitflowstageId
+                  submit.actions.push({ name: 'Add '+stage.name, route })
+                }
+              }
+            }
+          }
+        }
+
+        ////////// We'll need the entries (ordered by flowstage weight) so we can get action links
+        const dbentries = await dbsubmit.getEntries({
+          include: { model: models.flowstages },
+          order: [
+            [models.flowstages, 'weight', 'ASC'],
+          ]
+        })
+        submit.entries = models.sanitiselist(dbentries, models.entries)
+
         ////////// Filter submits
         if (!onlyanauthor && !isowner) {
           let includethissubmit = false
@@ -575,12 +610,13 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           for (const flowgrade of flow.flowgrades) {
             if (flowgrade.flowstatusId === currentstatus.flowstatusId) { // If we are at status where this grade possible
               //console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
+              let route = false
               if (flowgrade.visibletorole !== 0) {
                 // Check if I have role that means I can grade
                 const ihavethisrole = _.find(myroles, roles => { return roles.id === flowgrade.visibletorole })
                 if (ihavethisrole) {
                   includethissubmit = true
-                  submit.actions.push(flowgrade)
+                  route = true
                 }
               }
               if (flowgrade.visibletoreviewers) {
@@ -589,8 +625,16 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
                 for (const dbreviewer of dbreviewers) {
                   if (dbreviewer.userId === req.dbuser.id) {
                     includethissubmit = true
-                    submit.actions.push(flowgrade)
+                    route = true
                   }
+                }
+              }
+              if (route) {
+                const entrytograde = _.find(submit.entries, (entry) => { return entry.flowstageId === flowgrade.displayflowstageId })
+                if (entrytograde) {
+                  route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/' + entrytograde.id
+                  submit.actions.push({ name: flowgrade.name + ' needed', route })
+                  submit.user = 'author redacted'
                 }
               }
             }
@@ -598,22 +642,13 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           if (!includethissubmit) continue
         }
 
-        console.log('submit.actions', submit.id, submit.actions)
-
-        ////////// OK, we're returning this submit: get its entries, ordered by flowstage weight
-        const dbentries = await dbsubmit.getEntries({
-          include: { model: models.flowstages },
-          order: [
-            [models.flowstages, 'weight', 'ASC'],
-          ]
-        })
-        submit.entries = models.sanitiselist(dbentries, models.entries)
+        submit.actionable = submit.actions.length>0
 
         ////////// Add submit to return list
         flow.submits.push(submit)
       }
 
-      console.log('flow.actions', flow.actions)
+      //console.log('flow.actions', flow.actions)
       flows.push(flow)
     }
 

@@ -8,7 +8,7 @@ const router = Router()
 
 /* GET pubs listing. */
 router.get('/pubs', async function (req, res, next) {
-  console.log('GET /pubs')
+  //console.log('GET /pubs')
 
   try {
     const order = {
