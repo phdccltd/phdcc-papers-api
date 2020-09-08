@@ -25,7 +25,10 @@ module.exports = (sequelize, DataTypes) => {
     dbs.publookups.hasMany(dbs.formfields, { foreignKey: { allowNull: true }, onDelete: 'RESTRICT' })  // Cannot delete pub while publookups exist
     dbs.formfields.belongsTo(dbs.publookups, { foreignKey: { allowNull: true } })
 
+    dbs.formfields.belongsTo(dbs.pubroles, { foreignKey: { allowNull: true } })
+
     dbs.formfields.fields.publookupId = true
+    dbs.formfields.fields.pubroleId = true
   }
 
   return formfields

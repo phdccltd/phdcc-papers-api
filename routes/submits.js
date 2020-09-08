@@ -400,16 +400,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     
     entry.values = models.sanitiselist(await dbentry.getEntryValues(), models.entryvalues)
 
-    const dbformfields = await models.formfields.findAll({
-      where: {
-        formtypeid: dbentry.flowstageId
-      },
-      order: [
-        ['weight', 'ASC']
-      ]
-    })
-    entry.fields = models.sanitiselist(dbformfields, models.formfields)
-    entry.publookups = []
+    await getEntryFormFields(entry, dbentry.flowstageId)
 
     //console.log('entry', entry)
     logger.log4req(req, 'Returning entry', entryid)
@@ -420,7 +411,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
 })
 
 /* ************************ */
-/* GET formfields for specified flowstageId*/
+/* GET formfields for specified flowstageId */
 router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
   try {
     const flowstageId = parseInt(req.params.flowstageId)
@@ -429,16 +420,7 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
     if (!Number.isInteger(req.dbuser.id)) return utils.giveup(req, res, 'Invalid req.user.id')
 
     const entry = {}
-    const dbformfields = await models.formfields.findAll({
-      where: {
-        formtypeid: flowstageId
-      },
-      order: [
-        ['weight', 'ASC']
-      ]
-    })
-    entry.fields = models.sanitiselist(dbformfields, models.formfields)
-    entry.publookups = []
+    await getEntryFormFields(entry, flowstageId)
 
     //console.log('entry', entry)
     logger.log4req(req, 'Returning formfields', flowstageId)
@@ -447,6 +429,42 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
     utils.giveup(req, res, e.message)
   }
 })
+
+/* ************************ */
+/* Retrive formfields for entry
+ * entry may be existing or newly created
+ */
+async function getEntryFormFields(entry, flowstageId) {
+  const dbformfields = await models.formfields.findAll({
+    where: {
+      formtypeid: flowstageId
+    },
+    order: [
+      ['weight', 'ASC']
+    ]
+  })
+  entry.fields = models.sanitiselist(dbformfields, models.formfields)
+  //????entry.publookups = []
+  entry.pubrolelookups = []
+  for (const dbformfield of dbformfields) {
+    if (dbformfield.pubroleId != null) {
+      const dbpubrole = await models.pubroles.findByPk(dbformfield.pubroleId)
+      if (!dbpubrole) {
+        console.log('formfield: pubroleId not found', pubroleId)
+      } else {
+        const dbusers = await dbpubrole.getUsers()
+        const users = []
+        for (const dbuser of dbusers) {
+          users.push({ value: dbuser.id, text: dbuser.name })
+        }
+        entry.pubrolelookups.push({
+          pubroleId: dbformfield.pubroleId,
+          users
+        })
+      }
+    }
+  }
+}
 
 /* ************************ */
 /* GET submits for publication
@@ -572,11 +590,11 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
 
         ////////// If mine, then add actions to Add next stage (if appropriate)
         if (submit.ismine) {
-          console.log('currentstatus.flowstatusId', currentstatus.flowstatusId)
+          //console.log('currentstatus.flowstatusId', currentstatus.flowstatusId)
           if (currentstatus.flowstatusId) {
             const flowstatus = _.find(flow.statuses, (status) => { return status.id === currentstatus.flowstatusId })
             if (flowstatus) {
-              console.log('flowstatus.cansubmitflowstageId', flowstatus.cansubmitflowstageId)
+              //console.log('flowstatus.cansubmitflowstageId', flowstatus.cansubmitflowstageId)
               if (flowstatus.cansubmitflowstageId) {
                 const stage = _.find(flow.stages, (stage) => { return stage.id === flowstatus.cansubmitflowstageId })
                 if (stage) {
@@ -858,7 +876,20 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbentry) {
                 for (const sel of aselections) {
                   const dbpublookupvalue = await models.publookupvalues.findByPk(parseInt(sel))
                   if (dbpublookupvalue) {
-                    stringvalue += dbpublookupvalue.text+' - '
+                    stringvalue += dbpublookupvalue.text + ' - '
+                  } else {
+                    stringvalue += sel + ' - '
+                  }
+                }
+              } else if (formfield.type === 'rolelookups') {
+                stringvalue = ''
+                const aselections = v.string.split(',')
+                for (const sel of aselections) {
+                  const dbuser = await models.users.findByPk(parseInt(sel))
+                  if (dbuser) {
+                    stringvalue += dbuser.name + ' - '
+                  } else {
+                    stringvalue += sel + ' - '
                   }
                 }
               }
