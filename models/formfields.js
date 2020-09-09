@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     allowedfiletypes: { type: Sequelize.STRING, allowNull: true },
     maxwords: { type: Sequelize.INTEGER, allowNull: true },
     maxchars: { type: Sequelize.INTEGER, allowNull: true },
-    hidewhenreviewing: { type: DataTypes.BOOLEAN, allowNull: false },
+    hidewhengrading: { type: DataTypes.BOOLEAN, allowNull: false },
   }
   const formfields = sequelize.define('formfields', fields)
   formfields.fields = fields

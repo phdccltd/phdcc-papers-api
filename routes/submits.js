@@ -391,6 +391,8 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
+    let iamgrading = false
+
     req.dbsubmit = await dbentry.getSubmit()
       //await models.submits.findByPk(dbentry.submitId)
     if (!req.dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
@@ -458,6 +460,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
             const ihavethisrole = _.find(myroles, roles => { return roles.id === flowgrade.visibletorole })
             if (ihavethisrole) {
               includethissubmit = true
+              iamgrading = true
             }
           }
           if (flowgrade.visibletoreviewers) {
@@ -466,6 +469,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
             for (const dbreviewer of dbreviewers) {
               if (dbreviewer.userId === req.dbuser.id) {
                 includethissubmit = true
+              iamgrading = true
               }
             }
           }
@@ -486,9 +490,18 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
 
     const entry = models.sanitise(models.entries, dbentry)
     
-    entry.values = models.sanitiselist(await dbentry.getEntryValues(), models.entryvalues)
-
     await getEntryFormFields(entry, dbentry.flowstageId)
+
+    entry.values = []
+    for (const dbentryvalue of await dbentry.getEntryValues()) {
+      const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
+      if (iamgrading) {
+        const field = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
+        console.log('field', entryvalue.string, field.hidewhengrading)
+        if (field.hidewhengrading) continue
+      }
+      entry.values.push(entryvalue)
+    }
 
     //console.log('entry', entry)
     logger.log4req(req, 'Returning entry', entryid)
