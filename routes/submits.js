@@ -623,7 +623,6 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           // If user is the submitter, then include
           if (await req.dbuser.hasSubmit(dbsubmit)) {
             includethissubmit = true
-            console.log('user is the submitter')
           } // Don't else this
 
           // Go through grades looking to see if currentstatus means that I need to grade
@@ -763,49 +762,84 @@ router.post('/submits/status/:id', async function (req, res, next) {
 
 /* ************************ */
 /* POST DELETE submit status*/
+/* ACCESS: OWNER-ONLY */
 async function deleteSubmitStatus(req, res, next) {
-  console.log('deleteSubmitStatus', req.params.id)
+  try {
+    //console.log('deleteSubmitStatus', req.params.id)
 
-  const submitstatusid = parseInt(req.params.id)
-  const dbsubmitstatus = await models.submitstatuses.findByPk(submitstatusid)
-  if (!dbsubmitstatus) return utils.giveup(req, res, "submitstatus not found")
+    const submitstatusid = parseInt(req.params.id)
+    const dbsubmitstatus = await models.submitstatuses.findByPk(submitstatusid)
+    if (!dbsubmitstatus) return utils.giveup(req, res, "submitstatus not found")
 
-  const affectedRows = await models.submitstatuses.destroy({ where: { id: submitstatusid } })
-  logger.log4req(req, 'Deleted submit status', submitstatusid, affectedRows)
+    req.dbsubmit = await dbsubmitstatus.getSubmit()
+    if (!req.dbsubmit) return utils.giveup(req, res, "submit not found")
 
-  const ok = affectedRows === 1
-  utils.returnOK(req, res, ok, 'ok')
+    const dbflow = await req.dbsubmit.getFlow()
+    if (!dbflow) return utils.giveup(req, res, "flow not found")
+
+    const dbpub = await dbflow.getPub()
+    if (!dbpub) return utils.giveup(req, res, "pub not found")
+
+    // Get MY roles in all publications - check iamowner
+    const dbmypubroles = await req.dbuser.getRoles()
+    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
+    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+
+    const affectedRows = await models.submitstatuses.destroy({ where: { id: submitstatusid } })
+    logger.log4req(req, 'Deleted submit status', submitstatusid, affectedRows)
+
+    const ok = affectedRows === 1
+    utils.returnOK(req, res, ok, 'ok')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
 }
 
 /* ************************ */
 /* POST POST add submit status*/
+/* ACCESS: OWNER-ONLY */
 async function addSubmitStatus(req, res, next) {
-  const submitid = parseInt(req.params.id)
-  const newstatusid = parseInt(req.body.newstatusid)
-  console.log('addSubmitStatus', submitid, newstatusid)
+  try {
+    const submitid = parseInt(req.params.id)
+    const newstatusid = parseInt(req.body.newstatusid)
+    //console.log('addSubmitStatus', submitid, newstatusid)
 
-  req.dbsubmit = await models.submits.findByPk(submitid)
-  if (!req.dbsubmit) return utils.giveup(req, res, 'Submit not found')
+    req.dbsubmit = await models.submits.findByPk(submitid)
+    if (!req.dbsubmit) return utils.giveup(req, res, 'Submit not found')
 
-  const dbflowstatus = await models.flowstatuses.findByPk(newstatusid)
-  if (!dbflowstatus) return utils.giveup(req, res, 'Flow status not found')
+    const dbflow = await req.dbsubmit.getFlow()
+    if (!dbflow) return utils.giveup(req, res, "flow not found")
 
-  const now = new Date()
-  const submitstatus = {
-    dt: now,
-    submitId: submitid,
-    flowstatusId: newstatusid
+    const dbpub = await dbflow.getPub()
+    if (!dbpub) return utils.giveup(req, res, "pub not found")
+
+    // Get MY roles in all publications - check iamowner
+    const dbmypubroles = await req.dbuser.getRoles()
+    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
+    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+
+    const dbflowstatus = await models.flowstatuses.findByPk(newstatusid)
+    if (!dbflowstatus) return utils.giveup(req, res, 'Flow status not found')
+
+    const now = new Date()
+    const submitstatus = {
+      dt: now,
+      submitId: submitid,
+      flowstatusId: newstatusid
+    }
+    const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
+    if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
+    const newsubmitstatus = models.sanitise(models.submitstatuses, dbsubmitstatus)
+
+    logger.log4req(req, 'Created submit status', submitid, newstatusid, dbsubmitstatus.id)
+
+    // Send out mails for this status
+    await sendOutMailsForStatus(req, dbflowstatus, false)
+
+    utils.returnOK(req, res, newsubmitstatus, 'submitstatus')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
   }
-  const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
-  if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
-  const newsubmitstatus = models.sanitise(models.submitstatuses, dbsubmitstatus)
-
-  logger.log4req(req, 'Created submit status', submitid, newstatusid, dbsubmitstatus.id)
-
-  // Send out mails for this status
-  await sendOutMailsForStatus(req, dbflowstatus, false)
-
-  utils.returnOK(req, res, newsubmitstatus, 'submitstatus')
 }
 
 /* ************************ */
