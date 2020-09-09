@@ -394,7 +394,12 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     const dbsubmit = await models.submits.findByPk(dbentry.submitId)
     if (!dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
 
-    if (dbsubmit.userId !== req.dbuser.id) return utils.giveup(req, res, 'Not your submit entry')
+    if (dbsubmit.userId !== req.dbuser.id) {
+      // Get my roles in all publications
+      const dbmypubroles = await req.dbuser.getRoles()
+
+      return utils.giveup(req, res, 'Not your submit entry')
+    }
 
     const entry = models.sanitise(models.entries, dbentry)
     
@@ -694,16 +699,28 @@ router.post('/submits/:submitid', async function (req, res, next) {
 
 /* ************************ */
 /* POST DELETE submit */
+/* ACCESS: OWNER-ONLY TESTED */
 async function deleteSubmit(req, res, next) {
   try {
     //console.log('delete submit', req.params.submitid)
 
     const submitid = parseInt(req.params.submitid)
-    const dbsubmit = await models.submits.findByPk(submitid)
-    if (!dbsubmit) return utils.giveup(req, res, "submit not found")
+    req.dbsubmit = await models.submits.findByPk(submitid)
+    if (!req.dbsubmit) return utils.giveup(req, res, "submit not found")
+
+    const dbflow = await req.dbsubmit.getFlow()
+    if (!dbflow) return utils.giveup(req, res, "flow not found")
+
+    const dbpub = await dbflow.getPub()
+    if (!dbpub) return utils.giveup(req, res, "pub not found")
+
+    // Get MY roles in all publications - check iamowner
+    const dbmypubroles = await req.dbuser.getRoles()
+    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
+    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
 
     // Delete entries and their contents
-    const dbentries = await dbsubmit.getEntries()
+    const dbentries = await req.dbsubmit.getEntries()
     for (const dbentry of dbentries) {
       req.entryid = dbentry.id
       const ok = await deleteEntry(req, res, next)
@@ -727,16 +744,28 @@ async function deleteSubmit(req, res, next) {
 
 /* ************************ */
 /* PATCH edit submit title */
+/* ACCESS: OWNER-ONLY TESTED */
 async function editSubmitTitle(req, res, next) {
   try {
     console.log('changeSubmitTitle', req.params.submitid, req.body.newtitle)
 
     const submitid = parseInt(req.params.submitid)
-    const dbsubmit = await models.submits.findByPk(submitid)
-    if (!dbsubmit) return utils.giveup(req, res, "submit not found")
+    req.dbsubmit = await models.submits.findByPk(submitid)
+    if (!req.dbsubmit) return utils.giveup(req, res, "submit not found")
 
-    dbsubmit.name = req.body.newtitle
-    await dbsubmit.save()
+    const dbflow = await req.dbsubmit.getFlow()
+    if (!dbflow) return utils.giveup(req, res, "flow not found")
+
+    const dbpub = await dbflow.getPub()
+    if (!dbpub) return utils.giveup(req, res, "pub not found")
+
+    // Get MY roles in all publications - check iamowner
+    const dbmypubroles = await req.dbuser.getRoles()
+    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
+    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+
+    req.dbsubmit.name = req.body.newtitle
+    await req.dbsubmit.save()
 
     logger.log4req(req, 'Edited submit title', submitid, req.body.newtitle)
 
