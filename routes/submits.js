@@ -391,14 +391,97 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
-    const dbsubmit = await models.submits.findByPk(dbentry.submitId)
-    if (!dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
+    req.dbsubmit = await dbentry.getSubmit()
+      //await models.submits.findByPk(dbentry.submitId)
+    if (!req.dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
 
-    if (dbsubmit.userId !== req.dbuser.id) {
+    if (req.dbsubmit.userId !== req.dbuser.id) {
+      ////////// If not mine, then check if I can see it and set up for actions
+      const submit = models.sanitise(models.submits, req.dbsubmit)
+
+      const dbflow = await req.dbsubmit.getFlow()
+      if (!dbflow) return utils.giveup(req, res, "flow not found")
+      const flow = models.sanitise(models.flows, dbflow)
+
+      // Get all grades for this flow
+      const dbflowgrades = await dbflow.getFlowgrades()
+      flow.flowgrades = []
+      for (const dbflowgrade of dbflowgrades) {
+        const flowgrade = models.sanitise(models.flowgrades, dbflowgrade)
+        flowgrade.scores = models.sanitiselist(await dbflowgrade.getFlowgradescores(), models.flowgradescores)
+        flow.flowgrades.push(flowgrade)
+      }
+
+      const dbpub = await dbflow.getPub()
+      if (!dbpub) return utils.giveup(req, res, "pub not found")
+      const pub = models.sanitise(models.pubs, dbpub)
+
       // Get my roles in all publications
       const dbmypubroles = await req.dbuser.getRoles()
 
-      return utils.giveup(req, res, 'Not your submit entry')
+      // Set isowner and myroles for this publication
+      let isowner = false
+      const myroles = []
+      _.forEach(dbmypubroles, (dbmypubrole) => {
+        if (dbmypubrole.pubId === pub.id) {
+          const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
+          myroles.push(mypubrole)
+          if (mypubrole.isowner) isowner = true
+        }
+      })
+
+      // Get submit's statuses and currentstatus
+      const dbstatuses = await req.dbsubmit.getStatuses({ order: [['id', 'DESC']] })
+      submit.statuses = []
+      let currentstatus = false
+      for (const dbstatus of dbstatuses) {
+        const submitstatus = models.sanitise(models.submitstatuses, dbstatus)
+        submit.statuses.push(submitstatus)
+        if (!currentstatus) currentstatus = submitstatus
+      }
+      if (!currentstatus) { // If no statuses, then give up here
+        return utils.giveup(req, res, "No statuses for this submit")
+      }
+
+
+      ////////// What if owner???
+      ////////// Filter submits
+      let includethissubmit = false
+
+      // Go through grades looking to see if currentstatus means that I need to grade
+      for (const flowgrade of flow.flowgrades) {
+        if (flowgrade.flowstatusId === currentstatus.flowstatusId) { // If we are at status where this grade possible
+          //console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
+          let route = false
+          if (flowgrade.visibletorole !== 0) {
+            // Check if I have role that means I can grade
+            const ihavethisrole = _.find(myroles, roles => { return roles.id === flowgrade.visibletorole })
+            if (ihavethisrole) {
+              includethissubmit = true
+            }
+          }
+          if (flowgrade.visibletoreviewers) {
+            // Check if I am reviewer that means I can grade
+            const dbreviewers = await req.dbsubmit.getReviewers()
+            for (const dbreviewer of dbreviewers) {
+              if (dbreviewer.userId === req.dbuser.id) {
+                includethissubmit = true
+              }
+            }
+          }
+          if (route) {
+            const entrytograde = _.find(submit.entries, (entry) => { return entry.flowstageId === flowgrade.displayflowstageId })
+            if (entrytograde) {
+              route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/' + entrytograde.id
+              submit.actions.push({ name: flowgrade.name + ' needed', route })
+              submit.user = 'author redacted'
+            }
+          }
+        }
+      }
+      if (!includethissubmit) {
+        return utils.giveup(req, res, 'Not your submit entry')
+      }
     }
 
     const entry = models.sanitise(models.entries, dbentry)
