@@ -571,10 +571,11 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         submit.statuses = []
         let currentstatus = false
         for (const dbstatus of dbstatuses) {
-          const status = models.sanitise(models.submitstatuses, dbstatus)
-          if (onlyanauthor && !status.visibletoauthor) continue // If author: only return statuses with visibletoauthor
-          submit.statuses.push(status)
-          if (!currentstatus) currentstatus = status
+          const submitstatus = models.sanitise(models.submitstatuses, dbstatus)
+          const flowstatus = _.find(flow.statuses, flowstatus => { return flowstatus.id === submitstatus.flowstatusId })
+          if (onlyanauthor && !flowstatus.visibletoauthor) continue // If author: only return statuses with visibletoauthor
+          submit.statuses.push(submitstatus)
+          if (!currentstatus) currentstatus = submitstatus
         }
         if (!currentstatus) { // If no statuses, then only return to owner
           if (!isowner) continue
@@ -622,6 +623,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           // If user is the submitter, then include
           if (await req.dbuser.hasSubmit(dbsubmit)) {
             includethissubmit = true
+            console.log('user is the submitter')
           } // Don't else this
 
           // Go through grades looking to see if currentstatus means that I need to grade
