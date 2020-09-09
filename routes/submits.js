@@ -497,7 +497,6 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
       const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
       if (iamgrading) {
         const field = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
-        console.log('field', entryvalue.string, field.hidewhengrading)
         if (field.hidewhengrading) continue
       }
       entry.values.push(entryvalue)
