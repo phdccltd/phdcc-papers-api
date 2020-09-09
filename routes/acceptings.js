@@ -22,6 +22,7 @@ router.post('/acceptings/:flowid', async function (req, res, next) {
 
 /* ************************ */
 /* POST: Delete accepting*/
+/* ACCESS: OWNER-ONLY TOTEST */
 async function deleteAccepting(req, res, next){
   const flowid = parseInt(req.params.flowid)
   //console.log('DELETE /acceptings', flowid)
@@ -60,6 +61,7 @@ async function deleteAccepting(req, res, next){
 
 /* ************************ */
 /* POST: Add/Edit accepting*/
+/* ACCESS: OWNER-ONLY TOTEST */
 async function addEditAccepting(req, res, next){
   const flowid = parseInt(req.params.flowid)
   //console.log('Add/Edit /acceptings', flowid)

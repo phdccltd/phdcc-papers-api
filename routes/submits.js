@@ -762,7 +762,7 @@ router.post('/submits/status/:id', async function (req, res, next) {
 
 /* ************************ */
 /* POST DELETE submit status*/
-/* ACCESS: OWNER-ONLY */
+/* ACCESS: OWNER-ONLY TESTED */
 async function deleteSubmitStatus(req, res, next) {
   try {
     //console.log('deleteSubmitStatus', req.params.id)
@@ -797,7 +797,7 @@ async function deleteSubmitStatus(req, res, next) {
 
 /* ************************ */
 /* POST POST add submit status*/
-/* ACCESS: OWNER-ONLY */
+/* ACCESS: OWNER-ONLY TESTED */
 async function addSubmitStatus(req, res, next) {
   try {
     const submitid = parseInt(req.params.id)
