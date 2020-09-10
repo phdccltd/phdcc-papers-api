@@ -10,6 +10,7 @@ const auth = require('./auth')
 const acceptingsRouter = require('./acceptings')
 const mailtemplatesRouter = require('./mailtemplates')
 const pubsRouter = require('./pubs')
+const reviewersRouter = require('./reviewers')
 const sitepagesRouter = require('./sitepages')
 const submitsRouter = require('./submits')
 const users = require('./users')
@@ -110,6 +111,10 @@ router.use(mailtemplatesRouter)
 //////////////////////
 // /acceptings/*
 router.use(acceptingsRouter)
+
+//////////////////////
+// /acceptings/*
+router.use(reviewersRouter)
 
 //////////////////////
 // /submits/*

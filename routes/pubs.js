@@ -41,6 +41,7 @@ router.get('/pubs', async function (req, res, next) {
           if (mypubrole.isowner) pub.isowner = true
         }
       }
+      //pub.isowner = true // When testing add this fake ownership so subsequent tests fail
 
       const dbpubroles = await dbpub.getPubroles()
       pub.pubroles = models.sanitiselist(dbpubroles, models.pubroles)
@@ -66,7 +67,6 @@ router.get('/pubs', async function (req, res, next) {
             for (const dbreviewer of dbreviewers) {
               const alreadyin = _.find(pub.reviewers, (reviewer) => { return reviewer.id === dbreviewer.id })
               if (!alreadyin) {
-                console.log('Adding ', dbreviewer.id, dbreviewer.name, dbpubrole.name)
                 pub.reviewers.push({ id: dbreviewer.id, name: dbreviewer.name, roles: dbpubrole.name })
               } else {
                 alreadyin.roles += ', ' + dbpubrole.name
