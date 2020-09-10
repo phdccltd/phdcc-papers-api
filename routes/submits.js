@@ -761,6 +761,29 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           if (!includethissubmit) continue
         }
 
+        const reviewers = []
+        for (const dbreviewer of await dbsubmit.getReviewers()) {
+          const reviewer = models.sanitise(models.submitreviewers, dbreviewer)
+          const dbuser = await dbreviewer.getUser()
+          reviewer.username = dbuser ? dbuser.name : ''
+          reviewers.push(reviewer)
+        }
+        const returnreviewers = true
+        submit.reviewers = returnreviewers ? reviewers : []
+
+        const returngradings = true
+        submit.gradings = []
+        if (returngradings) {
+          for (const dbgrading of await dbsubmit.getGradings()) {
+            const grading = models.sanitise(models.submitgradings, dbgrading)
+            const reviewer = _.find(reviewers, (reviewer) => { return reviewer.userId === grading.userId })
+            grading.lead = reviewer ? reviewer.lead : false
+            const dbuser = await dbgrading.getUser()
+            grading.username = dbuser ? dbuser.name : ''
+            submit.gradings.push(grading)
+          }
+        }
+
         submit.actionable = submit.actions.length>0
 
         ////////// Add submit to return list

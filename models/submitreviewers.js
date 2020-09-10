@@ -3,6 +3,7 @@ const Sequelize = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
+    lead: { type: DataTypes.BOOLEAN, allowNull: false },
   }
   const submitreviewers = sequelize.define('submitreviewers', fields)
   submitreviewers.fields = fields
@@ -14,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
 
     dbs.submitreviewers.belongsTo(dbs.users, { foreignKey: { allowNull: false } })
 
-    //dbs.submitreviewers.fields.userId = true
+    dbs.submitreviewers.fields.userId = true
 }
 
   return submitreviewers
