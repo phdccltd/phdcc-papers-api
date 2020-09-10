@@ -34,15 +34,16 @@ router.get('/pubs', async function (req, res, next) {
       // Set isowner and myroles for this publication
       pub.isowner = false
       pub.myroles = []
-      _.forEach(dbmypubroles, (dbmypubrole) => {
+      for (const dbmypubrole of dbmypubroles) {
         if (dbmypubrole.pubId === pub.id) {
           const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
           pub.myroles.push(mypubrole)
           if (mypubrole.isowner) pub.isowner = true
         }
-      })
+      }
 
-      pub.pubroles = models.sanitiselist(await dbpub.getPubroles(), models.pubroles)
+      const dbpubroles = await dbpub.getPubroles()
+      pub.pubroles = models.sanitiselist(dbpubroles, models.pubroles)
 
       pub.publookups = []
       const dbpublookups = await dbpub.getPubLookups()
@@ -56,6 +57,25 @@ router.get('/pubs', async function (req, res, next) {
         publookup.values = models.sanitiselist(dbpublookupvalues, models.publookupvalues)
         pub.publookups.push(publookup)
       }
+
+      pub.reviewers = []
+      if (pub.isowner) {
+        for (const dbpubrole of dbpubroles) {
+          if (dbpubrole.isreviewer) {
+            const dbreviewers = await dbpubrole.getUsers()
+            for (const dbreviewer of dbreviewers) {
+              const alreadyin = _.find(pub.reviewers, (reviewer) => { return reviewer.id === dbreviewer.id })
+              if (!alreadyin) {
+                console.log('Adding ', dbreviewer.id, dbreviewer.name, dbpubrole.name)
+                pub.reviewers.push({ id: dbreviewer.id, name: dbreviewer.name, roles: dbpubrole.name })
+              } else {
+                alreadyin.roles += ', ' + dbpubrole.name
+              }
+            }
+          }
+        }
+      }
+
       pubs.push(pub)
     }
     utils.returnOK(req, res, pubs, 'pubs')

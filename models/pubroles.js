@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     name: { type: Sequelize.STRING(100), allowNull: false },
     isowner: { type: DataTypes.BOOLEAN, allowNull: false, default: false },
     defaultrole: { type: DataTypes.BOOLEAN, allowNull: false },
+    isreviewer: { type: DataTypes.BOOLEAN, allowNull: false },
 }
   const pubroles = sequelize.define('pubroles', fields)
   pubroles.fields = fields
