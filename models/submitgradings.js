@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     // id, createdAt and updatedAt: added automatically
     comment: { type: Sequelize.TEXT, allowNull: false },
     canreview: { type: DataTypes.BOOLEAN, allowNull: false },
+    dt: { type: Sequelize.DATE, allowNull: false },
   }
   const submitgradings = sequelize.define('submitgradings', fields)
   submitgradings.fields = fields
