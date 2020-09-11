@@ -448,7 +448,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
 
       ////////// What if owner???
       ////////// Filter submits
-      let includethissubmit = false
+      let includethissubmit = false // ARGHH DUPLICATE CODE
 
       // Go through grades looking to see if currentstatus means that I need to grade
       for (const flowgrade of flow.flowgrades) {
@@ -469,7 +469,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
             for (const dbreviewer of dbreviewers) {
               if (dbreviewer.userId === req.dbuser.id) {
                 includethissubmit = true
-              iamgrading = true
+                iamgrading = true
               }
             }
           }
@@ -477,7 +477,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
             const entrytograde = _.find(submit.entries, (entry) => { return entry.flowstageId === flowgrade.displayflowstageId })
             if (entrytograde) {
               route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/' + entrytograde.id
-              submit.actions.push({ name: flowgrade.name + ' needed', route })
+              submit.actions.push({ name: flowgrade.name, route, flowgradeid: flowgrade.id })
               submit.user = 'author redacted'
             }
           }
@@ -718,7 +718,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
 
         ////////// Filter submits
         if (!onlyanauthor && !isowner) {
-          let includethissubmit = false
+          let includethissubmit = false // ARGHH DUPLICATE CODE
 
           // If user is the submitter, then include
           if (await req.dbuser.hasSubmit(dbsubmit)) {
@@ -752,7 +752,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
                 const entrytograde = _.find(submit.entries, (entry) => { return entry.flowstageId === flowgrade.displayflowstageId })
                 if (entrytograde) {
                   route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/' + entrytograde.id
-                  submit.actions.push({ name: flowgrade.name + ' needed', route })
+                  submit.actions.push({ name: flowgrade.name, route, flowgradeid: flowgrade.id })
                   submit.user = 'author redacted'
                 }
               }
