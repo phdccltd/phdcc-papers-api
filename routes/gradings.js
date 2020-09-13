@@ -21,7 +21,7 @@ router.post('/gradings/:submitid', async function (req, res, next) {
 })
 
 /* ************************ */
-/* POST: Delete grading*/
+/* POST: Delete grading */
 /* ACCESS: OWNER-ONLY TESTED */
 async function deleteGrading(req, res, next){
   const submitid = parseInt(req.params.submitid)
@@ -69,55 +69,58 @@ async function addGrading(req, res, next){
   const submitid = parseInt(req.params.submitid)
   //console.log('Add /gradings', submitid)
   try {
-    /*const dbflow = await models.flows.findByPk(flowid)
-    if (!dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
+    req.dbsubmit = await models.submits.findByPk(submitid)
+    if (!req.dbsubmit) return utils.giveup(req, res, 'Cannot find submitid ' + submitid)
+
+    const dbflow = await req.dbsubmit.getFlow()
+    if (!dbflow) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
 
     const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, 'No pub found for flowid ' + flowid)
+    if (!dbpub) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
 
-    // Get MY roles in all publications - check iamowner
+    // TODO: Check I can do grading
+    /*// Get MY roles in all publications - check iamowner
     const dbmypubroles = await req.dbuser.getRoles()
     const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!iamowner) return utils.giveup(req, res, 'Not an owner')*/
 
     const gradingid = req.body.gradingid
-    console.log('Add /gradings', submitid, gradingid)
+    console.log('Add/Edit /gradings', submitid, gradingid)
 
     let ok = false
-    if (gradingid) {
+    if (gradingid) {  // NOT TESTED
       const dbgrading = await models.submitgradings.findByPk(gradingid)
       if (!dbgrading) return utils.giveup(req, res, 'Cannot find grading ' + gradingid)
 
-      const dbgradingflow = await dbgrading.getFlow()
-      if (!dbgradingflow) return utils.giveup(req, res, 'Cannot find flow for grading')
-      if (dbgradingflow.id !== flowid) return utils.giveup(req, res, 'Edit grading flowid mismatch ' + dbgradingflow.id + ' ' + flowid)
+      const dbgradingsubmit = await dbgrading.getSubmit()
+      if (!dbgradingsubmit) return utils.giveup(req, res, 'Cannot find submit for grading')
+      if (dbgradingsubmit.id !== submitid) return utils.giveup(req, res, 'Edit grading submitid mismatch ' + dbgradingsubmit.id + ' ' + submitid)
 
-      dbgrading.flowstageId = parseInt(req.body.chosenstage)
-      dbgrading.open = req.body.chosenopen
-      const chosenstatus = parseInt(req.body.chosenstatus)
-      dbgrading.flowstatusId = chosenstatus ? chosenstatus : null
+      dbgrading.flowgradescoreId = parseInt(req.body.decision)
+      dbgrading.comment = req.body.comment
+      dbgrading.canreview = req.body.canreview
 
-      await dbgrading.save()
-      logger.log4req(req, 'UPDATED grading', gradingid)
+      //await dbgrading.save()
+      //logger.log4req(req, 'UPDATED grading', gradingid)
 
-      ok = true
+      ok = false
     } else {
+      const now = new Date()
       const params = {
-        flowId: flowid,
-        flowstageId: parseInt(req.body.chosenstage),
-        open: req.body.chosenopen,
+        dt: now,
+        submitId: submitid,
+        userId: req.dbuser.id,
+        flowgradeId: parseInt(req.body.flowgradeid),
+        flowgradescoreId: parseInt(req.body.decision),
+        comment: req.body.comment,
+        canreview: req.body.canreview,
       }
-      
-      const chosenstatus = parseInt(req.body.chosenstatus)
-      if (chosenstatus) params.flowstatusId = chosenstatus
-
-      const dbgrading = await models.flowgradings.create(params)
+      console.log("creating", params)
+      const dbgrading = await models.submitgradings.create(params)
       if (!dbgrading) return utils.giveup(req, res, 'grading not created')
       logger.log4req(req, 'CREATED new grading', dbgrading.id)
       ok = true
     }
-    */
-    const ok = false
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
     utils.giveup(req, res, e.message)
