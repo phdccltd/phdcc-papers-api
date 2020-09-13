@@ -8,6 +8,7 @@ const utils = require('../utils')
 
 const auth = require('./auth')
 const acceptingsRouter = require('./acceptings')
+const gradingsRouter = require('./gradings')
 const mailtemplatesRouter = require('./mailtemplates')
 const pubsRouter = require('./pubs')
 const reviewersRouter = require('./reviewers')
@@ -115,6 +116,10 @@ router.use(acceptingsRouter)
 //////////////////////
 // /acceptings/*
 router.use(reviewersRouter)
+
+//////////////////////
+// /gradings/*
+router.use(gradingsRouter)
 
 //////////////////////
 // /submits/*
