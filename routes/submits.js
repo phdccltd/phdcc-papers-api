@@ -721,11 +721,11 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           // Go through grades looking to see if currentstatus means that I need to grade
           for (const flowgrade of flow.flowgrades) {
 
-            // CHECK TO SEE IF I HAVE ENTERED A GRADING FOR THIS GRADE: If I have then, don't add action
-            console.log('flowgrade', flowgrade.id, flowgrade.name)
-            for (const dbsubmitgrading of dnsubmitgradings) {
-              if (dbsubmitgrading.id === dbsubmitgradings.flowgradeId) {
-                console.log('dbsubmitgrading', dbsubmitgrading.id, dbsubmitgrading.userId)
+            // If I have already graded, don't add action later (but still show submit)
+            let ihavegraded = false
+            for (const dbsubmitgrading of dbsubmitgradings) {
+              if ((flowgrade.id === dbsubmitgrading.flowgradeId) && (dbsubmitgrading.userId === req.dbuser.id)) {
+                ihavegraded = true
               }
             }
 
@@ -737,7 +737,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
                 const ihavethisrole = _.find(myroles, roles => { return roles.id === flowgrade.visibletorole })
                 if (ihavethisrole) {
                   includethissubmit = true
-                  route = true
+                  route = !ihavegraded
                 }
               }
               if (flowgrade.visibletoreviewers) {
@@ -746,7 +746,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
                 for (const dbreviewer of dbreviewers) {
                   if (dbreviewer.userId === req.dbuser.id) {
                     includethissubmit = true
-                    route = true
+                    route = !ihavegraded
                   }
                 }
               }
@@ -776,7 +776,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         const returngradings = true
         submit.gradings = []
         if (returngradings) {
-          for (const dbgrading of dnsubmitgradings) {
+          for (const dbgrading of dbsubmitgradings) {
             const grading = models.sanitise(models.submitgradings, dbgrading)
             const reviewer = _.find(reviewers, (reviewer) => { return reviewer.userId === grading.userId })
             grading.lead = reviewer ? reviewer.lead : false
