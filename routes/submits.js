@@ -448,13 +448,12 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
 
       ////////// What if owner???
       ////////// Filter submits
-      let includethissubmit = false // ARGHH DUPLICATE CODE
+      let includethissubmit = false // ARGHH DUPLICATE CODE: SIMILAR SUB SLIMMED DOWN
 
       // Go through grades looking to see if currentstatus means that I need to grade
       for (const flowgrade of flow.flowgrades) {
         if (flowgrade.flowstatusId === currentstatus.flowstatusId) { // If we are at status where this grade possible
           //console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
-          let route = false
           if (flowgrade.visibletorole !== 0) {
             // Check if I have role that means I can grade
             const ihavethisrole = _.find(myroles, roles => { return roles.id === flowgrade.visibletorole })
@@ -471,14 +470,6 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
                 includethissubmit = true
                 iamgrading = true
               }
-            }
-          }
-          if (route) {
-            const entrytograde = _.find(submit.entries, (entry) => { return entry.flowstageId === flowgrade.displayflowstageId })
-            if (entrytograde) {
-              route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/' + entrytograde.id
-              submit.actions.push({ name: flowgrade.name, route, flowgradeid: flowgrade.id })
-              submit.user = 'author redacted'
             }
           }
         }
@@ -664,6 +655,8 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
       for (const dbsubmit of dbsubmits) {
         const submit = models.sanitise(models.submits, dbsubmit)
 
+        const dbsubmitgradings = await dbsubmit.getGradings()
+
         submit.actions = [] // Allowable actions
 
         // Get submit's statuses and currentstatus
@@ -718,7 +711,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
 
         ////////// Filter submits
         if (!onlyanauthor && !isowner) {
-          let includethissubmit = false // ARGHH DUPLICATE CODE
+          let includethissubmit = false // ARGHH DUPLICATE CODE: SIMILAR CODE LATER
 
           // If user is the submitter, then include
           if (await req.dbuser.hasSubmit(dbsubmit)) {
@@ -727,6 +720,15 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
 
           // Go through grades looking to see if currentstatus means that I need to grade
           for (const flowgrade of flow.flowgrades) {
+
+            // CHECK TO SEE IF I HAVE ENTERED A GRADING FOR THIS GRADE: If I have then, don't add action
+            console.log('flowgrade', flowgrade.id, flowgrade.name)
+            for (const dbsubmitgrading of dnsubmitgradings) {
+              if (dbsubmitgrading.id === dbsubmitgradings.flowgradeId) {
+                console.log('dbsubmitgrading', dbsubmitgrading.id, dbsubmitgrading.userId)
+              }
+            }
+
             if (flowgrade.flowstatusId === currentstatus.flowstatusId) { // If we are at status where this grade possible
               //console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
               let route = false
@@ -774,7 +776,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         const returngradings = true
         submit.gradings = []
         if (returngradings) {
-          for (const dbgrading of await dbsubmit.getGradings()) {
+          for (const dbgrading of dnsubmitgradings) {
             const grading = models.sanitise(models.submitgradings, dbgrading)
             const reviewer = _.find(reviewers, (reviewer) => { return reviewer.userId === grading.userId })
             grading.lead = reviewer ? reviewer.lead : false
