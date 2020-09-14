@@ -68,6 +68,7 @@ async function deleteGrading(req, res, next){
 async function addGrading(req, res, next){
   const submitid = parseInt(req.params.submitid)
   //console.log('Add /gradings', submitid)
+  const flowgradeid = parseInt(req.body.flowgradeid)
   try {
     req.dbsubmit = await models.submits.findByPk(submitid)
     if (!req.dbsubmit) return utils.giveup(req, res, 'Cannot find submitid ' + submitid)
@@ -78,11 +79,51 @@ async function addGrading(req, res, next){
     const dbpub = await dbflow.getPub()
     if (!dbpub) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
 
-    // TODO: Check I can do grading
-    /*// Get MY roles in all publications - check iamowner
+    // Get MY roles in all publications - see if iamowner or can grade
     const dbmypubroles = await req.dbuser.getRoles()
     const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')*/
+    if (!iamowner) {
+
+      const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
+      if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found' + flowgradeid)
+      console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
+      if (dbflowgrade.flowId !== dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
+      
+
+      // See if I have graded already
+      const dbsubmitgradings = await req.dbsubmit.getGradings()
+      let ihavegraded = false
+      for (const dbsubmitgrading of dbsubmitgradings) {
+        if ((flowgradeid === dbsubmitgrading.flowgradeId) && (dbsubmitgrading.userId === req.dbuser.id)) {
+          ihavegraded = true
+        }
+      }
+      console.log('ihavegraded', ihavegraded)
+      /*if (dbflowgrade.flowstatusId === currentstatus.flowstatusId) { // If we are at status where this grade possible
+        //console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
+        let route = false
+        if (flowgrade.visibletorole !== 0) {
+          // Check if I have role that means I can grade
+          const ihavethisrole = _.find(myroles, roles => { return roles.id === flowgrade.visibletorole })
+          if (ihavethisrole) {
+            includethissubmit = true
+            route = !ihavegraded
+          }
+        }
+        if (flowgrade.visibletoreviewers) {
+          // Check if I am reviewer that means I can grade
+          const dbreviewers = await dbsubmit.getReviewers()
+          for (const dbreviewer of dbreviewers) {
+            if (dbreviewer.userId === req.dbuser.id) {
+              includethissubmit = true
+              route = !ihavegraded
+            }
+          }
+        }
+      }*/
+
+      return utils.giveup(req, res, 'Not allowed')
+    }
 
     const gradingid = req.body.gradingid
     console.log('Add/Edit /gradings', submitid, gradingid)
@@ -110,7 +151,7 @@ async function addGrading(req, res, next){
         dt: now,
         submitId: submitid,
         userId: req.dbuser.id,
-        flowgradeId: parseInt(req.body.flowgradeid),
+        flowgradeId: flowgradeid,
         flowgradescoreId: parseInt(req.body.decision),
         comment: req.body.comment,
         canreview: req.body.canreview,

@@ -8,6 +8,7 @@ const mime = require('mime-types')
 const Handlebars = require("handlebars")
 const _ = require('lodash/core')
 const logger = require('../logger')
+const dbutils = require('./dbutils')
 
 const TMPDIR = '/tmp/papers/'
 const TMPDIRARCHIVE = '/tmp/papers/archive'  // Without final slash.  Deleted files go here (to be deleted on server reboot)
@@ -660,7 +661,8 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         submit.actions = [] // Allowable actions
 
         // Get submit's statuses and currentstatus
-        const dbstatuses = await dbsubmit.getStatuses({ order: [ ['id', 'DESC']]})
+        const currentstatus = await dbutils.getSubmitCurrentStatus(dbsubmit, submit, flow, onlyanauthor)
+        /*const dbstatuses = await dbsubmit.getStatuses({ order: [ ['id', 'DESC']]})
         submit.statuses = []
         let currentstatus = false
         for (const dbstatus of dbstatuses) {
@@ -669,7 +671,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           if (onlyanauthor && !flowstatus.visibletoauthor) continue // If author: only return statuses with visibletoauthor
           submit.statuses.push(submitstatus)
           if (!currentstatus) currentstatus = submitstatus
-        }
+        }*/
         if (!currentstatus) { // If no statuses, then only return to owner
           if (!isowner) continue
         }
@@ -725,7 +727,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
             let ihavegraded = false
             for (const dbsubmitgrading of dbsubmitgradings) {
               if ((flowgrade.id === dbsubmitgrading.flowgradeId) && (dbsubmitgrading.userId === req.dbuser.id)) {
-                ihavegraded = true
+                //ihavegraded = true // (fake) comment this out to check if I can grade twice
               }
             }
 
