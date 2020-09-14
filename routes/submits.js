@@ -778,8 +778,20 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
             const grading = models.sanitise(models.submitgradings, dbgrading)
             const reviewer = _.find(reviewers, (reviewer) => { return reviewer.userId === grading.userId })
             grading.lead = reviewer ? reviewer.lead : false
-            const dbuser = await dbgrading.getUser()
-            grading.username = dbuser ? dbuser.name : ''
+            const dbgrader = await dbgrading.getUser()
+            grading.username = ''
+            grading.hasReviewerRole = false
+            if (dbgrader) {
+              console.log('dbgrader', dbgrader)
+              grading.username = dbgrader.name
+              const dbgraderpubroles = await dbgrader.getRoles()
+              const isreviewer = _.find(dbgraderpubroles, (grader) => { return grader.isreviewer })
+              for (const grader of dbgraderpubroles) {
+                console.log('grader', grader.id, grader.isreviewer, grader.name)
+              }
+              console.log('isreviewer', isreviewer)
+              if (isreviewer) grading.hasReviewerRole = true
+            }
             submit.gradings.push(grading)
           }
         }
