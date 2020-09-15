@@ -392,10 +392,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
-    let iamgrading = false
-
     req.dbsubmit = await dbentry.getSubmit()
-      //await models.submits.findByPk(dbentry.submitId)
     if (!req.dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
 
     if (req.dbsubmit.userId !== req.dbuser.id) {
@@ -415,41 +412,24 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
         flow.flowgrades.push(flowgrade)
       }
 
-      const dbpub = await dbflow.getPub()
-      if (!dbpub) return utils.giveup(req, res, "pub not found")
-      const pub = models.sanitise(models.pubs, dbpub)
+      req.dbpub = await dbflow.getPub()
+      if (!req.dbpub) return utils.giveup(req, res, "pub not found")
+      const pub = models.sanitise(models.pubs, req.dbpub)
 
-      // Get my roles in all publications
-      const dbmypubroles = await req.dbuser.getRoles()
-
-      // Set isowner and myroles for this publication
-      let isowner = false
-      const myroles = []
-      _.forEach(dbmypubroles, (dbmypubrole) => {
-        if (dbmypubrole.pubId === pub.id) {
-          const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
-          myroles.push(mypubrole)
-          if (mypubrole.isowner) isowner = true
-        }
-      })
+      await dbutils.getMyRoles(req)
 
       // Get submit's statuses and currentstatus
-      const dbstatuses = await req.dbsubmit.getStatuses({ order: [['id', 'DESC']] })
-      submit.statuses = []
-      let currentstatus = false
-      for (const dbstatus of dbstatuses) {
-        const submitstatus = models.sanitise(models.submitstatuses, dbstatus)
-        submit.statuses.push(submitstatus)
-        if (!currentstatus) currentstatus = submitstatus
-      }
-      if (!currentstatus) { // If no statuses, then give up here
+      await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow, req.onlyanauthor) // NEW
+      if (!req.currentstatus) { // If no statuses, then give up here
         return utils.giveup(req, res, "No statuses for this submit")
       }
 
+      req.dbsubmitgradings = await dbsubmit.getGradings()
 
       ////////// What if owner???
       ////////// Filter submits
-      let includethissubmit = false // ARGHH DUPLICATE CODE: SIMILAR SUB SLIMMED DOWN
+      const includethissubmit = await dbutils.isActionableSubmit(req, flow, false)
+      /*let includethissubmit = false // ARGHH DUPLICATE CODE: SIMILAR SUB SLIMMED DOWN
 
       // Go through grades looking to see if currentstatus means that I need to grade
       for (const flowgrade of flow.flowgrades) {
@@ -474,7 +454,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
             }
           }
         }
-      }
+      }*/
       if (!includethissubmit) {
         return utils.giveup(req, res, 'Not your submit entry')
       }
@@ -487,7 +467,7 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
     entry.values = []
     for (const dbentryvalue of await dbentry.getEntryValues()) {
       const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
-      if (iamgrading) {
+      if (req.iamgrading) {
         const field = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
         if (field.hidewhengrading) continue
       }
@@ -577,33 +557,14 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
     const pubid = parseInt(req.params.pubid)
     console.log('GET /submits/pub/', pubid)
 
-    // Get my roles in all publications
-    const dbmypubroles = await req.dbuser.getRoles()
+    req.dbpub = await models.pubs.findByPk(pubid)
+    if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
 
-    const dbpub = await models.pubs.findByPk(pubid)
-    if (!dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
-
-    // Set isowner, onlyanauthor and myroles for this publication
-    let isowner = false
-    let onlyanauthor = false
-    const myroles = []
-    _.forEach(dbmypubroles, (dbmypubrole) => {
-      if (dbmypubrole.pubId === pubid) {
-        const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
-        myroles.push(mypubrole)
-        if (mypubrole.isowner) isowner = true
-        if (mypubrole.defaultrole) onlyanauthor = true // ie author
-      }
-    })
-    if (myroles.length >= 2) onlyanauthor = false
-    else if (myroles.length === 0) onlyanauthor = true
-    if (req.dbuser.super) {
-      onlyanauthor = false
-      isowner = true
-    }
+    // Set req.isowner, req.onlyanauthor and req.myroles for this publication
+    await dbutils.getMyRoles(req)
 
     //////////
-    const dbflows = await dbpub.getFlows()
+    const dbflows = await req.dbpub.getFlows()
     const flows = []
     for (const dbflow of dbflows) {
       ////////// FOR THIS FLOW
@@ -621,7 +582,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
       // Find all candidate submits ie just user's or all of them
       flow.submits = []
       let dbsubmits = false
-      if (onlyanauthor) { // Just get mine
+      if (req.onlyanauthor) { // Just get mine
         dbsubmits = await dbflow.getSubmits({ where: { userId: req.dbuser.id } })
       } else { // Otherwise: det all submits and filter
         dbsubmits = await dbflow.getSubmits()
@@ -654,26 +615,17 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
 
       ////////// GO THROUGH ALL FLOW'S SUBMITS
       for (const dbsubmit of dbsubmits) {
+        req.dbsubmit = dbsubmit
         const submit = models.sanitise(models.submits, dbsubmit)
 
-        const dbsubmitgradings = await dbsubmit.getGradings()
+        req.dbsubmitgradings = await dbsubmit.getGradings()
 
         submit.actions = [] // Allowable actions
 
         // Get submit's statuses and currentstatus
-        const currentstatus = await dbutils.getSubmitCurrentStatus(dbsubmit, submit, flow, onlyanauthor)
-        /*const dbstatuses = await dbsubmit.getStatuses({ order: [ ['id', 'DESC']]})
-        submit.statuses = []
-        let currentstatus = false
-        for (const dbstatus of dbstatuses) {
-          const submitstatus = models.sanitise(models.submitstatuses, dbstatus)
-          const flowstatus = _.find(flow.statuses, flowstatus => { return flowstatus.id === submitstatus.flowstatusId })
-          if (onlyanauthor && !flowstatus.visibletoauthor) continue // If author: only return statuses with visibletoauthor
-          submit.statuses.push(submitstatus)
-          if (!currentstatus) currentstatus = submitstatus
-        }*/
-        if (!currentstatus) { // If no statuses, then only return to owner
-          if (!isowner) continue
+        await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow, req.onlyanauthor)
+        if (!req.currentstatus) { // If no statuses, then only return to owner
+          if (!req.isowner) continue
         }
 
         submit.user = ''
@@ -687,8 +639,8 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         ////////// If mine, then add actions to Add next stage (if appropriate)
         if (submit.ismine) {
           //console.log('currentstatus.flowstatusId', currentstatus.flowstatusId)
-          if (currentstatus.flowstatusId) {
-            const flowstatus = _.find(flow.statuses, (status) => { return status.id === currentstatus.flowstatusId })
+          if (req.currentstatus.flowstatusId) {
+            const flowstatus = _.find(flow.statuses, (status) => { return status.id === req.currentstatus.flowstatusId })
             if (flowstatus) {
               //console.log('flowstatus.cansubmitflowstageId', flowstatus.cansubmitflowstageId)
               if (flowstatus.cansubmitflowstageId) {
@@ -712,8 +664,9 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         submit.entries = models.sanitiselist(dbentries, models.entries)
 
         ////////// Filter submits
-        if (!onlyanauthor && !isowner) {
-          let includethissubmit = false // ARGHH DUPLICATE CODE: SIMILAR CODE LATER
+        if (!req.onlyanauthor && !req.isowner) {
+          const includethissubmit = await dbutils.isActionableSubmit(req, flow, submit) // LATER
+          /*let includethissubmit = false // ARGHH DUPLICATE CODE: SIMILAR CODE EARLIER
 
           // If user is the submitter, then include
           if (await req.dbuser.hasSubmit(dbsubmit)) {
@@ -731,12 +684,12 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
               }
             }
 
-            if (flowgrade.flowstatusId === currentstatus.flowstatusId) { // If we are at status where this grade possible
+            if (flowgrade.flowstatusId === req.currentstatus.flowstatusId) { // If we are at status where this grade possible
               //console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
               let route = false
               if (flowgrade.visibletorole !== 0) {
                 // Check if I have role that means I can grade
-                const ihavethisrole = _.find(myroles, roles => { return roles.id === flowgrade.visibletorole })
+                const ihavethisrole = _.find(req.myroles, roles => { return roles.id === flowgrade.visibletorole })
                 if (ihavethisrole) {
                   includethissubmit = true
                   route = !ihavegraded
@@ -761,7 +714,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
                 }
               }
             }
-          }
+          }*/
           if (!includethissubmit) continue
         }
 
@@ -778,7 +731,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         const returngradings = true
         submit.gradings = []
         if (returngradings) {
-          for (const dbgrading of dbsubmitgradings) {
+          for (const dbgrading of req.dbsubmitgradings) {
             const grading = models.sanitise(models.submitgradings, dbgrading)
             const reviewer = _.find(reviewers, (reviewer) => { return reviewer.userId === grading.userId })
             grading.lead = reviewer ? reviewer.lead : false

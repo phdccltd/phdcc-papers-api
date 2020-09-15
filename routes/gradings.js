@@ -70,7 +70,9 @@ async function addGrading(req, res, next){
       if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found' + flowgradeid)
       console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
       if (dbflowgrade.flowId !== req.dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
-      
+
+      const submit = models.sanitise(models.submits, req.dbsubmit)
+      await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow, onlyanauthor)
 
       // See if I have graded already
       const dbsubmitgradings = await req.dbsubmit.getGradings()
