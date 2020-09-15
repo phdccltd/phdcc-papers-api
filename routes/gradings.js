@@ -122,7 +122,6 @@ async function addGrading(req, res, next){
         comment: req.body.comment,
         canreview: req.body.canreview,
       }
-      console.log("creating", params)
       const dbgrading = await models.submitgradings.create(params)
       if (!dbgrading) return utils.giveup(req, res, 'grading not created')
       logger.log4req(req, 'CREATED new grading', dbgrading.id)

@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     visibletoreviewers: { type: DataTypes.BOOLEAN, allowNull: false },
     cancomment: { type: DataTypes.BOOLEAN, allowNull: false },
     canopttoreview: { type: DataTypes.BOOLEAN, allowNull: false },
+    authorcanseeatthisstatus: { type: Sequelize.INTEGER, allowNull: false },  // Author can see comments if at this status
   }
   const flowgrades = sequelize.define('flowgrades', fields)
   flowgrades.fields = fields

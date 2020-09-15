@@ -630,10 +630,17 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           reviewer.username = dbuser ? dbuser.name : ''
           reviewers.push(reviewer)
         }
-        const returnreviewers = true
+        const returnreviewers = req.iamowner
         submit.reviewers = returnreviewers ? reviewers : []
 
-        const returngradings = true
+        // Decide which gradings to return
+        // - if owner then return all
+        // - If author: return when grading at status authorcanseeatthisstatus
+        // - If council: if scoring then can add / can see own. Otherwise can see all earlier gradings
+        // - If reviewer: can see earlier abstract scores and add/see your own
+
+        const returngradings = !req.onlyanauthor
+        req.currentstatus
         submit.gradings = []
         if (returngradings) {
           for (const dbgrading of req.dbsubmitgradings) {
