@@ -830,23 +830,12 @@ router.post('/submits/:submitid', async function (req, res, next) {
 /* POST DELETE submit */
 /* ACCESS: OWNER-ONLY TESTED */
 async function deleteSubmit(req, res, next) {
+  const submitid = parseInt(req.params.submitid)
   try {
-    //console.log('delete submit', req.params.submitid)
+    const error = await dbutils.getSubmitFlowPub(req, submitid)
+    if (error) return utils.giveup(req, res, error)
 
-    const submitid = parseInt(req.params.submitid)
-    req.dbsubmit = await models.submits.findByPk(submitid)
-    if (!req.dbsubmit) return utils.giveup(req, res, "submit not found")
-
-    const dbflow = await req.dbsubmit.getFlow()
-    if (!dbflow) return utils.giveup(req, res, "flow not found")
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, "pub not found")
-
-    // Get MY roles in all publications - check iamowner
-    const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
 
     // Delete entries and their contents
     const dbentries = await req.dbsubmit.getEntries()
@@ -875,23 +864,14 @@ async function deleteSubmit(req, res, next) {
 /* PATCH edit submit title */
 /* ACCESS: OWNER-ONLY TESTED */
 async function editSubmitTitle(req, res, next) {
+  const submitid = parseInt(req.params.submitid)
   try {
     console.log('changeSubmitTitle', req.params.submitid, req.body.newtitle)
 
-    const submitid = parseInt(req.params.submitid)
-    req.dbsubmit = await models.submits.findByPk(submitid)
-    if (!req.dbsubmit) return utils.giveup(req, res, "submit not found")
+    const error = await dbutils.getSubmitFlowPub(req, submitid)
+    if (error) return utils.giveup(req, res, error)
 
-    const dbflow = await req.dbsubmit.getFlow()
-    if (!dbflow) return utils.giveup(req, res, "flow not found")
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, "pub not found")
-
-    // Get MY roles in all publications - check iamowner
-    const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
 
     req.dbsubmit.name = req.body.newtitle
     await req.dbsubmit.save()
@@ -962,19 +942,10 @@ async function addSubmitStatus(req, res, next) {
     const newstatusid = parseInt(req.body.newstatusid)
     //console.log('addSubmitStatus', submitid, newstatusid)
 
-    req.dbsubmit = await models.submits.findByPk(submitid)
-    if (!req.dbsubmit) return utils.giveup(req, res, 'Submit not found')
+    const error = await dbutils.getSubmitFlowPub(req, submitid)
+    if (error) return utils.giveup(req, res, error)
 
-    const dbflow = await req.dbsubmit.getFlow()
-    if (!dbflow) return utils.giveup(req, res, "flow not found")
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, "pub not found")
-
-    // Get MY roles in all publications - check iamowner
-    const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
 
     const dbflowstatus = await models.flowstatuses.findByPk(newstatusid)
     if (!dbflowstatus) return utils.giveup(req, res, 'Flow status not found')

@@ -4,6 +4,7 @@ const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
+const dbutils = require('./dbutils')
 
 const router = Router()
 
@@ -27,19 +28,10 @@ async function deleteGrading(req, res, next){
   const submitid = parseInt(req.params.submitid)
   //console.log('DELETE /gradings', submitid)
   try {
-    req.dbsubmit = await models.submits.findByPk(submitid)
-    if (!req.dbsubmit) return utils.giveup(req, res, 'Cannot find submitid ' + submitid)
+    const error = await dbutils.getSubmitFlowPub(req, submitid)
+    if (error) return utils.giveup(req, res, error)
 
-    const dbflow = await req.dbsubmit.getFlow()
-    if (!dbflow) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
-
-    // Get MY roles in all publications - check iamowner
-    const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
 
     const gradingid = req.body.gradingid
     console.log('DELETE /gradings', submitid, gradingid)
@@ -70,24 +62,14 @@ async function addGrading(req, res, next){
   //console.log('Add /gradings', submitid)
   const flowgradeid = parseInt(req.body.flowgradeid)
   try {
-    req.dbsubmit = await models.submits.findByPk(submitid)
-    if (!req.dbsubmit) return utils.giveup(req, res, 'Cannot find submitid ' + submitid)
-
-    const dbflow = await req.dbsubmit.getFlow()
-    if (!dbflow) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
-
-    // Get MY roles in all publications - see if iamowner or can grade
-    const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) {
+    const error = await dbutils.getSubmitFlowPub(req, submitid)
+    if (error) return utils.giveup(req, res, error)
+    if (!req.iamowner) {
 
       const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
       if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found' + flowgradeid)
       console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
-      if (dbflowgrade.flowId !== dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
+      if (dbflowgrade.flowId !== req.dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
       
 
       // See if I have graded already

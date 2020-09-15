@@ -4,6 +4,7 @@ const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
+const dbutils = require('./dbutils')
 
 const router = Router()
 
@@ -27,19 +28,10 @@ async function removeReviewer(req, res, next){
   const submitid = parseInt(req.params.submitid)
   //console.log('DELETE /reviewers', submitid)
   try {
-    req.dbsubmit = await models.submits.findByPk(submitid)
-    if (!req.dbsubmit) return utils.giveup(req, res, 'Cannot find submitid ' + submitid)
+    const error = await dbutils.getSubmitFlowPub(req, submitid)
+    if (error) return utils.giveup(req, res, error)
 
-    const dbflow = await req.dbsubmit.getFlow()
-    if (!dbflow) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
-
-    // Get MY roles in all publications - check iamowner
-    const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
 
     const submitreviewerid = req.body.submitreviewerid
     //console.log('DELETE /reviewers', submitid, submitreviewerid)
@@ -69,19 +61,10 @@ async function addReviewer(req, res, next){
   const submitid = parseInt(req.params.submitid)
   console.log('Add /reviewers', submitid)
   try {
-    req.dbsubmit = await models.submits.findByPk(submitid)
-    if (!req.dbsubmit) return utils.giveup(req, res, 'Cannot find submitid ' + submitid)
+    const error = await dbutils.getSubmitFlowPub(req, submitid)
+    if (error) return utils.giveup(req, res, error)
 
-    const dbflow = await req.dbsubmit.getFlow()
-    if (!dbflow) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, 'No pub found for submitid ' + submitid)
-
-    // Get MY roles in all publications - check iamowner
-    const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
 
     const userid = req.body.userid
     console.log('Add /reviewers', submitid, userid, req.body.lead)
