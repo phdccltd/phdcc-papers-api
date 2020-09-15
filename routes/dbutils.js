@@ -6,6 +6,7 @@ const logger = require('../logger')
 /* ************************ */
 
 getSubmitCurrentStatus = async function (req, dbsubmit, submit, flow) {
+  if (!('onlyanauthor' in req)) throw new Error('onlyanauthor not in req')
   const dbstatuses = await dbsubmit.getStatuses({ order: [['id', 'DESC']] })
   submit.statuses = []
   req.currentstatus = false
@@ -76,18 +77,18 @@ async function isActionableSubmit(req, flow, submit) {
     includethissubmit = true
   } // Don't else this
 
-
   // Go through grades looking to see if currentstatus means that I need to grade
   for (const flowgrade of flow.flowgrades) {
 
-    // If I have already graded, don't add action later (but still show submit)
-    for (const dbsubmitgrading of req.dbsubmitgradings) {
-      if ((flowgrade.id === dbsubmitgrading.flowgradeId) && (dbsubmitgrading.userId === req.dbuser.id)) {
-        req.ihavegraded = true // (fake) comment this out to check if I can grade twice
-      }
-    }
-
     if (flowgrade.flowstatusId === req.currentstatus.flowstatusId) { // If we are at status where this grade possible
+
+      // If I have already graded, don't add action later (but still show submit)
+      for (const dbsubmitgrading of req.dbsubmitgradings) {
+        if ((flowgrade.id === dbsubmitgrading.flowgradeId) && (dbsubmitgrading.userId === req.dbuser.id)) {
+          req.ihavegraded = true // (fake) comment this out to check if I can grade twice
+        }
+      }
+
       let route = false
       //console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
       if (flowgrade.visibletorole !== 0) {

@@ -23,7 +23,7 @@ const router = Router()
 
 /* ************************ */
 /* POST DELETE and PUT entry */
-router.post('/submits/entry/:entryid', upload.array('files'), async function (req, res, next) {
+async function handleEntryPost(req, res, next) {
   //console.log('/submits/entry/id ', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'PUT') {
     await editEntry(req, res, next)
@@ -36,7 +36,8 @@ router.post('/submits/entry/:entryid', upload.array('files'), async function (re
     return
   }
   utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
-})
+}
+router.post('/submits/entry/:entryid', upload.array('files'), handleEntryPost)
 
 /* ************************ */
 async function addEntry(req, res, next) {
@@ -160,7 +161,7 @@ router.post('/submits/entry', upload.array('files'), async function (req, res, n
 
 /* ************************ */
 /* POST add new submit with first entry */
-router.post('/submits/submit/:flowid', upload.array('files'), async function (req, res, next) {
+async function addNewSubmit(req, res, next) {
   try {
     console.log('addSubmitEntry', req.params.flowid)
 
@@ -192,7 +193,8 @@ router.post('/submits/submit/:flowid', upload.array('files'), async function (re
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
-})
+}
+router.post('/submits/submit/:flowid', upload.array('files'), addNewSubmit)
 
 /* ************************ */
 /* POST PUT edit entry */
@@ -345,7 +347,7 @@ async function deleteEntry(req, res, next) {
 
 /* ************************ */
 /* GET file for entry formfield */
-router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, next) {
+async function getEntryFile(req, res, next) {
   try {
     const entryid = parseInt(req.params.entryid)
     const entryvalueid = parseInt(req.params.entryvalueid)
@@ -378,11 +380,12 @@ router.get('/submits/entry/:entryid/:entryvalueid', async function (req, res, ne
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
-})
+}
+router.get('/submits/entry/:entryid/:entryvalueid', getEntryFile)
 
 /* ************************ */
 /* GET entry and associated formfields */
-router.get('/submits/entry/:entryid', async function (req, res, next) {
+async function getEntry(req, res, next) {
   try {
     const entryid = parseInt(req.params.entryid)
     console.log('GET /submits/entry/', entryid, req.dbuser.id)
@@ -442,11 +445,12 @@ router.get('/submits/entry/:entryid', async function (req, res, next) {
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
-})
+}
+router.get('/submits/entry/:entryid', getEntry)
 
 /* ************************ */
 /* GET formfields for specified flowstageId */
-router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
+async function getFlowFormFields(req, res, next) {
   try {
     const flowstageId = parseInt(req.params.flowstageId)
     console.log('GET /submits/formfields/', flowstageId, req.dbuser.id)
@@ -462,7 +466,8 @@ router.get('/submits/formfields/:flowstageId', async function (req, res, next) {
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
-})
+}
+router.get('/submits/formfields/:flowstageId', getFlowFormFields)
 
 /* ************************ */
 /* Retrive formfields for entry
@@ -514,7 +519,7 @@ async function getEntryFormFields(entry, flowstageId) {
  * - ?? Hide author details if grading
 
 */
-router.get('/submits/pub/:pubid', async function (req, res, next) {
+async function getPubSubmits(req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
     console.log('GET /submits/pub/', pubid)
@@ -560,7 +565,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
           const addstage = _.find(flow.stages, stage => { return stage.id === accepting.flowstageId })
           if (addstage) {
             flow.actions.push({
-              name: 'Add ' + addstage.name,
+              name: addstage.name,
               route: '/panel/' + pubid + '/' + flow.id + '/add/' + addstage.id
             })
           }
@@ -601,7 +606,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
                 const stage = _.find(flow.stages, (stage) => { return stage.id === flowstatus.cansubmitflowstageId })
                 if (stage) {
                   const route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/add/' + flowstatus.cansubmitflowstageId
-                  submit.actions.push({ name: 'Add '+stage.name, route })
+                  submit.actions.push({ name: stage.name, route })
                 }
               }
             }
@@ -619,7 +624,7 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
 
         ////////// Filter submits
         if (!req.onlyanauthor && !req.iamowner) {
-          const includethissubmit = await dbutils.isActionableSubmit(req, flow, submit) // LATER
+          const includethissubmit = await dbutils.isActionableSubmit(req, flow, submit)
           if (!includethissubmit) continue
         }
 
@@ -639,24 +644,35 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
         // - If council: if scoring then can add / can see own. Otherwise can see all earlier gradings
         // - If reviewer: can see earlier abstract scores and add/see your own
 
-        const returngradings = !req.onlyanauthor
-        req.currentstatus
         submit.gradings = []
-        if (returngradings) {
-          for (const dbgrading of req.dbsubmitgradings) {
-            const grading = models.sanitise(models.submitgradings, dbgrading)
-            const reviewer = _.find(reviewers, (reviewer) => { return reviewer.userId === grading.userId })
-            grading.lead = reviewer ? reviewer.lead : false
-            const dbgrader = await dbgrading.getUser()
-            grading.username = ''
-            grading.hasReviewerRole = false
-            if (dbgrader) {
-              grading.username = dbgrader.name
-              const dbgraderpubroles = await dbgrader.getRoles()
-              const isreviewerrole = _.find(dbgraderpubroles, (grader) => { return grader.isreviewer })
-              if (isreviewerrole) grading.hasReviewerRole = true
+        for (const dbgrading of req.dbsubmitgradings) {
+          let returnthisone = req.iamowner
+          if (req.onlyanauthor) {
+            const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
+            if (flowgrade && (flowgrade.authorcanseeatthisstatus === req.currentstatus.flowstatusId)) {
+              returnthisone = true
             }
-            submit.gradings.push(grading)
+          }
+          if (returnthisone) {
+            if (req.onlyanauthor) {
+              submit.gradings.push({ flowgradeId: dbgrading.flowgradeId, comment: dbgrading.comment})
+            } else {
+              const grading = models.sanitise(models.submitgradings, dbgrading)
+              if (!req.onlyanauthor) {
+                const reviewer = _.find(reviewers, (reviewer) => { return reviewer.userId === grading.userId })
+                grading.lead = reviewer ? reviewer.lead : false
+                const dbgrader = await dbgrading.getUser()
+                grading.username = ''
+                grading.hasReviewerRole = false
+                if (dbgrader) {
+                  grading.username = dbgrader.name
+                  const dbgraderpubroles = await dbgrader.getRoles()
+                  const isreviewerrole = _.find(dbgraderpubroles, (grader) => { return grader.isreviewer })
+                  if (isreviewerrole) grading.hasReviewerRole = true
+                }
+              }
+              submit.gradings.push(grading)
+            }
           }
         }
 
@@ -675,7 +691,8 @@ router.get('/submits/pub/:pubid', async function (req, res, next) {
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
-})
+}
+router.get('/submits/pub/:pubid', getPubSubmits)
 
 /* ************************ */
 /* POST DELETE submit or PATCH submit title*/
