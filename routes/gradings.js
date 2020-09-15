@@ -64,53 +64,35 @@ async function addGrading(req, res, next){
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
+
+    const gradingid = req.body.gradingid  // If non-zero then editing
+    console.log('Add/Edit /gradings', submitid, gradingid)
+
     if (!req.iamowner) {
+      await dbutils.getMyRoles(req)
 
       const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
       if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found' + flowgradeid)
       console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
       if (dbflowgrade.flowId !== req.dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
 
+      const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
+
+      const dbstatuses = await req.dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
+      flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
+
       const submit = models.sanitise(models.submits, req.dbsubmit)
-      await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow, onlyanauthor)
+      await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
+      req.dbsubmitgradings = await req.dbsubmit.getGradings()
 
-      // See if I have graded already
-      const dbsubmitgradings = await req.dbsubmit.getGradings()
-      let ihavegraded = false
-      for (const dbsubmitgrading of dbsubmitgradings) {
-        if ((flowgradeid === dbsubmitgrading.flowgradeId) && (dbsubmitgrading.userId === req.dbuser.id)) {
-          ihavegraded = true
-        }
-      }
-      console.log('ihavegraded', ihavegraded)
-      /*if (dbflowgrade.flowstatusId === currentstatus.flowstatusId) { // If we are at status where this grade possible
-        //console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
-        let route = false
-        if (flowgrade.visibletorole !== 0) {
-          // Check if I have role that means I can grade
-          const ihavethisrole = _.find(myroles, roles => { return roles.id === flowgrade.visibletorole })
-          if (ihavethisrole) {
-            includethissubmit = true
-            route = !ihavegraded
-          }
-        }
-        if (flowgrade.visibletoreviewers) {
-          // Check if I am reviewer that means I can grade
-          const dbreviewers = await dbsubmit.getReviewers()
-          for (const dbreviewer of dbreviewers) {
-            if (dbreviewer.userId === req.dbuser.id) {
-              includethissubmit = true
-              route = !ihavegraded
-            }
-          }
-        }
-      }*/
+      const includethissubmit = await dbutils.isActionableSubmit(req, flow, false)
 
-      return utils.giveup(req, res, 'Not allowed')
+      console.log('includethissubmit ihavegraded', includethissubmit, req.ihavegraded)
+
+      if (!includethissubmit) return utils.giveup(req, res, 'Not allowed')
+      if (gradingid) return utils.giveup(req, res, 'Not allowed')
+      if (req.ihavegraded) return utils.giveup(req, res, 'Not allowed')
     }
-
-    const gradingid = req.body.gradingid
-    console.log('Add/Edit /gradings', submitid, gradingid)
 
     let ok = false
     if (gradingid) {  // NOT TESTED
