@@ -656,13 +656,17 @@ async function getPubSubmits(req, res, next) {
               returnthisone = true
             }
           }
+          let overrideviewall = false
           if (req.iamgrading) {
             const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
             if (flowgrade) {
               if (req.iamleadgrader) returnthisone = true
               if (dbgrading.userId === req.dbuser.id) returnthisone = true
+              else overrideviewall = true
             }
           }
+          if (req.canviewall && !overrideviewall) returnthisone = true
+
           if (returnthisone) {
             if (req.onlyanauthor) {
               submit.gradings.push({ flowgradeId: dbgrading.flowgradeId, comment: dbgrading.comment })

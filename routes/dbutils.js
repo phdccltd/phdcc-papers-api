@@ -44,6 +44,7 @@ getSubmitFlowPub = async function (req, submitid) {
 async function getMyRoles(req) {
   req.iamowner = false
   req.onlyanauthor = false
+  req.canviewall =  false
 
   req.dbmypubroles = await req.dbuser.getRoles()
   req.myroles = []
@@ -52,6 +53,7 @@ async function getMyRoles(req) {
       const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
       req.myroles.push(mypubrole)
       if (mypubrole.isowner) req.iamowner = true
+      if (mypubrole.canviewall) req.canviewall = true
       if (mypubrole.defaultrole) req.onlyanauthor = true // ie author
     }
   }
@@ -73,10 +75,14 @@ async function isActionableSubmit(req, flow, submit) {
   req.ihavegraded = false
   req.iamleadgrader = false
 
-  // If user is the submitter, then include // XXXXXXXXX CHECK
+  // If user is the submitter, then include
   if (await req.dbuser.hasSubmit(req.dbsubmit)) {
     includethissubmit = true
   } // Don't else this
+
+  if (req.canviewall) {
+    includethissubmit = true
+  }
 
   // Go through grades looking to see if currentstatus means that I need to grade
   for (const flowgrade of flow.flowgrades) {

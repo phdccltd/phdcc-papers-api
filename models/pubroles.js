@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     // id, createdAt and updatedAt: added automatically
     name: { type: Sequelize.STRING(100), allowNull: false },
     isowner: { type: DataTypes.BOOLEAN, allowNull: false, default: false },
+    canviewall: { type: DataTypes.BOOLEAN, allowNull: false },
     defaultrole: { type: DataTypes.BOOLEAN, allowNull: false },
     isreviewer: { type: DataTypes.BOOLEAN, allowNull: false },
 }
