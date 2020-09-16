@@ -17,6 +17,8 @@ module.exports = (sequelize, DataTypes) => {
     dbs.flowmailrules.belongsTo(dbs.flowmailtemplates, { foreignKey: { allowNull: false }})
     dbs.flowstatuses.hasMany(dbs.flowmailrules, { as: 'FlowMailRules', foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete flowmailtemplate while flowstatuses exist
     dbs.flowmailrules.belongsTo(dbs.flowstatuses, { foreignKey: { allowNull: false } })
+
+    dbs.flowmailrules.belongsTo(dbs.pubroles, { foreignKey: { allowNull: true } }) // pubroleId
  }
 
   return flowmailrules

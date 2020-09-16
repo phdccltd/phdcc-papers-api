@@ -641,10 +641,10 @@ async function getPubSubmits(req, res, next) {
         submit.reviewers = returnreviewers ? reviewers : []
 
         // Decide which gradings to return
-        // - if owner then return all
+        // - if owner then return all 
+        // - if canviewall then return all except if role means I'm grading
         // - If author: return when grading at status authorcanseeatthisstatus
-        // - If council: if scoring then can add/see own. Otherwise can see all earlier gradings
-        // - If reviewer: can see earlier abstract scores and add/see your own
+        // - If reviewer: add/see your own (but can't see earlier abstract scores)
 
         let authorhasgradingstosee = false
         submit.gradings = []
@@ -910,73 +910,93 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbentry) {
       }
     }
 
+    const recipients = []
+    const dbpubrole = await dbmailrule.getPubrole()
+    if (dbpubrole) {
+      console.log('sendOutMailsForStatus to pubrole', dbpubrole.id)
+      const dbusers = await dbpubrole.getUsers()
+      for (const dbuser of dbusers) {
+        recipients.push(dbuser.email)
+      }
+    }
+
+    let author = false
     if (dbmailrule.sendToAuthor) {
-      const dbtemplate = await dbmailrule.getFlowmailtemplate()
-      //console.log('sendOutMailsForStatus dbtemplate', dbtemplate.id, dbtemplate.name, dbtemplate.subject)
       const dbauthor = await req.dbsubmit.getUser()
       if (dbauthor) {
         //console.log('dbauthor', dbauthor.id, dbauthor.email)
-        let subject = Handlebars.compile(dbtemplate.subject)
-        let body = Handlebars.compile(dbtemplate.body)
+        author = models.sanitise(models.users, dbauthor)
+        recipients.push(author.email)
+      }
+    }
+    const dbtemplate = await dbmailrule.getFlowmailtemplate()
+    //console.log('sendOutMailsForStatus dbtemplate', dbtemplate.id, dbtemplate.name, recipients.join(','))
+    let subject = Handlebars.compile(dbtemplate.subject)
+    let body = Handlebars.compile(dbtemplate.body)
 
-        let entryout = false
-        if (dbentry) {
-          entryout = models.sanitise(models.entries, dbentry)
-          for (const sv of req.body.values) {
-            const v = JSON.parse(sv)
+    if (recipients.length === 0) {
+      logger.log4req(req, 'No recipients for ' + dbtemplate.name)
+      console.log('No recipients for ' + dbtemplate.name)
+      continue
+    }
 
-            const formfield = _.find(dbformfields, formfield => { return formfield.id === v.formfieldid })
+    let entryout = false
+    if (dbentry) {
+      entryout = models.sanitise(models.entries, dbentry)
+      for (const sv of req.body.values) {
+        const v = JSON.parse(sv)
 
-            let stringvalue = ''
-            if (v.string) stringvalue = v.string
-            else if (v.text) stringvalue = v.text
-            else if (v.integer) stringvalue = v.integer.toString()
-            else if (v.file) stringvalue = v.file
+        const formfield = _.find(dbformfields, formfield => { return formfield.id === v.formfieldid })
 
-            if (formfield) {
-              if (formfield.type === 'yes' || formfield.type === 'yesno') {
-                stringvalue = v.integer ? 'Yes' : 'No'
-              } else if (formfield.type === 'lookup' || formfield.type === 'lookups') {
-                stringvalue = ''
-                const aselections = v.string.split(',')
-                for (const sel of aselections) {
-                  const dbpublookupvalue = await models.publookupvalues.findByPk(parseInt(sel))
-                  if (dbpublookupvalue) {
-                    stringvalue += dbpublookupvalue.text + ' - '
-                  } else {
-                    stringvalue += sel + ' - '
-                  }
-                }
-              } else if (formfield.type === 'rolelookups') {
-                stringvalue = ''
-                const aselections = v.string.split(',')
-                for (const sel of aselections) {
-                  const dbuser = await models.users.findByPk(parseInt(sel))
-                  if (dbuser) {
-                    stringvalue += dbuser.name + ' - '
-                  } else {
-                    stringvalue += sel + ' - '
-                  }
-                }
+        let stringvalue = ''
+        if (v.string) stringvalue = v.string
+        else if (v.text) stringvalue = v.text
+        else if (v.integer) stringvalue = v.integer.toString()
+        else if (v.file) stringvalue = v.file
+
+        if (formfield) {
+          if (formfield.type === 'yes' || formfield.type === 'yesno') {
+            stringvalue = v.integer ? 'Yes' : 'No'
+          } else if (formfield.type === 'lookup' || formfield.type === 'lookups') {
+            stringvalue = ''
+            const aselections = v.string.split(',')
+            for (const sel of aselections) {
+              const dbpublookupvalue = await models.publookupvalues.findByPk(parseInt(sel))
+              if (dbpublookupvalue) {
+                stringvalue += dbpublookupvalue.text + ' - '
+              } else {
+                stringvalue += sel + ' - '
               }
             }
-
-            entryout['field_' + v.formfieldid] = stringvalue
+          } else if (formfield.type === 'rolelookups') {
+            stringvalue = ''
+            const aselections = v.string.split(',')
+            for (const sel of aselections) {
+              const dbuser = await models.users.findByPk(parseInt(sel))
+              if (dbuser) {
+                stringvalue += dbuser.name + ' - '
+              } else {
+                stringvalue += sel + ' - '
+              }
+            }
           }
         }
 
-        const now = (new Date()).toLocaleString()
-        const data = {
-          submit: models.sanitise(models.submits, req.dbsubmit),
-          entry: entryout,
-          user: models.sanitise(models.users, dbauthor),
-          now,
-        }
-        subject = subject(data)
-        body = body(data)
-        utils.async_mail(dbauthor.email, subject, body, bccOwners.join(','))
+        entryout['field_' + v.formfieldid] = stringvalue
       }
     }
+
+    const now = (new Date()).toLocaleString()
+    const data = {
+      submit: models.sanitise(models.submits, req.dbsubmit),
+      entry: entryout,
+      user: models.sanitise(models.users, req.dbuser),
+      now,
+    }
+    if (author) data.author = author
+    subject = subject(data)
+    body = body(data)
+    utils.async_mail(recipients.join(','), subject, body, bccOwners.join(','))
   }
 }
 
