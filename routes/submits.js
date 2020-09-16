@@ -565,7 +565,7 @@ async function getPubSubmits(req, res, next) {
           const addstage = _.find(flow.stages, stage => { return stage.id === accepting.flowstageId })
           if (addstage) {
             flow.actions.push({
-              name: addstage.name,
+              name: 'Add '+addstage.name,
               route: '/panel/' + pubid + '/' + flow.id + '/add/' + addstage.id
             })
           }
@@ -606,7 +606,7 @@ async function getPubSubmits(req, res, next) {
                 const stage = _.find(flow.stages, (stage) => { return stage.id === flowstatus.cansubmitflowstageId })
                 if (stage) {
                   const route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/add/' + flowstatus.cansubmitflowstageId
-                  submit.actions.push({ name: stage.name, route })
+                  submit.actions.push({ name: 'Add '+stage.name, route, show: 3, dograde: 0 })
                 }
               }
             }
@@ -641,9 +641,10 @@ async function getPubSubmits(req, res, next) {
         // Decide which gradings to return
         // - if owner then return all
         // - If author: return when grading at status authorcanseeatthisstatus
-        // - If council: if scoring then can add / can see own. Otherwise can see all earlier gradings
+        // - If council: if scoring then can add/see own. Otherwise can see all earlier gradings
         // - If reviewer: can see earlier abstract scores and add/see your own
 
+        let authorhasgradingstosee = false
         submit.gradings = []
         for (const dbgrading of req.dbsubmitgradings) {
           let returnthisone = req.iamowner
@@ -655,7 +656,8 @@ async function getPubSubmits(req, res, next) {
           }
           if (returnthisone) {
             if (req.onlyanauthor) {
-              submit.gradings.push({ flowgradeId: dbgrading.flowgradeId, comment: dbgrading.comment})
+              submit.gradings.push({ flowgradeId: dbgrading.flowgradeId, comment: dbgrading.comment })
+              authorhasgradingstosee = true
             } else {
               const grading = models.sanitise(models.submitgradings, dbgrading)
               if (!req.onlyanauthor) {
@@ -674,6 +676,10 @@ async function getPubSubmits(req, res, next) {
               submit.gradings.push(grading)
             }
           }
+        }
+        if (authorhasgradingstosee) {
+          const route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id
+          submit.actions.push({ name: 'See reviews', route, show: 1, dograde: 0 })
         }
 
         submit.actionable = submit.actions.length>0
