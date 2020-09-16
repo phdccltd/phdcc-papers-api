@@ -623,6 +623,8 @@ async function getPubSubmits(req, res, next) {
         submit.entries = models.sanitiselist(dbentries, models.entries)
 
         ////////// Filter submits
+        req.iamgrading = false
+        req.iamleadgrader = false
         if (!req.onlyanauthor && !req.iamowner) {
           const includethissubmit = await dbutils.isActionableSubmit(req, flow, submit)
           if (!includethissubmit) continue
@@ -635,7 +637,7 @@ async function getPubSubmits(req, res, next) {
           reviewer.username = dbuser ? dbuser.name : ''
           reviewers.push(reviewer)
         }
-        const returnreviewers = req.iamowner
+        const returnreviewers = req.iamowner || req.iamleadgrader
         submit.reviewers = returnreviewers ? reviewers : []
 
         // Decide which gradings to return
@@ -652,6 +654,13 @@ async function getPubSubmits(req, res, next) {
             const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
             if (flowgrade && (flowgrade.authorcanseeatthisstatus === req.currentstatus.flowstatusId)) {
               returnthisone = true
+            }
+          }
+          if (req.iamgrading) {
+            const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
+            if (flowgrade) {
+              if (req.iamleadgrader) returnthisone = true
+              if (dbgrading.userId === req.dbuser.id) returnthisone = true
             }
           }
           if (returnthisone) {

@@ -71,6 +71,7 @@ async function isActionableSubmit(req, flow, submit) {
 
   req.iamgrading = false
   req.ihavegraded = false
+  req.iamleadgrader = false
 
   // If user is the submitter, then include // XXXXXXXXX CHECK
   if (await req.dbuser.hasSubmit(req.dbsubmit)) {
@@ -107,6 +108,7 @@ async function isActionableSubmit(req, flow, submit) {
           if (dbreviewer.userId === req.dbuser.id) {
             includethissubmit = true
             req.iamgrading = true
+            if (dbreviewer.lead) req.iamleadgrader = true
             route = !req.ihavegraded
           }
         }
