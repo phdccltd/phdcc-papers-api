@@ -11,6 +11,9 @@ module.exports = (sequelize, DataTypes) => {
     cancomment: { type: DataTypes.BOOLEAN, allowNull: false },
     canopttoreview: { type: DataTypes.BOOLEAN, allowNull: false },
     authorcanseeatthisstatus: { type: Sequelize.INTEGER, allowNull: false },  // Author can see comments if at this status
+    helptext: { type: Sequelize.STRING, allowNull: false },
+    helplinktext: { type: Sequelize.STRING, allowNull: false },
+    helplink: { type: Sequelize.STRING, allowNull: false },
   }
   const flowgrades = sequelize.define('flowgrades', fields)
   flowgrades.fields = fields
