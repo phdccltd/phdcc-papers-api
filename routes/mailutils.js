@@ -87,7 +87,7 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
       console.log('No recipients for ' + dbtemplate.name)
       continue
     }
-    //console.log('recipients', recipients.join(','))
+    console.log('recipients', recipients.join(','))
 
     let entryout = false
     if (dbentry) {
