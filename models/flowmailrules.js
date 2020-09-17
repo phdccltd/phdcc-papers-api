@@ -8,6 +8,7 @@
 // - Author
 // - Role
 // - submitting user
+// - paper's reviewers
 // - bcc owners
 
 const Sequelize = require('sequelize')
@@ -19,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     sendToAuthor: { type: DataTypes.BOOLEAN, allowNull: false },
     bccToOwners: { type: DataTypes.BOOLEAN, allowNull: false },
     sendToUser: { type: DataTypes.BOOLEAN, allowNull: false },
+    sendToReviewers: { type: DataTypes.BOOLEAN, allowNull: false },
     // sendToRole: defined by pubroleId below
   }
   const flowmailrules = sequelize.define('flowmailrules', fields)

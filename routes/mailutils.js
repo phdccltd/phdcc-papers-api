@@ -8,7 +8,7 @@ const logger = require('../logger')
 // req.dbsubmit must be set
 // CHECK: could assume that req.dbflow and req.dbpub set
 
-async function sendOutMailsForStatus(req, dbflowstatus, dbflowgrade, dbentry, grading) {
+async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
 
   let dbformfields = false
   if (dbentry) {
@@ -26,7 +26,7 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbflowgrade, dbentry, gr
     dbmailrules = await dbflowgrade.getFlowMailRules()
   }
   for (const dbmailrule of dbmailrules) {
-    //console.log('sendOutMailsForStatus dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.name, dbmailrule.sendToUser, dbmailrule.sendToAuthor, dbmailrule.bccToOwners)
+    //console.log('sendOutMails dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.name, dbmailrule.sendToUser, dbmailrule.sendToAuthor, dbmailrule.bccToOwners)
 
     const bccOwners = []
     if (dbmailrule.bccToOwners) {
@@ -68,6 +68,16 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbflowgrade, dbentry, gr
       recipients.push(req.dbuser.email)
     }
 
+    if (dbmailrule.sendToReviewers) {
+      const dbreviewers = await req.dbsubmit.getReviewers()
+      for (const dbreviewer of dbreviewers) {
+        const dbuser = await dbreviewer.getUser()
+        if (dbuser) {
+          recipients.push(dbuser.email)
+        }
+      }
+    }
+
     const dbtemplate = await dbmailrule.getFlowmailtemplate()
     let subject = Handlebars.compile(dbtemplate.subject)
     let body = Handlebars.compile(dbtemplate.body)
@@ -77,6 +87,7 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbflowgrade, dbentry, gr
       console.log('No recipients for ' + dbtemplate.name)
       continue
     }
+    //console.log('recipients', recipients.join(','))
 
     let entryout = false
     if (dbentry) {
@@ -133,7 +144,7 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbflowgrade, dbentry, gr
       user: models.sanitise(models.users, req.dbuser),
       now,
     }
-    //console.log('sendOutMailsForStatus', data)
+    //console.log('sendOutMails', data)
     subject = subject(data)
     body = body(data)
     let bcc = bccOwners.join(',')
@@ -147,5 +158,5 @@ async function sendOutMailsForStatus(req, dbflowstatus, dbflowgrade, dbentry, gr
 /* ************************ */
 
 module.exports = {
-  sendOutMailsForStatus,
+  sendOutMails,
 }

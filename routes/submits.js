@@ -128,7 +128,7 @@ async function addEntry(req, res, next) {
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
 
       // Send out mails for this status
-      await mailutils.sendOutMailsForStatus(req, dbflowstatus, false, dbentry, false)
+      await mailutils.sendOutMails(req, dbflowstatus, false, dbentry, false)
     }
 
     // Return OK
@@ -864,7 +864,7 @@ async function addSubmitStatus(req, res, next) {
     logger.log4req(req, 'Created submit status', submitid, newstatusid, dbsubmitstatus.id)
 
     // Send out mails for this status
-    await mailutils.sendOutMailsForStatus(req, dbflowstatus, false, false, false)
+    await mailutils.sendOutMails(req, dbflowstatus, false, false, false)
 
     utils.returnOK(req, res, newsubmitstatus, 'submitstatus')
   } catch (e) {

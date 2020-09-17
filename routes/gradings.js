@@ -143,7 +143,7 @@ async function addGrading(req, res, next){
       } else {
         delete grading.canreview
       }
-      await mailutils.sendOutMailsForStatus(req, false, dbflowgrade, false, grading)
+      await mailutils.sendOutMails(req, false, dbflowgrade, false, grading)
 
       ok = true
     }
