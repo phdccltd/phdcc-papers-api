@@ -5,6 +5,7 @@ const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
 const dbutils = require('./dbutils')
+const mailutils = require('./mailutils')
 
 const router = Router()
 
@@ -68,15 +69,22 @@ async function addGrading(req, res, next){
     const gradingid = req.body.gradingid  // If non-zero then editing
     console.log('Add/Edit /gradings', submitid, gradingid)
 
+    const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
+    if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found ' + flowgradeid)
+    //console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
+    if (dbflowgrade.flowId !== req.dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
+
+    const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
+
+    // Re-find flowgrade and check score
+    const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === flowgradeid})
+    if (!flowgrade) return utils.giveup(req, res, 'flowgrade not found' + flowgradeid)
+    const flowgradescoreId = parseInt(req.body.decision)
+    const flowgradescore = _.find(flowgrade.scores, (score) => { return score.id === flowgradescoreId })
+    if (!flowgradescore) return utils.giveup(req, res, 'flowgradescore not found ' + flowgradescoreId)
+
     if (!req.iamowner) {
       await dbutils.getMyRoles(req)
-
-      const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
-      if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found' + flowgradeid)
-      console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
-      if (dbflowgrade.flowId !== req.dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
-
-      const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
 
       const dbstatuses = await req.dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
       flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
@@ -118,13 +126,25 @@ async function addGrading(req, res, next){
         submitId: submitid,
         userId: req.dbuser.id,
         flowgradeId: flowgradeid,
-        flowgradescoreId: parseInt(req.body.decision),
+        flowgradescoreId,
         comment: req.body.comment,
         canreview: req.body.canreview,
       }
       const dbgrading = await models.submitgradings.create(params)
       if (!dbgrading) return utils.giveup(req, res, 'grading not created')
       logger.log4req(req, 'CREATED new grading', dbgrading.id)
+
+      // Send out mails for this grading
+      const grading = models.sanitise(models.submitgradings, dbgrading)
+      grading.score = flowgradescore.name
+      if (!flowgrade.cancomment) delete grading.comment
+      if (flowgrade.canopttoreview) {
+        grading.canreview = grading.canreview ? 'Yes' : 'No'
+      } else {
+        delete grading.canreview
+      }
+      await mailutils.sendOutMailsForStatus(req, false, dbflowgrade, false, grading)
+
       ok = true
     }
     utils.returnOK(req, res, ok, 'ok')
