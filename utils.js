@@ -76,11 +76,18 @@ function async_mail(toEmail, subject, message, bccEmail) {
 
 //////////////////////
 
+const async_sleep = function (ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+//////////////////////
+
 module.exports = {
   exterminate,
   giveup,
   returnOK,
   async_mail,
+  async_sleep,
   setMailTransport,
   getSiteName
 }

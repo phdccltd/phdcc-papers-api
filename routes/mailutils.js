@@ -26,6 +26,11 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
     dbmailrules = await dbflowgrade.getFlowMailRules()
   }
   for (const dbmailrule of dbmailrules) {
+
+    // Ignore reminder rules
+    if (dbmailrule.sendReviewReminderDays !== 0 || dbmailrule.sendReviewChaseUpDays !== 0) {
+      continue
+    }
     //console.log('sendOutMails dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.name, dbmailrule.sendToUser, dbmailrule.sendToAuthor, dbmailrule.bccToOwners)
 
     const bccOwners = []
@@ -87,7 +92,7 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
       console.log('No recipients for ' + dbtemplate.name)
       continue
     }
-    console.log('recipients', recipients.join(','))
+    //console.log('recipients', recipients.join(','))
 
     let entryout = false
     if (dbentry) {

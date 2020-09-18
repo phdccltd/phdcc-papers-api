@@ -14,7 +14,7 @@ const router = Router()
 /* ACCESS: OWNER-ONLY NOT TESTED */
 router.get('/mail/templates/:flowid', async function (req, res, next) {
   const flowid = parseInt(req.params.flowid)
-  console.log('GET /mail/templates', flowid)
+  //console.log('GET /mail/templates', flowid)
   try {
     const dbflow = await models.flows.findByPk(flowid)
     if (!dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
@@ -110,7 +110,6 @@ async function addEditMailTemplate(req, res, next) {
     const templatename = req.body.templatename
     const templatesubject = req.body.templatesubject
     const templatebody = req.body.templatebody
-    console.log('POST /mail/templates', templateid, templatename)
 
     let ok = false
     if (templateid) {
@@ -154,7 +153,7 @@ router.post('/mail/:pubid', sendMail)
 
 async function sendMail(req, res, next) {
   const pubid = parseInt(req.params.pubid)
-  console.log('POST /mail', pubid)
+  //console.log('POST /mail', pubid)
   try {
     req.dbpub = await models.pubs.findByPk(pubid)
     if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
@@ -171,8 +170,6 @@ async function sendMail(req, res, next) {
 
     if (mailsubject.length === 0) return utils.giveup(req, res, 'Empty subject')
     if (mailtext.length === 0) return utils.giveup(req, res, 'Empty text')
-
-    console.log('sendMail', selecteduser, selectedrole, mailsubject)
 
     const recipients = []
     if (selecteduser > 0) {
@@ -207,7 +204,6 @@ async function sendMail(req, res, next) {
       }
 
     }
-    console.log('recipients', recipients.join(','))
     if (recipients.length === 0) return utils.giveup(req, res, 'No recipients')
 
     let subject = Handlebars.compile(mailsubject)
@@ -221,10 +217,11 @@ async function sendMail(req, res, next) {
     subject = subject(data)
     body = body(data)
 
-    //console.log('sendMail', subject)
     for (const recipient of recipients) {
       utils.async_mail(recipient, subject, body)
     }
+
+    logger.log4req(req, 'Sending mail. Recipients:', recipients.length)
 
     let ok = true
     utils.returnOK(req, res, ok, 'ok')

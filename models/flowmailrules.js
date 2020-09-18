@@ -3,6 +3,12 @@
 // Trigger for when fired
 // - flowstatusId: when this status assigned
 // - flowgradeId: when this grade added
+// - sendReviewReminderDays: send reminder if:
+//      - status at flowstatusId for sendReviewReminderDays
+//      - grading at flowgradeId not entered
+// - sendReviewChaseUpDays: send reminder to lead reviewer if:
+//      - status at flowstatusId for sendReviewReminderDays
+//      - not all reviewers have entered gradings at flowgradeId
 //
 // Who to send it to
 // - Author
@@ -17,6 +23,8 @@ module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
     name: { type: Sequelize.STRING(50), allowNull: false },
+    sendReviewReminderDays: { type: Sequelize.INTEGER, allowNull: false },
+    sendReviewChaseUpDays: { type: Sequelize.INTEGER, allowNull: false },
     sendToAuthor: { type: DataTypes.BOOLEAN, allowNull: false },
     bccToOwners: { type: DataTypes.BOOLEAN, allowNull: false },
     sendToUser: { type: DataTypes.BOOLEAN, allowNull: false },

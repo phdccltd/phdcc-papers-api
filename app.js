@@ -12,6 +12,7 @@ const db = require('./db')
 const models = require('./models')
 const logger = require('./logger')
 const utils = require('./utils')
+const backgroundtask = require('./task')
 
 var now = new Date();
 global.starttime = now.toISOString()
@@ -197,5 +198,23 @@ app.use(function (err, req, res, next) {
   // render the error page
   res.status(err.status || 500).send(err.message)
 })
+
+
+
+var now = new Date();
+global.starttime = now.toISOString()
+console.log("STARTED: ", global.starttime, process.pid)
+let startupSeconds = parseInt(process.env.ST) || 15;
+if (startupSeconds < 1) startupSeconds = 1
+console.log("startupSeconds:" + startupSeconds)
+let intervalMinutes = parseInt(process.env.IM) || 5;
+if (intervalMinutes < 1) intervalMinutes = 1
+console.log("intervalMinutes:" + intervalMinutes)
+const intervalSeconds = 60 * intervalMinutes;
+setTimeout(backgroundtask, startupSeconds * 1000, app);
+setInterval(backgroundtask, intervalSeconds * 1000, app);
+
+logger.log("papers API app started: process ", process.pid);
+
 
 module.exports = app
