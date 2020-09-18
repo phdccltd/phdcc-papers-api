@@ -10,7 +10,7 @@ let sitename = false
 function exterminate(req, res, err) {
   logger.error4req(req, "EXTERMINATE", err)
   res.status(200).json({ ret: 1, status: err.message })
-  return false;
+  return false
 }
 
 //////////////////////
@@ -66,8 +66,8 @@ function async_mail(toEmail, subject, message, bccEmail) {
 
   transport.sendMail(params, (err, info) => {
     if (err) {
-      logger.log("Send mail fail", subject, err);
-      return;
+      logger.log("Send mail fail", subject, err)
+      return
     }
     logger.log("Sent mail OK", subject, info)
   })

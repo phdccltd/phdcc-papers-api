@@ -1,17 +1,20 @@
 const { Router } = require('express')
 const Sequelize = require('sequelize')
+const Handlebars = require("handlebars")
 const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
+const dbutils = require('./dbutils')
 
 const router = Router()
 
 /* ************************ */
 /* GET all mail templates for this flow */
-router.get('/mailtemplates/:flowid', async function (req, res, next) {
+/* ACCESS: OWNER-ONLY NOT TESTED */
+router.get('/mail/templates/:flowid', async function (req, res, next) {
   const flowid = parseInt(req.params.flowid)
-  console.log('GET /mailtemplates', flowid)
+  console.log('GET /mail/templates', flowid)
   try {
     const dbflow = await models.flows.findByPk(flowid)
     if (!dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
@@ -37,8 +40,8 @@ router.get('/mailtemplates/:flowid', async function (req, res, next) {
 
 /* ************************ */
 /* POST: Add/Edit or Delete mail template */
-router.post('/mailtemplates/:flowid', async function (req, res, next) {
-  //console.log('/mailtemplates/:flowid', req.headers['x-http-method-override'])
+router.post('/mail/templates/:flowid', async function (req, res, next) {
+  //console.log('/mail/templates/:flowid', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'DELETE') {
     return await deleteMailTemplate(req, res, next)
   }
@@ -50,9 +53,10 @@ router.post('/mailtemplates/:flowid', async function (req, res, next) {
 
 /* ************************ */
 /* POST add/edit mail template for this flow */
+/* ACCESS: OWNER-ONLY NOT TESTED */
 async function deleteMailTemplate(req, res, next) {
   const flowid = parseInt(req.params.flowid)
-  //console.log('DELETE /mailtemplates', flowid)
+  //console.log('DELETE /mail/templates', flowid)
   try {
     const dbflow = await models.flows.findByPk(flowid)
     if (!dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
@@ -86,9 +90,10 @@ async function deleteMailTemplate(req, res, next) {
 
 /* ************************ */
 /* POST add/edit mail template for this flow */
+/* ACCESS: OWNER-ONLY NOT TESTED */
 async function addEditMailTemplate(req, res, next) {
   const flowid = parseInt(req.params.flowid)
-  //console.log('POST /mailtemplates', flowid)
+  //console.log('POST /mail/templates', flowid)
   try {
     const dbflow = await models.flows.findByPk(flowid)
     if (!dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
@@ -105,7 +110,7 @@ async function addEditMailTemplate(req, res, next) {
     const templatename = req.body.templatename
     const templatesubject = req.body.templatesubject
     const templatebody = req.body.templatebody
-    console.log('POST /mailtemplates', templateid, templatename)
+    console.log('POST /mail/templates', templateid, templatename)
 
     let ok = false
     if (templateid) {
@@ -140,6 +145,94 @@ async function addEditMailTemplate(req, res, next) {
     utils.giveup(req, res, e.message)
   }
 }
+
+/* ************************ */
+/* POST send mail */
+/* ACCESS: OWNER-ONLY NOT TESTED */
+
+router.post('/mail/:pubid', sendMail)
+
+async function sendMail(req, res, next) {
+  const pubid = parseInt(req.params.pubid)
+  console.log('POST /mail', pubid)
+  try {
+    req.dbpub = await models.pubs.findByPk(pubid)
+    if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
+
+    // Set req.iamowner, req.onlyanauthor and req.myroles for this publication
+    await dbutils.getMyRoles(req)
+
+    if (!req.iamowner) return utils.giveup(req, res, 'Not owner')
+
+    const selecteduser = parseInt(req.body.selecteduser)
+    const selectedrole = parseInt(req.body.selectedrole)
+    const mailsubject = req.body.mailsubject.trim()
+    const mailtext = req.body.mailtext.trim()
+
+    if (mailsubject.length === 0) return utils.giveup(req, res, 'Empty subject')
+    if (mailtext.length === 0) return utils.giveup(req, res, 'Empty text')
+
+    console.log('sendMail', selecteduser, selectedrole, mailsubject)
+
+    const recipients = []
+    if (selecteduser > 0) {
+      const dbuser = await models.users.findByPk(selecteduser)
+      if (!dbuser) return utils.giveup(req, res, 'Invalid selecteduser ' + selecteduser)
+      recipients.push(dbuser.email)
+    } else {
+      const dbusers = await req.dbpub.getUsers()
+      if (selectedrole === -1) {  // All users
+        for (const dbuser of dbusers) {
+          recipients.push(dbuser.email)
+        }
+      }
+      if (selectedrole === -2) { // Submitters
+        for (const dbuser of dbusers) {
+          const dbsubmits = await dbuser.getSubmits()
+          if (dbsubmits.length > 0) {
+            recipients.push(dbuser.email)
+          }
+        }
+      }
+      if (selectedrole > 0) { // Role
+        for (const dbuser of dbusers) {
+          const dbuserpubroles = await dbuser.getRoles()
+          for (const dbuserpubrole of dbuserpubroles) {
+            if (dbuserpubrole.id === selectedrole) {
+              recipients.push(dbuser.email)
+              break
+            }
+          }
+        }
+      }
+
+    }
+    console.log('recipients', recipients.join(','))
+    if (recipients.length === 0) return utils.giveup(req, res, 'No recipients')
+
+    let subject = Handlebars.compile(mailsubject)
+    let body = Handlebars.compile(mailtext)
+
+    const now = (new Date()).toLocaleString()
+    const data = {
+      user: models.sanitise(models.users, req.dbuser),
+      now,
+    }
+    subject = subject(data)
+    body = body(data)
+
+    //console.log('sendMail', subject)
+    for (const recipient of recipients) {
+      utils.async_mail(recipient, subject, body)
+    }
+
+    let ok = true
+    utils.returnOK(req, res, ok, 'ok')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+}
+
 /* ************************ */
 
 module.exports = router

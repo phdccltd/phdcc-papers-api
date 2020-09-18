@@ -9,7 +9,7 @@ const utils = require('../utils')
 const auth = require('./auth')
 const acceptingsRouter = require('./acceptings')
 const gradingsRouter = require('./gradings')
-const mailtemplatesRouter = require('./mailtemplates')
+const mailRouter = require('./mail')
 const pubsRouter = require('./pubs')
 const reviewersRouter = require('./reviewers')
 const sitepagesRouter = require('./sitepages')
@@ -107,7 +107,7 @@ router.use(pubsRouter)
 
 //////////////////////
 // /mailtemplates/*
-router.use(mailtemplatesRouter)
+router.use(mailRouter)
 
 //////////////////////
 // /acceptings/*
