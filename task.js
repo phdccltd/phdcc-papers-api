@@ -1,4 +1,5 @@
 const Sequelize = require('sequelize')
+const Handlebars = require("handlebars")
 const _ = require('lodash/core')
 const models = require('./models')
 const utils = require('./utils')
@@ -33,22 +34,21 @@ async function backgroundTask() {
         ],
       }
     })
-    for (const dbflowmailrule of dbflowmailrules) {
-      console.log('dbflowmailrule', dbflowmailrule.id, dbflowmailrule.name, dbflowmailrule.flowstatusId, dbflowmailrule.flowgradeId)
+    for (const dbmailrule of dbflowmailrules) {
+      //console.log('dbmailrule', dbmailrule.id, dbmailrule.name, dbmailrule.flowstatusId, dbmailrule.flowgradeId)
 
-      if (dbflowmailrule.flowstatusId === null || dbflowmailrule.flowgradeId === null) {
-        console.log('backgroundTask flowstatusId or flowgradeId null', dbflowmailrule.id)
+      if (dbmailrule.flowstatusId === null || dbmailrule.flowgradeId === null) {
+        console.log('backgroundTask flowstatusId or flowgradeId null', dbmailrule.id)
         continue
       }
 
       // Find all submit statuses which have the right status
-      const dbsubmitstatuses = await models.submitstatuses.findAll({ where: { flowstatusId: dbflowmailrule.flowstatusId } })
+      const dbsubmitstatuses = await models.submitstatuses.findAll({ where: { flowstatusId: dbmailrule.flowstatusId } })
       for (const dbsubmitstatus of dbsubmitstatuses) {
-        console.log('-- dbsubmitstatus', dbsubmitstatus.id, dbsubmitstatus.dt)
         // Get the submit of this status
         const dbsubmit = await dbsubmitstatus.getSubmit()
         if (!dbsubmit) {
-          console.log('backgroundTask submit not found for status', dbflowmailrule.id, dbsubmitstatus.id)
+          console.log('backgroundTask submit not found for status', dbmailrule.id, dbsubmitstatus.id)
           continue
         }
         // Get the statuses of this submit
@@ -59,41 +59,45 @@ async function backgroundTask() {
 
         // See if enough time has elapsed to trigger rule
         const elapseddays = (now - dbsubmitstatus.dt) / 1000 / 60 / 60 / 24
-        console.log('Submit', dbsubmit.id, 'at this status', dbsubmitstatus.dt, elapseddays)
-        const sendReminder = dbflowmailrule.sendReviewReminderDays ? elapseddays > dbflowmailrule.sendReviewReminderDays : false
-        const sendLeadReminder = dbflowmailrule.sendLeadReminderDays ? elapseddays > dbflowmailrule.sendLeadReminderDays : false
-        const sendChaseUp = dbflowmailrule.sendReviewChaseUpDays ? elapseddays > dbflowmailrule.sendReviewChaseUpDays : false
+        //console.log('Submit', dbsubmit.id, 'at this status', dbsubmitstatus.dt, elapseddays)
+        const sendReminder = dbmailrule.sendReviewReminderDays ? elapseddays > dbmailrule.sendReviewReminderDays : false
+        const sendLeadReminder = dbmailrule.sendLeadReminderDays ? elapseddays > dbmailrule.sendLeadReminderDays : false
+        const sendChaseUp = dbmailrule.sendReviewChaseUpDays ? elapseddays > dbmailrule.sendReviewChaseUpDays : false
         if (!sendReminder && !sendLeadReminder && !sendChaseUp) continue
-        console.log('sendReminder || sendLeadReminder || sendChaseUp')
+        //console.log('sendReminder || sendLeadReminder || sendChaseUp')
 
         const dbgradings = await dbsubmit.getGradings()
         const dbreviewers = await dbsubmit.getReviewers()
         let allReviewsDone = true
         for (const dbreviewer of dbreviewers) {
-          console.log('dbreviewer', dbreviewer.id, dbreviewer.userId, dbreviewer.lead)
+          //console.log('dbreviewer', dbreviewer.id, dbreviewer.userId, dbreviewer.lead)
 
-          const sentReminders = await dbflowmailrule.getSentReminders({ where: { userId: dbreviewer.userId } })
-          if (sentReminders.length > 0) {
-            console.log('- Reminder already sent')
-            continue
-          }
-          console.log('+ Reminder may be needed')
+          const dbsentreminders = await dbmailrule.getSentReminders({ where: { userId: dbreviewer.userId, submitId: dbsubmit.id } })
+          if (dbsentreminders.length > 0) continue
+
+          //console.log('+ Reminder may be needed')
           const graded = _.find(dbgradings, (grading) => { return grading.userId == dbreviewer.userId })
           if (!graded) {
-            allReviewsDone = false
+            if (!dbreviewer.lead) allReviewsDone = false
             if (sendReminder && !dbreviewer.lead) {
-              console.log('  + Reviewer', dbreviewer.userId, 'NOT graded: SEND REMINDER to non-lead!!')
+              //console.log('  + Reviewer', dbreviewer.userId, 'NOT graded: SEND REMINDER to non-lead!!')
+              sendMail(dbmailrule, dbsubmit, dbreviewer)
             }
             if (sendLeadReminder && dbreviewer.lead) {
-              console.log('  + Lead', dbreviewer.userId, 'NOT graded: SEND REMINDER to lead!!')
+              //console.log('  + Lead', dbreviewer.userId, 'NOT graded: SEND REMINDER to lead!!')
+              sendMail(dbmailrule, dbsubmit, dbreviewer)
             }
           }
         }
         if (sendChaseUp && !allReviewsDone) {
-          console.log('=== Not all reviews done: SEND REMINDER to leads')
+          //console.log('=== Not all reviews done: SEND REMINDER to leads')
           for (const dbreviewer of dbreviewers) {
             if (dbreviewer.lead) {
-              console.log('    Lead', dbreviewer.userId)
+              const dbsentreminders = await dbmailrule.getSentReminders({ where: { userId: dbreviewer.userId, submitId: dbsubmit.id } })
+              if (dbsentreminders.length > 0) continue
+
+              //console.log('    Lead', dbreviewer.userId)
+              sendMail(dbmailrule, dbsubmit, dbreviewer)
             }
           }
         }
@@ -105,6 +109,62 @@ async function backgroundTask() {
     logger.log(__filename, 'backgroundTask', e.message)
   }
 
+}
+
+/* ************************ */
+
+async function sendMail(dbmailrule, dbsubmit, dbreviewer) {
+
+  const dbtemplate = await dbmailrule.getFlowmailtemplate()
+  if (!dbtemplate) return logger.warn4req(false, 'Could not find flowmailtemplate for rule', dbmailrule.id)
+
+  const dbuser = await dbreviewer.getUser()
+  if (!dbuser) return logger.warn4req(false, 'Could not find user for reviewer')
+
+
+  let subject = Handlebars.compile(dbtemplate.subject)
+  let body = Handlebars.compile(dbtemplate.body)
+
+  const bccOwners = []
+  if (dbmailrule.bccToOwners) {
+    const dbflow = await dbsubmit.getFlow()
+    if (!dbflow) return logger.warn4req(false, 'Could not find flow so not sending mail')
+    const dbpub = await dbflow.getPub()
+    if (!dbpub) return logger.warn4req(false, 'Could not find pub so not sending mail')
+    const dbownerroles = await dbpub.getPubroles({ where: { isowner: true } })
+    for (const dbownerrole of dbownerroles) {
+      const dbownerusers = await dbownerrole.getUsers()
+      for (const dbowneruser of dbownerusers) {
+        bccOwners.push(dbowneruser.email)
+      }
+    }
+  }
+
+  const dbauthor = await dbsubmit.getUser()
+  const author = dbauthor ? models.sanitise(models.users, dbauthor) : false
+
+  const now = new Date()
+  const data = {
+    submit: models.sanitise(models.submits, dbsubmit),
+    author,
+    now: now.toLocaleString()
+  }
+  //console.log('sendOutMails', data)
+  subject = subject(data)
+  body = body(data)
+  let bcc = bccOwners.join(',')
+  console.log('sendMail', dbuser.email, subject)
+  utils.async_mail(dbuser.email, subject, body, bcc)
+
+  // Note in sentreminders
+  const params = {
+    dt: now,
+    flowmailruleId: dbmailrule.id,
+    submitId: dbsubmit.id,
+    userId: dbreviewer.userId,
+  }
+  const dbsentreminder = await models.sentreminders.create(params)
+  if (!dbsentreminder) logger.warn4req(false,'Could not create sentreminder')
 }
 
 /* ************************ */

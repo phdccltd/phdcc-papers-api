@@ -635,6 +635,11 @@ async function getPubSubmits(req, res, next) {
           const reviewer = models.sanitise(models.submitreviewers, dbreviewer)
           const dbuser = await dbreviewer.getUser()
           reviewer.username = dbuser ? dbuser.name : ''
+
+          reviewer.sentreminderdt = false
+          const dbsentreminders = await models.sentreminders.findAll({ where: { userId: dbreviewer.userId, submitId: req.dbsubmit.id } })
+          if (dbsentreminders.length > 0) reviewer.sentreminderdt = dbsentreminders[0].dt
+
           reviewers.push(reviewer)
         }
         const returnreviewers = req.iamowner || req.iamleadgrader
