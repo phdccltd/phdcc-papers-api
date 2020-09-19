@@ -28,7 +28,7 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
   for (const dbmailrule of dbmailrules) {
 
     // Ignore reminder rules
-    if (dbmailrule.sendReviewReminderDays !== 0 || dbmailrule.sendReviewChaseUpDays !== 0) {
+    if (dbmailrule.sendReviewReminderDays !== 0 || dbmailrule.sendLeadReminderDays !== 0 || dbmailrule.sendReviewChaseUpDays !== 0) {
       continue
     }
     //console.log('sendOutMails dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.name, dbmailrule.sendToUser, dbmailrule.sendToAuthor, dbmailrule.bccToOwners)
