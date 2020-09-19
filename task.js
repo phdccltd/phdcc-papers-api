@@ -59,7 +59,7 @@ async function backgroundTask() {
 
         // See if enough time has elapsed to trigger rule
         const elapseddays = (now - dbsubmitstatus.dt) / 1000 / 60 / 60 / 24
-        //console.log('Submit', dbsubmit.id, 'at this status', dbsubmitstatus.dt, elapseddays)
+        //console.log('Submit', dbsubmit.id, 'at this status', dbsubmitstatus.dt, elapseddays, dbmailrule.sendReviewReminderDays, dbmailrule.sendLeadReminderDays, dbmailrule.sendReviewChaseUpDays)
         const sendReminder = dbmailrule.sendReviewReminderDays ? elapseddays > dbmailrule.sendReviewReminderDays : false
         const sendLeadReminder = dbmailrule.sendLeadReminderDays ? elapseddays > dbmailrule.sendLeadReminderDays : false
         const sendChaseUp = dbmailrule.sendReviewChaseUpDays ? elapseddays > dbmailrule.sendReviewChaseUpDays : false
