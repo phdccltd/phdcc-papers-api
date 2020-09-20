@@ -76,7 +76,7 @@ async function backgroundTask() {
           if (dbsentreminders.length > 0) continue
 
           //console.log('+ Reminder may be needed')
-          const graded = _.find(dbgradings, (grading) => { return grading.userId == dbreviewer.userId })
+          const graded = _.find(dbgradings, (grading) => { return (grading.userId === dbreviewer.userId) && (grading.flowgradeId === dbmailrule.flowgradeId) })
           if (!graded) {
             if (!dbreviewer.lead) allReviewsDone = false
             if (sendReminder && !dbreviewer.lead) {

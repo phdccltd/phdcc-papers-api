@@ -636,9 +636,11 @@ async function getPubSubmits(req, res, next) {
           const dbuser = await dbreviewer.getUser()
           reviewer.username = dbuser ? dbuser.name : ''
 
-          reviewer.sentreminderdt = false
+          reviewer.sentreminders = []
           const dbsentreminders = await models.sentreminders.findAll({ where: { userId: dbreviewer.userId, submitId: req.dbsubmit.id } })
-          if (dbsentreminders.length > 0) reviewer.sentreminderdt = dbsentreminders[0].dt
+          for (const dbsentreminder of dbsentreminders) {
+            reviewer.sentreminders.push({ id: dbsentreminder.id, dt: dbsentreminder.dt })
+          }
 
           reviewers.push(reviewer)
         }
