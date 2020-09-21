@@ -33,18 +33,27 @@ getSubmitFlowPub = async function (req, submitid) {
   req.dbpub = await req.dbflow.getPub()
   if (!req.dbpub) return 'No pub found for submitid ' + req.dbsubmit.id
 
-  // Get MY roles in all publications - see if iamowner
-  await getMyRoles(req)
+  // Get MY roles in all publications - see if iamowner etc
+  if (!await getMyRoles(req)) return 'No access to this publication'
 
   return false
 }
 
 /* ************************ */
-
+/* getMyRoles
+    returns false if not allowed access to publication
+   Needs: req.dbuser, req.dbpub
+*/
 async function getMyRoles(req) {
   req.iamowner = false
+  req.isauthor = false
   req.onlyanauthor = false
-  req.canviewall =  false
+  req.canviewall = false
+
+  // Check user has access to publication
+  const dbpubchecks = await req.dbuser.getPublications()
+  const dbpubcheck = _.find(dbpubchecks, (dbpubcheck) => { return dbpubcheck.id === req.dbpub.id })
+  if (!dbpubcheck) return false
 
   req.dbmypubroles = await req.dbuser.getRoles()
   req.myroles = []
@@ -54,15 +63,19 @@ async function getMyRoles(req) {
       req.myroles.push(mypubrole)
       if (mypubrole.isowner) req.iamowner = true
       if (mypubrole.canviewall) req.canviewall = true
-      if (mypubrole.defaultrole) req.onlyanauthor = true // ie author
+      if (mypubrole.defaultrole) { // ie author
+        req.onlyanauthor = true
+        req.isauthor = true
+      }
     }
   }
   if (req.myroles.length >= 2) req.onlyanauthor = false
-  else if (req.myroles.length === 0) req.onlyanauthor = true
+
   if (req.dbuser.super) {
     req.onlyanauthor = false
     req.iamowner = true
   }
+  return true
 }
 
 /* ************************ */
@@ -90,9 +103,11 @@ async function isActionableSubmit(req, flow, submit) {
     if (flowgrade.flowstatusId === req.currentstatus.flowstatusId) { // If we are at status where this grade possible
 
       // If I have already graded, don't add action later (but still show submit)
+      let gradedid = false
       for (const dbsubmitgrading of req.dbsubmitgradings) {
         if ((flowgrade.id === dbsubmitgrading.flowgradeId) && (dbsubmitgrading.userId === req.dbuser.id)) {
           req.ihavegraded = true // (fake) comment this out to check if I can grade twice
+          gradedid = dbsubmitgrading.id
         }
       }
 
@@ -126,6 +141,9 @@ async function isActionableSubmit(req, flow, submit) {
           submit.actions.push({ name: flowgrade.name + ' needed', gradename: 'Add ' + flowgrade.name, route, flowgradeid: flowgrade.id, show: 3, dograde: 4 })
           submit.user = 'author redacted'
         }
+      }
+      if (req.ihavegraded && submit) {
+        submit.actionsdone.push({ id: gradedid, name: flowgrade.name+' added'})
       }
     }
   }

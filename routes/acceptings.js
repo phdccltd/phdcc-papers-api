@@ -34,7 +34,7 @@ async function deleteAccepting(req, res, next){
     req.dbpub = await req.dbflow.getPub()
     if (!req.dbpub) return utils.giveup(req, res, 'No pub found for flowid ' + flowid)
 
-    await dbutils.getMyRoles(req)
+    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
     if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
 
     const acceptingid = req.body.acceptingid
@@ -71,7 +71,7 @@ async function addEditAccepting(req, res, next){
     req.dbpub = await req.dbflow.getPub()
     if (!req.dbpub) return utils.giveup(req, res, 'No pub found for flowid ' + flowid)
 
-    await dbutils.getMyRoles(req)
+    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
     if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
 
     const acceptingid = req.body.acceptingid

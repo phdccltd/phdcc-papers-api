@@ -159,7 +159,7 @@ async function sendMail(req, res, next) {
     if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
 
     // Set req.iamowner, req.onlyanauthor and req.myroles for this publication
-    await dbutils.getMyRoles(req)
+    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
     if (!req.iamowner) return utils.giveup(req, res, 'Not owner')
 

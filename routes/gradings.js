@@ -83,9 +83,9 @@ async function addGrading(req, res, next){
     const flowgradescore = _.find(flowgrade.scores, (score) => { return score.id === flowgradescoreId })
     if (!flowgradescore) return utils.giveup(req, res, 'flowgradescore not found ' + flowgradescoreId)
 
-    if (!req.iamowner) {
-      await dbutils.getMyRoles(req)
+    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
+    if (!req.iamowner) {
       const dbstatuses = await req.dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
       flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
 

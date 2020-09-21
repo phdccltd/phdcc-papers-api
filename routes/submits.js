@@ -161,12 +161,22 @@ router.post('/submits/entry', upload.array('files'), async function (req, res, n
 
 /* ************************ */
 /* POST add new submit with first entry */
+/* ACCESS: TESTED */
 async function addNewSubmit(req, res, next) {
   try {
     console.log('addSubmitEntry', req.params.flowid)
 
-    const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
     const flowid = parseInt(req.params.flowid)
+
+    req.dbflow = await models.flows.findByPk(flowid)
+    if (!req.dbflow) return utils.giveup(req, res, 'Could not find flow', flowid)
+
+    req.dbpub = await req.dbflow.getPub()
+    if (!req.dbpub) return utils.giveup(req, res, 'Could not find pub for flow', flowid)
+
+    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
+    if (req.myroles.length === 0) return utils.giveup(req, res, 'No permissions')
+    if (!req.isauthor) return utils.giveup(req, res, 'You are not an author')
 
     const now = new Date()
     const submit = {
@@ -407,7 +417,7 @@ async function getEntry(req, res, next) {
 
       const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
 
-      await dbutils.getMyRoles(req)
+      if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
       // Get submit's statuses and currentstatus
       await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
@@ -528,7 +538,7 @@ async function getPubSubmits(req, res, next) {
     if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
 
     // Set req.iamowner, req.onlyanauthor and req.myroles for this publication
-    await dbutils.getMyRoles(req)
+    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
     //////////
     const dbflows = await req.dbpub.getFlows()
@@ -563,7 +573,7 @@ async function getPubSubmits(req, res, next) {
       for (const accepting of flow.acceptings) {
         if (_.isNull(accepting.flowstatusId) && accepting.open) {
           const addstage = _.find(flow.stages, stage => { return stage.id === accepting.flowstageId })
-          if (addstage) {
+          if (addstage && req.isauthor) {
             flow.actions.push({
               name: 'Add '+addstage.name,
               route: '/panel/' + pubid + '/' + flow.id + '/add/' + addstage.id
@@ -580,6 +590,7 @@ async function getPubSubmits(req, res, next) {
         req.dbsubmitgradings = await dbsubmit.getGradings()
 
         submit.actions = [] // Allowable actions
+        submit.actionsdone = [] // Actions done
 
         // Get submit's statuses and currentstatus
         await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
