@@ -412,12 +412,12 @@ async function getEntry(req, res, next) {
       ////////// If not mine, then check if I can see it and set up for actions
       const submit = models.sanitise(models.submits, req.dbsubmit)
 
-      // Got dbsubmit, but get flow, pub, etc
-      await dbutils.getSubmitFlowPub(req, 0)
+      // Got dbsubmit, but get flow, pub, roles, etc
+      const error = await dbutils.getSubmitFlowPub(req, 0)
+      if (error) return utils.giveup(req, res, error)
+      console.log('getEntry', req.isowner)
 
       const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
-
-      if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
       // Get submit's statuses and currentstatus
       await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
@@ -537,7 +537,7 @@ async function getPubSubmits(req, res, next) {
     req.dbpub = await models.pubs.findByPk(pubid)
     if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
 
-    // Set req.iamowner, req.onlyanauthor and req.myroles for this publication
+    // Set req.isowner, req.onlyanauthor and req.myroles for this publication
     if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
     //////////
@@ -595,7 +595,7 @@ async function getPubSubmits(req, res, next) {
         // Get submit's statuses and currentstatus
         await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
         if (!req.currentstatus) { // If no statuses, then only return to owner
-          if (!req.iamowner) continue
+          if (!req.isowner) continue
         }
 
         submit.user = ''
@@ -606,18 +606,20 @@ async function getPubSubmits(req, res, next) {
           submit.ismine = false
         }
 
-        ////////// If mine, then add actions to Add next stage (if appropriate)
-        if (submit.ismine) {
-          //console.log('currentstatus.flowstatusId', currentstatus.flowstatusId)
-          if (req.currentstatus.flowstatusId) {
-            const flowstatus = _.find(flow.statuses, (status) => { return status.id === req.currentstatus.flowstatusId })
-            if (flowstatus) {
-              //console.log('flowstatus.cansubmitflowstageId', flowstatus.cansubmitflowstageId)
-              if (flowstatus.cansubmitflowstageId) {
-                const stage = _.find(flow.stages, (stage) => { return stage.id === flowstatus.cansubmitflowstageId })
-                if (stage) {
+        ////////// Add actions to Add next stage (if appropriate)
+        let ihaveactions = false
+        if (req.currentstatus.flowstatusId) {
+          const flowstatus = _.find(flow.statuses, (status) => { return status.id === req.currentstatus.flowstatusId })
+          if (flowstatus) {
+            if (flowstatus.cansubmitflowstageId) {
+              const stage = _.find(flow.stages, (stage) => { return stage.id === flowstatus.cansubmitflowstageId })
+              if (stage) {
+                // Am I allowed to enter this stage
+                const hasRole = _.find(req.myroles, (role) => { return role.id === stage.pubroleId })
+                if (hasRole) {
                   const route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/add/' + flowstatus.cansubmitflowstageId
-                  submit.actions.push({ name: 'Add '+stage.name, route, show: 3, dograde: 0 })
+                  submit.actions.push({ name: 'Add ' + stage.name, route, show: 3, dograde: 0 })
+                  ihaveactions = true
                 }
               }
             }
@@ -636,7 +638,7 @@ async function getPubSubmits(req, res, next) {
         ////////// Filter submits
         req.iamgrading = false
         req.iamleadgrader = false
-        if (!req.onlyanauthor && !req.iamowner) {
+        if (!ihaveactions && !req.onlyanauthor && !req.isowner) {
           const includethissubmit = await dbutils.isActionableSubmit(req, flow, submit)
           if (!includethissubmit) continue
         }
@@ -655,7 +657,7 @@ async function getPubSubmits(req, res, next) {
 
           reviewers.push(reviewer)
         }
-        const returnreviewers = req.iamowner || req.iamleadgrader
+        const returnreviewers = req.isowner || req.iamleadgrader
         submit.reviewers = returnreviewers ? reviewers : []
 
         // Decide which gradings to return
@@ -667,7 +669,7 @@ async function getPubSubmits(req, res, next) {
         let authorhasgradingstosee = false
         submit.gradings = []
         for (const dbgrading of req.dbsubmitgradings) {
-          let returnthisone = req.iamowner
+          let returnthisone = req.isowner
           if (req.onlyanauthor) {
             const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
             if (flowgrade && (flowgrade.authorcanseeatthisstatus === req.currentstatus.flowstatusId)) {
@@ -754,7 +756,7 @@ async function deleteSubmit(req, res, next) {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
-    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
     // Delete entries and their contents
     const dbentries = await req.dbsubmit.getEntries()
@@ -790,7 +792,7 @@ async function editSubmitTitle(req, res, next) {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
-    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
     req.dbsubmit.name = req.body.newtitle
     await req.dbsubmit.save()
@@ -837,10 +839,10 @@ async function deleteSubmitStatus(req, res, next) {
     const dbpub = await dbflow.getPub()
     if (!dbpub) return utils.giveup(req, res, "pub not found")
 
-    // Get MY roles in all publications - check iamowner
+    // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
+    if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const affectedRows = await models.submitstatuses.destroy({ where: { id: submitstatusid } })
     logger.log4req(req, 'Deleted submit status', submitstatusid, affectedRows)
@@ -864,7 +866,7 @@ async function addSubmitStatus(req, res, next) {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
-    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
     const dbflowstatus = await models.flowstatuses.findByPk(newstatusid)
     if (!dbflowstatus) return utils.giveup(req, res, 'Flow status not found')

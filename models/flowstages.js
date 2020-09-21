@@ -18,6 +18,10 @@ module.exports = (sequelize, DataTypes) => {
     // Adds flowstages.flowId Sequelize.INTEGER allowNull:false
     dbs.flows.hasMany(dbs.flowstages, { as: 'FlowStages', foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete flow while flowstages exist
     dbs.flowstages.belongsTo(dbs.flows, { foreignKey: { allowNull: false }})
+
+    dbs.flowstages.belongsTo(dbs.pubroles, { foreignKey: { allowNull: false } }) // Must have this role to submit. Might need multiple in future
+
+    dbs.flowstages.fields.pubroleId = true
  }
 
   return flowstages

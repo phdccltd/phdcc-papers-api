@@ -31,7 +31,7 @@ async function removeReviewer(req, res, next){
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
-    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
     const submitreviewerid = req.body.submitreviewerid
     //console.log('DELETE /reviewers', submitid, submitreviewerid)
@@ -64,7 +64,7 @@ async function addReviewer(req, res, next){
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
-    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
     const userid = req.body.userid
     console.log('Add /reviewers', submitid, userid, req.body.lead)

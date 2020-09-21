@@ -15,10 +15,10 @@ async function removePubUser(req, res, next) {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
-    // Get MY roles in all publications - check iamowner
+    // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
+    if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const dbuser = await models.users.findByPk(userid)
     if (!dbuser) return utils.giveup(req, res, 'Cannot find userid ' + userid)
@@ -66,10 +66,10 @@ async function addUserRole(req, res, next) {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
-    // Get MY roles in all publications - check iamowner
+    // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
+    if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const dbpubrole = await models.pubroles.findByPk(roleid)
     if (!dbpubrole) return utils.giveup(req, res, 'Cannot find roleid ' + roleid)
@@ -106,10 +106,10 @@ async function deleteUserRole(req, res, next) {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
-    // Get MY roles in all publications - check iamowner
+    // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
+    if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const dbpubrole = await models.pubroles.findByPk(roleid)
     if (!dbpubrole) return utils.giveup(req, res, 'Cannot find roleid ' + roleid)
@@ -140,11 +140,11 @@ async function getPubUsers(req, res, next) {
     const pubid = parseInt(req.params.pubid)
     console.log('GET /users/pub/', pubid, req.dbuser.id)
 
-    // Get MY roles in all publications - check iamowner
+    // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
-    //console.log('iamowner', iamowner.id, iamowner.name)
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
+    if (!isowner) return utils.giveup(req, res, 'Not an owner')
+    //console.log('isowner', isowner.id, isowner.name)
 
     // Get publication
     const dbpub = await models.pubs.findByPk(pubid)

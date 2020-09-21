@@ -22,10 +22,10 @@ router.get('/mail/templates/:flowid', async function (req, res, next) {
     const dbpub = await dbflow.getPub()
     if (!dbpub) return utils.giveup(req, res, 'No pub found for flowid ' + flowid)
 
-    // Get MY roles in all publications - check iamowner
+    // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
+    if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const dbmailtemplates = await dbflow.getFlowMailTemplates()
     const mailtemplates = models.sanitiselist(dbmailtemplates, models.flowmailtemplates)
@@ -64,10 +64,10 @@ async function deleteMailTemplate(req, res, next) {
     const dbpub = await dbflow.getPub()
     if (!dbpub) return utils.giveup(req, res, 'No pub found for flowid ' + flowid)
 
-    // Get MY roles in all publications - check iamowner
+    // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
+    if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const templateid = req.body.templateid
     const dbmailtemplate = await models.flowmailtemplates.findByPk(templateid)
@@ -101,10 +101,10 @@ async function addEditMailTemplate(req, res, next) {
     const dbpub = await dbflow.getPub()
     if (!dbpub) return utils.giveup(req, res, 'No pub found for flowid ' + flowid)
 
-    // Get MY roles in all publications - check iamowner
+    // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const iamowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
-    if (!iamowner) return utils.giveup(req, res, 'Not an owner')
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
+    if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const templateid = req.body.templateid
     const templatename = req.body.templatename
@@ -158,10 +158,10 @@ async function sendMail(req, res, next) {
     req.dbpub = await models.pubs.findByPk(pubid)
     if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
 
-    // Set req.iamowner, req.onlyanauthor and req.myroles for this publication
+    // Set req.isowner, req.onlyanauthor and req.myroles for this publication
     if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
-    if (!req.iamowner) return utils.giveup(req, res, 'Not owner')
+    if (!req.isowner) return utils.giveup(req, res, 'Not owner')
 
     const selecteduser = parseInt(req.body.selecteduser)
     const selectedrole = parseInt(req.body.selectedrole)

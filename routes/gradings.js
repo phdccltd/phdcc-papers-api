@@ -32,7 +32,7 @@ async function deleteGrading(req, res, next){
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
-    if (!req.iamowner) return utils.giveup(req, res, 'Not an owner')
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
     const gradingid = req.body.gradingid
     console.log('DELETE /gradings', submitid, gradingid)
@@ -85,7 +85,7 @@ async function addGrading(req, res, next){
 
     if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
-    if (!req.iamowner) {
+    if (!req.isowner) {
       const dbstatuses = await req.dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
       flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
 

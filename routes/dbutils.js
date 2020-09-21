@@ -33,7 +33,7 @@ getSubmitFlowPub = async function (req, submitid) {
   req.dbpub = await req.dbflow.getPub()
   if (!req.dbpub) return 'No pub found for submitid ' + req.dbsubmit.id
 
-  // Get MY roles in all publications - see if iamowner etc
+  // Get MY roles in all publications - see if isowner etc
   if (!await getMyRoles(req)) return 'No access to this publication'
 
   return false
@@ -45,7 +45,7 @@ getSubmitFlowPub = async function (req, submitid) {
    Needs: req.dbuser, req.dbpub
 */
 async function getMyRoles(req) {
-  req.iamowner = false
+  req.isowner = false
   req.isauthor = false
   req.onlyanauthor = false
   req.canviewall = false
@@ -61,7 +61,7 @@ async function getMyRoles(req) {
     if (dbmypubrole.pubId === req.dbpub.id) {
       const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
       req.myroles.push(mypubrole)
-      if (mypubrole.isowner) req.iamowner = true
+      if (mypubrole.isowner) req.isowner = true
       if (mypubrole.canviewall) req.canviewall = true
       if (mypubrole.defaultrole) { // ie author
         req.onlyanauthor = true
@@ -73,7 +73,7 @@ async function getMyRoles(req) {
 
   if (req.dbuser.super) {
     req.onlyanauthor = false
-    req.iamowner = true
+    req.isowner = true
   }
   return true
 }
@@ -93,7 +93,7 @@ async function isActionableSubmit(req, flow, submit) {
     includethissubmit = true
   } // Don't else this
 
-  if (req.canviewall) {
+  if (req.isowner || req.canviewall) {
     includethissubmit = true
   }
 
