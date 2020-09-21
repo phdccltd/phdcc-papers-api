@@ -415,9 +415,15 @@ async function getEntry(req, res, next) {
       // Got dbsubmit, but get flow, pub, roles, etc
       const error = await dbutils.getSubmitFlowPub(req, 0)
       if (error) return utils.giveup(req, res, error)
-      console.log('getEntry', req.isowner)
 
       const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
+
+      // Get all possible flow statuses
+      const dbstatuses = await req.dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
+      flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
+      // Get all possible flow stages
+      const dbstages = await req.dbflow.getFlowStages({ order: [['weight', 'ASC']] })
+      flow.stages = models.sanitiselist(dbstages, models.flowstages)
 
       // Get submit's statuses and currentstatus
       await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
@@ -427,11 +433,15 @@ async function getEntry(req, res, next) {
 
       req.dbsubmitgradings = await req.dbsubmit.getGradings()
 
-      ////////// What if owner???
+      const ihaveactions = await dbutils.addActions(req, flow, submit)
+      console.log('getEntry', entryid, ihaveactions)
+
       ////////// Filter submits
-      const includethissubmit = await dbutils.isActionableSubmit(req, flow, false)
-      if (!includethissubmit) {
-        return utils.giveup(req, res, 'Not your submit entry')
+      if (!ihaveactions) {
+        const includethissubmit = await dbutils.isActionableSubmit(req, flow, false)
+        if (!includethissubmit) {
+          return utils.giveup(req, res, 'Not your submit entry')
+        }
       }
     }
 
@@ -589,7 +599,6 @@ async function getPubSubmits(req, res, next) {
 
         req.dbsubmitgradings = await dbsubmit.getGradings()
 
-        submit.actions = [] // Allowable actions
         submit.actionsdone = [] // Actions done
 
         // Get submit's statuses and currentstatus
@@ -606,25 +615,8 @@ async function getPubSubmits(req, res, next) {
           submit.ismine = false
         }
 
-        ////////// Add actions to Add next stage (if appropriate)
-        let ihaveactions = false
-        if (req.currentstatus.flowstatusId) {
-          const flowstatus = _.find(flow.statuses, (status) => { return status.id === req.currentstatus.flowstatusId })
-          if (flowstatus) {
-            if (flowstatus.cansubmitflowstageId) {
-              const stage = _.find(flow.stages, (stage) => { return stage.id === flowstatus.cansubmitflowstageId })
-              if (stage) {
-                // Am I allowed to enter this stage
-                const hasRole = _.find(req.myroles, (role) => { return role.id === stage.pubroleId })
-                if (hasRole) {
-                  const route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id + '/add/' + flowstatus.cansubmitflowstageId
-                  submit.actions.push({ name: 'Add ' + stage.name, route, show: 3, dograde: 0 })
-                  ihaveactions = true
-                }
-              }
-            }
-          }
-        }
+        ////////// Add actions to Add next stage (if appropriate).  Sets submit.actions
+        const ihaveactions = await dbutils.addActions(req, flow, submit)
 
         ////////// We'll need the entries (ordered by flowstage weight) so we can get action links
         const dbentries = await dbsubmit.getEntries({

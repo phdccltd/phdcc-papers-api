@@ -79,6 +79,37 @@ async function getMyRoles(req) {
 }
 
 /* ************************ */
+/*
+ *  needs: req.currentstatus, req.myroles, req.pub
+ *  return true if ihaveactions
+ */
+async function addActions(req, flow, submit) {
+  let ihaveactions = false
+  submit.actions = [] // Allowable actions
+  if (req.currentstatus.flowstatusId) {
+   console.log('addActions', req.currentstatus.flowstatusId)
+    const flowstatus = _.find(flow.statuses, (status) => { return status.id === req.currentstatus.flowstatusId })
+    if (flowstatus) {
+      console.log('addActions flowstatus', flowstatus.cansubmitflowstageId)
+      if (flowstatus.cansubmitflowstageId) {
+        console.log('addActions FIND', flowstatus.cansubmitflowstageId)
+        const stage = _.find(flow.stages, (stage) => { return stage.id === flowstatus.cansubmitflowstageId })
+        if (stage) {
+          console.log('addActions stage', stage.id)
+          // Am I allowed to enter this stage
+          const hasRole = _.find(req.myroles, (role) => { return role.id === stage.pubroleId })
+          if (hasRole) {
+            const route = '/panel/' + req.dbpub.id + '/' + flow.id + '/' + submit.id + '/add/' + flowstatus.cansubmitflowstageId
+            submit.actions.push({ name: 'Add ' + stage.name, route, show: 3, dograde: 0 })
+            ihaveactions = true
+          }
+        }
+      }
+    }
+  }
+  return ihaveactions
+}
+/* ************************ */
 
 async function isActionableSubmit(req, flow, submit) {
 
@@ -172,6 +203,7 @@ module.exports = {
   getSubmitCurrentStatus,
   getSubmitFlowPub,
   getMyRoles,
+  addActions,
   isActionableSubmit,
   getFlowWithFlowgrades,
 }
