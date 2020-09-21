@@ -76,7 +76,8 @@ async function addEntry(req, res, next) {
       logger.log4req(req, 'Uploaded file', filesdir + filepath)
     }
 
-    for (const sv of req.body.values) {
+    const values = (typeof req.body.values === 'string') ? [req.body.values] : req.body.values // Single value comes in as string; otherwise array
+    for (const sv of values) {
       const v = JSON.parse(sv)
       if (v.string && v.string.length > 255) v.string = v.string.substring(0, 255)
       if (v.file) {
@@ -135,6 +136,7 @@ async function addEntry(req, res, next) {
     return rv
   } catch (e) {
     utils.giveup(req, res, e.message)
+    console.log(e.stack)
   }
 }
 /* ************************ */
@@ -434,7 +436,6 @@ async function getEntry(req, res, next) {
       req.dbsubmitgradings = await req.dbsubmit.getGradings()
 
       const ihaveactions = await dbutils.addActions(req, flow, submit)
-      console.log('getEntry', entryid, ihaveactions)
 
       ////////// Filter submits
       if (!ihaveactions) {

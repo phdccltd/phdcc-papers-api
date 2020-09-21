@@ -124,13 +124,15 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
             }
           } else if (formfield.type === 'rolelookups') {
             stringvalue = ''
-            const aselections = v.string.split(',')
-            for (const sel of aselections) {
-              const dbuser = await models.users.findByPk(parseInt(sel))
-              if (dbuser) {
-                stringvalue += dbuser.name + ' - '
-              } else {
-                stringvalue += sel + ' - '
+            if (v.string != null) {
+              const aselections = v.string.split(',')
+              for (const sel of aselections) {
+                const dbuser = await models.users.findByPk(parseInt(sel))
+                if (dbuser) {
+                  stringvalue += dbuser.name + ' - '
+                } else {
+                  stringvalue += sel + ' - '
+                }
               }
             }
           }
