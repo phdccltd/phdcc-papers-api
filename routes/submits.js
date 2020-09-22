@@ -762,6 +762,12 @@ async function deleteSubmit(req, res, next) {
     // Delete statuses
     let affectedRows = await models.submitstatuses.destroy({ where: { submitId: submitid } })
 
+    // Delete submitgradings
+    affectedRows = await models.submitgradings.destroy({ where: { submitId: submitid } })
+
+    // Delete submitreviewers
+    affectedRows = await models.submitreviewers.destroy({ where: { submitId: submitid } })
+
     // Delete submit
     affectedRows = await models.submits.destroy({ where: { id: submitid } })
 
