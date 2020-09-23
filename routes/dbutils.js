@@ -194,6 +194,42 @@ async function getFlowWithFlowgrades(dbflow) {
 }
 
 /* ************************ */
+/* Retrive formfields for entry
+ * entry may be existing or newly created
+ */
+async function getEntryFormFields(entry, flowstageId) {
+  const dbformfields = await models.formfields.findAll({
+    where: {
+      formtypeid: flowstageId
+    },
+    order: [
+      ['weight', 'ASC']
+    ]
+  })
+  entry.fields = models.sanitiselist(dbformfields, models.formfields)
+  //????entry.publookups = []
+  entry.pubrolelookups = []
+  for (const dbformfield of dbformfields) {
+    if (dbformfield.pubroleId != null) {
+      const dbpubrole = await models.pubroles.findByPk(dbformfield.pubroleId)
+      if (!dbpubrole) {
+        console.log('formfield: pubroleId not found', pubroleId)
+      } else {
+        const dbusers = await dbpubrole.getUsers()
+        const users = []
+        for (const dbuser of dbusers) {
+          users.push({ value: dbuser.id, text: dbuser.name })
+        }
+        entry.pubrolelookups.push({
+          pubroleId: dbformfield.pubroleId,
+          users
+        })
+      }
+    }
+  }
+}
+
+/* ************************ */
 
 module.exports = {
   getSubmitCurrentStatus,
@@ -202,4 +238,5 @@ module.exports = {
   addActions,
   isActionableSubmit,
   getFlowWithFlowgrades,
+  getEntryFormFields,
 }

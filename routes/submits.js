@@ -448,7 +448,7 @@ async function getEntry(req, res, next) {
 
     const entry = models.sanitise(models.entries, dbentry)
     
-    await getEntryFormFields(entry, dbentry.flowstageId)
+    await dbutils.getEntryFormFields(entry, dbentry.flowstageId)
 
     entry.values = []
     for (const dbentryvalue of await dbentry.getEntryValues()) {
@@ -479,7 +479,7 @@ async function getFlowFormFields(req, res, next) {
     if (!Number.isInteger(req.dbuser.id)) return utils.giveup(req, res, 'Invalid req.user.id')
 
     const entry = {}
-    await getEntryFormFields(entry, flowstageId)
+    await dbutils.getEntryFormFields(entry, flowstageId)
 
     //console.log('entry', entry)
     logger.log4req(req, 'Returning formfields', flowstageId)
@@ -490,41 +490,6 @@ async function getFlowFormFields(req, res, next) {
 }
 router.get('/submits/formfields/:flowstageId', getFlowFormFields)
 
-/* ************************ */
-/* Retrive formfields for entry
- * entry may be existing or newly created
- */
-async function getEntryFormFields(entry, flowstageId) {
-  const dbformfields = await models.formfields.findAll({
-    where: {
-      formtypeid: flowstageId
-    },
-    order: [
-      ['weight', 'ASC']
-    ]
-  })
-  entry.fields = models.sanitiselist(dbformfields, models.formfields)
-  //????entry.publookups = []
-  entry.pubrolelookups = []
-  for (const dbformfield of dbformfields) {
-    if (dbformfield.pubroleId != null) {
-      const dbpubrole = await models.pubroles.findByPk(dbformfield.pubroleId)
-      if (!dbpubrole) {
-        console.log('formfield: pubroleId not found', pubroleId)
-      } else {
-        const dbusers = await dbpubrole.getUsers()
-        const users = []
-        for (const dbuser of dbusers) {
-          users.push({ value: dbuser.id, text: dbuser.name })
-        }
-        entry.pubrolelookups.push({
-          pubroleId: dbformfield.pubroleId,
-          users
-        })
-      }
-    }
-  }
-}
 
 /* ************************ */
 /* GET submits for publication
