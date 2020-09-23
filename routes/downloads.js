@@ -4,6 +4,7 @@ const path = require('path')
 const mime = require('mime-types')
 const Sequelize = require('sequelize')
 const _ = require('lodash/core')
+const archiver = require('archiver')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
@@ -14,7 +15,7 @@ const router = Router()
 const TMPDIR = '/tmp/papers/'
 
 /* ************************ */
-/* GET: Get anonymised gradings */
+/* GET: Get anonymised stage entries */
 /* ACCESS: OWNER-ONLY NOT TESTED */
 router.get('/downloads/anon/:pubid', async function (req, res, next) {
   const pubid = parseInt(req.params.pubid)
@@ -97,5 +98,135 @@ router.get('/downloads/anon/:pubid', async function (req, res, next) {
     utils.giveup(req, res, e.message)
   }
 })
+
+/* ************************ */
+/* GET: Get anonymised summary for publication */
+/* ACCESS: OWNER-ONLY NOT TESTED */
+router.get('/downloads/summary/:pubid', async function (req, res, next) {
+  const pubid = parseInt(req.params.pubid)
+  console.log('GET /downloads/summary', pubid)
+  try {
+    // https://www.archiverjs.com/
+
+    const now = new Date()
+    const dirName = 'summary-' + now.toISOString().substring(0, 16).replace(/:/g, "-")
+    fs.mkdirSync(TMPDIR + dirName, { recursive: true })
+    fs.mkdirSync(TMPDIR + dirName+'/papers', { recursive: true })
+
+    const writeFile1 = new Promise((resolve, reject) => {
+      const stream = fs.createWriteStream(TMPDIR + dirName +'/papers/hello.txt')
+      stream.on('close', function (fd) {
+        resolve()
+      })
+      stream.on('open', async function (fd) {
+        stream.write('Hello\rthere\r\r')
+        stream.end()
+      })
+    })
+    await writeFile1
+    const writeFile2 = new Promise((resolve, reject) => {
+      const stream = fs.createWriteStream(TMPDIR + dirName + '/there.txt')
+      stream.on('close', function (fd) {
+        resolve()
+      })
+      stream.on('open', async function (fd) {
+        stream.write('Well\rnow\r\r')
+        stream.end()
+      })
+    })
+    await writeFile2
+
+
+    const saveFilename = dirName + '.zip'
+
+    const outpath = path.join(TMPDIR, saveFilename)
+
+    const saveSummaryZip = new Promise((resolve, reject) => {
+      const output = fs.createWriteStream(TMPDIR + saveFilename)
+      const archive = archiver('zip', {
+        zlib: { level: 9 } // Sets the compression level.
+      })
+
+      output.on('close', function () { // archive.pointer() has byte count
+        resolve()
+      })
+
+      // good practice to catch warnings (ie stat failures and other non-blocking errors)
+      archive.on('warning', function (err) {
+        if (err.code === 'ENOENT') {
+          console.log('archive warning warning',err)
+        } else {
+          console.log('archive warning error', err)
+          throw err
+        }
+      })
+
+      // good practice to catch this error explicitly
+      archive.on('error', function (err) {
+        console.log('archive error', err)
+        reject()
+      })
+
+      // pipe archive data to the file
+      archive.pipe(output)
+
+      // append a file from stream
+      //const file1 = __dirname + '/file1.txt'
+      //archive.append(fs.createReadStream(file1), { name: 'file1.txt' })
+
+      // append a file from string
+      archive.append('tough tammy', { name: 'file1.txt' })
+      archive.append('string cheese!', { name: 'file2.txt' })
+
+      archive.directory(TMPDIR + dirName, false)
+      
+      // finalize the archive (ie we are done appending files but streams have to finish yet)
+      // 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
+      archive.finalize()
+    })
+    await saveSummaryZip
+
+    const ContentType = mime.lookup(saveFilename)
+    var options = {
+      root: TMPDIR,
+      dotfiles: 'deny',
+      headers: {
+        'Content-Type': ContentType,
+        'Content-Disposition': 'attachment; filename="' + saveFilename + '"',
+        'Access-Control-Expose-Headers': 'Content-Disposition',
+      }
+    }
+    res.sendFile(saveFilename, options)
+
+    // Delete tmp file 1 second after send
+    setTimeout(() => {
+      fs.unlink(outpath, err => { if (err) console.log(err) })
+
+      try {
+        deleteFolderRecursivelySync(TMPDIR+dirName)
+      } catch (err) {
+        console.log(err);
+      }
+
+
+
+    }, 1000)
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+})
+
+function deleteFolderRecursivelySync(dirpath) {
+  const files = fs.readdirSync(dirpath)
+  files.forEach(file => {
+    const path = dirpath + '/' + file
+    if (fs.lstatSync(path).isDirectory()) {
+      deleteFolderRecursivelySync(path)
+    } else {
+      fs.unlinkSync(path)
+    }
+  })
+  fs.rmdirSync(dirpath)
+}
 
 module.exports = router
