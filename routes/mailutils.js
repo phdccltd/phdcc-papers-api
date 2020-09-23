@@ -3,6 +3,7 @@ const Handlebars = require("handlebars")
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
+const dbutils = require('./dbutils')
 
 /* ************************ */
 // req.dbsubmit must be set
@@ -99,46 +100,8 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
       entryout = models.sanitise(models.entries, dbentry)
       for (const sv of req.body.values) {
         const v = JSON.parse(sv)
-
         const formfield = _.find(dbformfields, formfield => { return formfield.id === v.formfieldid })
-
-        let stringvalue = ''
-        if (v.string) stringvalue = v.string
-        else if (v.text) stringvalue = v.text
-        else if (v.integer) stringvalue = v.integer.toString()
-        else if (v.file) stringvalue = v.file
-
-        if (formfield) {
-          if (formfield.type === 'yes' || formfield.type === 'yesno') {
-            stringvalue = v.integer ? 'Yes' : 'No'
-          } else if (formfield.type === 'lookup' || formfield.type === 'lookups') {
-            stringvalue = ''
-            const aselections = v.string.split(',')
-            for (const sel of aselections) {
-              const dbpublookupvalue = await models.publookupvalues.findByPk(parseInt(sel))
-              if (dbpublookupvalue) {
-                stringvalue += dbpublookupvalue.text + ' - '
-              } else {
-                stringvalue += sel + ' - '
-              }
-            }
-          } else if (formfield.type === 'rolelookups') {
-            stringvalue = ''
-            if (v.string != null) {
-              const aselections = v.string.split(',')
-              for (const sel of aselections) {
-                const dbuser = await models.users.findByPk(parseInt(sel))
-                if (dbuser) {
-                  stringvalue += dbuser.name + ' - '
-                } else {
-                  stringvalue += sel + ' - '
-                }
-              }
-            }
-          }
-        }
-
-        entryout['field_' + v.formfieldid] = stringvalue
+        entryout['field_' + v.formfieldid] = await dbutils.getEntryStringValue(v, formfield)
       }
     }
 

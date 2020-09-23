@@ -66,32 +66,10 @@ router.get('/downloads/anon/:pubid', async function (req, res, next) {
           entry.values = []
           for (const dbentryvalue of await dbentry.getEntryValues()) {
             const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
-            const field = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
-            if (field.hidewhengrading) continue
-            let value = ''
-            switch (field.type){
-              case 'string':
-              case 'phone':
-              case 'email':
-                value = entryvalue.string
-                break
-              case 'text':
-                value = entryvalue.text
-                break
-              case 'lookups': 
-                value = entryvalue.string
-                break
-              case 'yes':
-              case 'yesno':
-                value = entryvalue.integer?'Yes':'No'
-                break
-              case 'file':
-                value = path.basename(entryvalue.file)
-                break
-              case 'rolelookups':
-                break
-            }
-            stream.write(field.label + '\r' + value + '\r\r')
+            const formfield = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
+            if (formfield.hidewhengrading) continue
+            const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
+            stream.write(formfield.label + '\r' + stringvalue + '\r\r')
           }
         }
 

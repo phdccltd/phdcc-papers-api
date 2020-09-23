@@ -231,6 +231,50 @@ async function getEntryFormFields(entry, flowstageId) {
 
 /* ************************ */
 
+async function getEntryStringValue(v, formfield){
+
+  let stringvalue = ''
+  if (v.string) stringvalue = v.string
+  else if (v.text) stringvalue = v.text
+  else if (v.integer) stringvalue = v.integer.toString()
+  else if (v.file) stringvalue = v.file
+
+  if (formfield) {
+    if (formfield.type === 'yes' || formfield.type === 'yesno') {
+      stringvalue = v.integer ? 'Yes' : 'No'
+    } else if (formfield.type === 'lookup' || formfield.type === 'lookups') {
+      stringvalue = ''
+      const aselections = v.string.split(',')
+      for (const sel of aselections) {
+        const dbpublookupvalue = await models.publookupvalues.findByPk(parseInt(sel))
+        if (stringvalue.length > 0) stringvalue += ' - '
+        if (dbpublookupvalue) {
+          stringvalue += dbpublookupvalue.text
+        } else {
+          stringvalue += sel
+        }
+      }
+    } else if (formfield.type === 'rolelookups') {
+      stringvalue = ''
+      if (v.string != null) {
+        const aselections = v.string.split(',')
+        for (const sel of aselections) {
+          const dbuser = await models.users.findByPk(parseInt(sel))
+          if (stringvalue.length > 0) stringvalue += ' - '
+          if (dbuser) {
+            stringvalue += dbuser.name
+          } else {
+            stringvalue += sel
+          }
+        }
+      }
+    }
+  }
+  return stringvalue
+}
+
+/* ************************ */
+
 module.exports = {
   getSubmitCurrentStatus,
   getSubmitFlowPub,
@@ -239,4 +283,5 @@ module.exports = {
   isActionableSubmit,
   getFlowWithFlowgrades,
   getEntryFormFields,
+  getEntryStringValue,
 }
