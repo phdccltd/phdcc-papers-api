@@ -43,44 +43,40 @@ router.get('/downloads/anon/:pubid', async function (req, res, next) {
 
     fs.mkdirSync(TMPDIR, { recursive: true })
 
+    //////////
+
     const now = new Date()
-    const saveFilename = dbflowstage.name.replace(/\s/g, "-") + '-' + now.toISOString().substring(0, 16).replace(/:/g, "-") + '.txt'
+    const saveFilename = dbflowstage.name.replace(/\s/g, '-') + '-' + now.toISOString().substring(0, 16).replace(/:/g, '-') + '.txt'
 
     const outpath = path.join(TMPDIR, saveFilename)
-    const writeAnon = new Promise((resolve, reject) => {
-      const stream = fs.createWriteStream(outpath)
-      stream.on('close', function (fd) {
-        resolve()
-      })
-      stream.on('open', async function (fd) {
+    const anonStream = await openFile(outpath)
 
-        const dbentries = await dbflowstage.getEntries()
-        for (const dbentry of dbentries) {
-          const dbsubmit = await dbentry.getSubmit()
-          if (!dbsubmit) continue
+    //////////
 
-          stream.write('---------------------------------------------------\r')
-          stream.write('Paper no: ' + dbsubmit.id+'\r')
-          stream.write('Title: ' + dbsubmit.name + '\r')
+    const dbentries = await dbflowstage.getEntries()
+    for (const dbentry of dbentries) {
+      const dbsubmit = await dbentry.getSubmit()
+      if (!dbsubmit) continue
 
-          const entry = {}
-          await dbutils.getEntryFormFields(entry, flowstageid)
+      anonStream.write('---------------------------------------------------\r')
+      anonStream.write('Paper no: ' + dbsubmit.id+'\r')
+      anonStream.write('Title: ' + dbsubmit.name + '\r')
 
-          entry.values = []
-          for (const dbentryvalue of await dbentry.getEntryValues()) {
-            const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
-            const formfield = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
-            if (formfield.hidewhengrading) continue
-            const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
-            stream.write(formfield.label + '\r' + stringvalue + '\r\r')
-          }
-        }
+      const entry = {}
+      await dbutils.getEntryFormFields(entry, flowstageid)
 
-        stream.end()
-      })
-    })
-    await writeAnon
+      entry.values = []
+      for (const dbentryvalue of await dbentry.getEntryValues()) {
+        const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
+        const formfield = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
+        if (formfield.hidewhengrading) continue
+        const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
+        anonStream.write(formfield.label + '\r' + stringvalue + '\r\r')
+      }
+    }
+    await closeFile(anonStream)
 
+    //////////
     // Send file
     sendFile(res, saveFilename)
 
@@ -119,40 +115,43 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
     ////////////////
 
     const now = new Date()
-    const nowstring = now.toISOString().substring(0, 16).replace(/:/g, "-")
+    const nowstring = now.toISOString().substring(0, 16).replace(/:/g, '-')
     const dirName = 'summary-' + nowstring
     fs.mkdirSync(TMPDIR + dirName, { recursive: true })
     fs.mkdirSync(TMPDIR + dirName + '/papers', { recursive: true })
 
     ////////
-    const flowstageFilename = dbflowstage.name.replace(/\s/g, "-") + nowstring + '.csv'
-    console.log('flowstageFilename', flowstageFilename)
-    const flowstageStream = await createFile(TMPDIR + dirName + '/' + flowstageFilename)
-    console.log('flowstageStream opened')
-    flowstageStream.write('Scrufulopus\rnow\r\r')
-    await closeFile(flowstageStream)
-    console.log('flowstageStream closed')
+
+    const dbflowgrades = await dbflow.getFlowgrades({ where: { displayflowstageId: flowstageid } })
+    if (dbflowgrades.length !== 1) return utils.giveup(req, res, 'dbpubcheck.id and dbpub.id mismatch')
+    const dbflowgrade = dbflowgrades[0]
+
+    const header = ['Paper"\r\nid', 'Status', 'Title']
+    for (const dbflowgradescore of await dbflowgrade.getFlowgradescores()) {
+      header.push(dbflowgradescore.name)
+    }
+    if (dbflowgrade.canopttoreview) header.push('WillReview')
+    if (dbflowgrade.cancomment) header.push('Comment')
+
+    const flowstageFilename = dbflowstage.name.replace(/\s/g, '-') + nowstring + '.csv'
+    const flowstageStream = await openFile(TMPDIR + dirName + '/' + flowstageFilename)
+
+    writeCSVline(flowstageStream, header)
 
     const dbsubmits = await dbflow.getSubmits()
     for (const dbsubmit of dbsubmits) {
       console.log('Submit: ', dbsubmit.id)
+      const submitOut = [dbsubmit.id, , dbsubmit.name]
+      writeCSVline(flowstageStream, submitOut)
+
+      //Paper id	Status	Title	Accept	Reject	Conflict-of-interest	Insufficient background	WillReview	WillReviewers	Comments
     }
 
-    const wf1Stream = await createFile(TMPDIR + dirName + '/papers/hello.txt')
-    wf1Stream.write('Hello\rthere\r\r')
-    await closeFile(wf1Stream)
+    await closeFile(flowstageStream)
 
-    const writeFile2 = new Promise((resolve, reject) => {
-      const stream = fs.createWriteStream(TMPDIR + dirName + '/there.txt')
-      stream.on('close', function (fd) {
-        resolve()
-      })
-      stream.on('open', async function (fd) {
-        stream.write('Well\rnow\r\r')
-        stream.end()
-      })
-    })
-    await writeFile2
+    //const wf1Stream = await openFile(TMPDIR + dirName + '/papers/hello.txt')
+    //wf1Stream.write('Hello\rthere\r\r')
+    //await closeFile(wf1Stream)
 
 
     // Make zip file from directory
@@ -170,7 +169,7 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
 })
 
 /* ************************ */
-function createFile(path) {
+function openFile(path) {
   return new Promise((resolve, reject) => {
     const stream = fs.createWriteStream(path)
     stream.on('open', async function (fd) {
@@ -186,6 +185,23 @@ function closeFile(stream) {
     })
     stream.end()
   })
+}
+
+/* ************************ */
+function writeCSVline(stream, items) {
+  let line = ''
+  for (const item of items) {
+    if (typeof item !== 'undefined' && item!==null) {
+      let escaped = item.toString()
+      escaped = escaped.replace(/"/g, '""')
+      escaped = escaped.replace(/\r/g, ' ')
+      escaped = escaped.replace(/\n/g, ' ')
+      line += '"' + escaped + '"'
+    }
+    line += ','
+  }
+  line += '\r'
+  stream.write(line)
 }
 
 /* ************************ */
