@@ -7,11 +7,11 @@ const router = Router()
 /* GET sitepages */
 router.get('/sitepages', async function (req, res, next) {
   try {
-    const sitedb = await models.sites.findByPk(req.site.id)
-    const sitepagesdb = await sitedb.getSitePages()
-    sitepages = []
-    for (const sitepagedb of sitepagesdb) {
-      sitepages.push(models.sanitise(models.sitepages, sitepagedb))
+    const dbsite = await models.sites.findByPk(req.site.id)
+    const dbsitepages = await dbsite.getSitePages()
+    const sitepages = []
+    for (const dbsitepage of dbsitepages) {
+      sitepages.push(models.sanitise(models.sitepages, dbsitepage))
     }
     //console.log(sitepages)
 

@@ -172,10 +172,22 @@ async function register(req, res, next) {
       }
 
       // Create user now
-      const user = await models.users.create(params)
-      if (!user) return utils.giveup(req, res, 'user not created')
+      const dbuser = await models.users.create(params)
+      if (!dbuser) return utils.giveup(req, res, 'user not created')
 
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET)
+      const dbsite = await models.sites.findByPk(req.site.id)
+      const dbpubs = await dbsite.getPubs()
+      for (const dbpub of dbpubs) {
+        const dbpubroles = await dbpub.getPubroles({ where: { defaultrole: true } })
+        if (dbpubroles.length > 0) {
+          await dbpub.addUser(dbuser)
+          for (const dbpubrole of dbpubroles) {
+            await dbpubrole.addUser(dbuser)
+          }
+        }
+      }
+
+      const token = jwt.sign({ id: dbuser.id }, process.env.JWT_SECRET)
 
       utils.async_mail(false, req.site.name + ". API User registered: " + username, 'Name: ' + params.name+'\r\nEmail: ' + params.email)
       utils.returnOK(req, res, { token }, 'user')
