@@ -435,6 +435,7 @@ async function getEntry(req, res, next) {
 
       req.dbsubmitgradings = await req.dbsubmit.getGradings()
 
+      submit.ismine = false
       const ihaveactions = await dbutils.addActions(req, flow, submit)
 
       ////////// Filter submits

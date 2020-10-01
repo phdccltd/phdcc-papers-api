@@ -84,8 +84,9 @@ async function getMyRoles(req) {
  *  return true if ihaveactions
  */
 async function addActions(req, flow, submit) {
-  let ihaveactions = false
   submit.actions = [] // Allowable actions
+  if (!submit.ismine) return false
+  let ihaveactions = false
   if (req.currentstatus.flowstatusId) {
     const flowstatus = _.find(flow.statuses, (status) => { return status.id === req.currentstatus.flowstatusId })
     if (flowstatus) {
