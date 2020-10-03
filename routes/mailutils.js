@@ -34,18 +34,19 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
     }
     //console.log('sendOutMails dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.name, dbmailrule.sendToUser, dbmailrule.sendToAuthor, dbmailrule.bccToOwners)
 
+    const dbflow = await req.dbsubmit.getFlow()
+    if (!dbflow) {
+      logger.log4req(req, 'Could not find flow so not sending mails')
+      return
+    }
+    const dbpub = await dbflow.getPub()
+    if (!dbpub) {
+      logger.log4req(req, 'Could not find pub so not sending mails')
+      return
+    }
+
     const bccOwners = []
     if (dbmailrule.bccToOwners) {
-      const dbflow = await req.dbsubmit.getFlow()
-      if (!dbflow) {
-        logger.log4req(req, 'Could not find flow so not sending mails')
-        return
-      }
-      const dbpub = await dbflow.getPub()
-      if (!dbpub) {
-        logger.log4req(req, 'Could not find pub so not sending mails')
-        return
-      }
       const dbownerroles = await dbpub.getPubroles({ where: { isowner: true } })
       for (const dbownerrole of dbownerroles) {
         const dbownerusers = await dbownerrole.getUsers()
@@ -105,8 +106,16 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
       }
     }
 
+    const dbsite = await dbpub.getSite()
+    if (!dbsite) {
+      logger.log4req(req, 'Could not find site so not sending mails')
+      return
+    }
+    const siteurl = 'https://' + dbsite.url + '/'
+
     const now = (new Date()).toLocaleString()
     const data = {
+      siteurl,
       submit: models.sanitise(models.submits, req.dbsubmit),
       entry: entryout,
       grading,

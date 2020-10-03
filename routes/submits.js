@@ -629,7 +629,7 @@ async function getPubSubmits(req, res, next) {
         submit.gradings = []
         for (const dbgrading of req.dbsubmitgradings) {
           let returnthisone = req.isowner
-          if (req.onlyanauthor) {
+          if (submit.ismine) {
             const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
             if (flowgrade && (flowgrade.authorcanseeatthisstatus === req.currentstatus.flowstatusId)) {
               returnthisone = true
@@ -647,7 +647,7 @@ async function getPubSubmits(req, res, next) {
           if (req.canviewall && !overrideviewall) returnthisone = true
 
           if (returnthisone) {
-            if (req.onlyanauthor) {
+            if (submit.ismine) {
               submit.gradings.push({ flowgradeId: dbgrading.flowgradeId, comment: dbgrading.comment })
               authorhasgradingstosee = true
             } else {
