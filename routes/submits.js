@@ -428,6 +428,7 @@ async function getEntry(req, res, next) {
       flow.stages = models.sanitiselist(dbstages, models.flowstages)
 
       // Get submit's statuses and currentstatus
+      submit.ismine = false
       await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
       if (!req.currentstatus) { // If no statuses, then give up here
         return utils.giveup(req, res, "No statuses for this submit")
@@ -435,7 +436,6 @@ async function getEntry(req, res, next) {
 
       req.dbsubmitgradings = await req.dbsubmit.getGradings()
 
-      submit.ismine = false
       const ihaveactions = await dbutils.addActions(req, flow, submit)
 
       ////////// Filter submits
@@ -530,7 +530,7 @@ async function getPubSubmits(req, res, next) {
       let dbsubmits = false
       if (req.onlyanauthor) { // Just get mine
         dbsubmits = await dbflow.getSubmits({ where: { userId: req.dbuser.id } })
-      } else { // Otherwise: det all submits and filter
+      } else { // Otherwise: get all submits and filter
         dbsubmits = await dbflow.getSubmits()
       }
 
@@ -568,18 +568,18 @@ async function getPubSubmits(req, res, next) {
 
         submit.actionsdone = [] // Actions done
 
-        // Get submit's statuses and currentstatus
-        await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
-        if (!req.currentstatus) { // If no statuses, then only return to owner
-          if (!req.isowner) continue
-        }
-
         submit.user = ''
         submit.ismine = true
         if (dbsubmit.userId !== req.dbuser.id) {
           const dbauthor = await dbsubmit.getUser()
           submit.user = dbauthor.name
           submit.ismine = false
+        }
+
+        // Get submit's statuses and currentstatus
+        await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
+        if (!req.currentstatus) { // If no statuses, then only return to owner
+          if (!req.isowner) continue
         }
 
         ////////// Add actions to Add next stage (if appropriate).  Sets submit.actions

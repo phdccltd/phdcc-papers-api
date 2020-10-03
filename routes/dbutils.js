@@ -13,7 +13,7 @@ getSubmitCurrentStatus = async function (req, dbsubmit, submit, flow) {
   for (const dbstatus of dbstatuses) {
     const submitstatus = models.sanitise(models.submitstatuses, dbstatus)
     const flowstatus = _.find(flow.statuses, flowstatus => { return flowstatus.id === submitstatus.flowstatusId })
-    if (req.onlyanauthor && !flowstatus.visibletoauthor) continue // If author: only return statuses with visibletoauthor
+    if (submit.ismine && !flowstatus.visibletoauthor) continue // If author of this submission: only return statuses with visibletoauthor
     submit.statuses.push(submitstatus)
     if (!req.currentstatus) req.currentstatus = submitstatus
   }
@@ -107,6 +107,16 @@ async function addActions(req, flow, submit) {
   return ihaveactions
 }
 /* ************************ */
+/* isActionableSubmit
+ *  return true if this submit should be shown to the user
+ *   - ismine
+ *   - owner
+ *   - If currentstatus has associated flowgrade
+ *    - if I have graded
+ *    - if I have role visibletorole
+ *    - if I am reviewer of this submit
+ *  If showing, then set submit.actions or submit.actionsdone
+*/
 
 async function isActionableSubmit(req, flow, submit) {
 
