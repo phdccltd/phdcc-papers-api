@@ -636,10 +636,9 @@ async function getPubSubmits(req, res, next) {
               const found = _.find(canseeat, (flowgradeid) => { return parseInt(flowgradeid) === req.currentstatus.flowstatusId})
               if (found) {
                 returnthisone = true
+                submit.gradings.push({ flowgradeId: dbgrading.flowgradeId, comment: dbgrading.comment })
+                authorhasgradingstosee = true
               }
-            }
-            if (flowgrade && (flowgrade.authorcanseeatthisstatus === req.currentstatus.flowstatusId)) {
-              returnthisone = true
             }
           }
           let overrideviewall = false
@@ -651,13 +650,12 @@ async function getPubSubmits(req, res, next) {
               else overrideviewall = true
             }
           }
-          if (req.canviewall && !overrideviewall) returnthisone = true
+          if (req.canviewall && !overrideviewall) {
+            returnthisone = true
+          }
 
           if (returnthisone) {
-            if (submit.ismine) {
-              submit.gradings.push({ flowgradeId: dbgrading.flowgradeId, comment: dbgrading.comment })
-              authorhasgradingstosee = true
-            } else {
+            if (!submit.ismine) {
               const grading = models.sanitise(models.submitgradings, dbgrading)
               if (!req.onlyanauthor) {
                 const reviewer = _.find(reviewers, (reviewer) => { return reviewer.userId === grading.userId })
