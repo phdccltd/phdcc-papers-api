@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     visibletoreviewers: { type: DataTypes.BOOLEAN, allowNull: false },
     cancomment: { type: DataTypes.BOOLEAN, allowNull: false },
     canopttoreview: { type: DataTypes.BOOLEAN, allowNull: false },
-    authorcanseeatthisstatus: { type: Sequelize.INTEGER, allowNull: false },  // Author can see comments if at this status
+    authorcanseeatthesestatuses: { type: Sequelize.STRING, allowNull: true },  // Author can see comments if at one of these statuses
     helptext: { type: Sequelize.STRING, allowNull: false },
     helplinktext: { type: Sequelize.STRING, allowNull: false },
     helplink: { type: Sequelize.STRING, allowNull: false },

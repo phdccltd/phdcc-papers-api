@@ -622,7 +622,7 @@ async function getPubSubmits(req, res, next) {
         // Decide which gradings to return
         // - if owner then return all 
         // - if canviewall then return all except if role means I'm grading
-        // - If author: return when grading at status authorcanseeatthisstatus
+        // - If author: return when grading at a status in authorcanseeatthesestatuses
         // - If reviewer: add/see your own (but can't see earlier abstract scores)
 
         let authorhasgradingstosee = false
@@ -631,6 +631,13 @@ async function getPubSubmits(req, res, next) {
           let returnthisone = req.isowner
           if (submit.ismine) {
             const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
+            if (flowgrade && flowgrade.authorcanseeatthesestatuses) {
+              const canseeat = flowgrade.authorcanseeatthesestatuses.split(',')
+              const found = _.find(canseeat, (flowgradeid) => { return parseInt(flowgradeid) === req.currentstatus.flowstatusId})
+              if (found) {
+                returnthisone = true
+              }
+            }
             if (flowgrade && (flowgrade.authorcanseeatthisstatus === req.currentstatus.flowstatusId)) {
               returnthisone = true
             }
