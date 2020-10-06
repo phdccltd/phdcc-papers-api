@@ -123,6 +123,7 @@ async function isActionableSubmit(req, flow, submit) {
   let includethissubmit = false
 
   req.iamgrading = false
+  req.iamgradingat = 0
   req.ihavegraded = false
   req.iamleadgrader = false
 
@@ -157,6 +158,7 @@ async function isActionableSubmit(req, flow, submit) {
         if (ihavethisrole) {
           includethissubmit = true
           req.iamgrading = true
+          req.iamgradingat = flowgrade.id
           route = !req.ihavegraded
         }
       }
@@ -167,6 +169,7 @@ async function isActionableSubmit(req, flow, submit) {
           if (dbreviewer.userId === req.dbuser.id) {
             includethissubmit = true
             req.iamgrading = true
+            req.iamgradingat = flowgrade.id
             if (dbreviewer.lead) req.iamleadgrader = true
             route = !req.ihavegraded
           }

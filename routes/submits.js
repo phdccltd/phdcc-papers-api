@@ -456,7 +456,7 @@ async function getEntry(req, res, next) {
       const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
       if (req.iamgrading) {
         const field = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
-        if (field.hidewhengrading) continue
+        if (field.hideatgrading && (field.hideatgrading === req.iamgradingat)) continue
       }
       entry.values.push(entryvalue)
     }
