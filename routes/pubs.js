@@ -30,6 +30,8 @@ router.get('/pubs', async function (req, res, next) {
     const pubs = []
     for (const dbpub of dbpubs) {
       const pub = models.sanitise(models.pubs, dbpub)
+      pub.apiversion = process.env.version // Bit naff
+      delete pub.email
 
       // Set isowner and myroles for this publication
       pub.isowner = false

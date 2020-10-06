@@ -1,6 +1,12 @@
+const fs = require('fs')
 process.env.STANDALONE = true
 require('dotenv').config()
 console.log('process.env.NODE_ENV', process.env.NODE_ENV)
+
+const packageJson = fs.readFileSync('./package.json')
+const version = JSON.parse(packageJson).version || 0
+console.log('version', version)
+process.env.version = version
 
 const http = require('http')
 const app = require('./app')

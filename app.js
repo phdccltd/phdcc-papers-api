@@ -35,9 +35,9 @@ async function checkDatabases() {
 
     // TODO??: Replace with migrations https://sequelize.org/master/manual/migrations.html
     await db.sequelize.sync({ alter: true });
-    console.log("All models were synchronized successfully")
+    console.log('All models were synchronized successfully')
     await models.logs.create({ msg: 'Started' })
-    console.log("Logged start")
+    console.log('Logged start')
 
     // Get rid of any excess INDEXES
     try {
@@ -60,7 +60,7 @@ async function checkDatabases() {
           publicsettings: JSON.stringify({}),
         }
         await models.sites.create(params)
-        console.log("mock site created")
+        console.log('mock site created')
       }
 
       const users = await models.users.findAll()
@@ -74,14 +74,14 @@ async function checkDatabases() {
         }
         const user = await models.users.create(params);
         if (!user) return routes.giveup(req, res, 'user not created')
-        console.log("User created", params.name)
+        console.log('User created', params.name)
       }
     }
 
     // Make clean site info available to router
     const sites = []
     for (const sitedb of await models.sites.findAll()) {
-      //console.log("sitedb", sitedb)
+      //console.log('sitedb', sitedb)
       try {
         const privatesettings = JSON.parse(sitedb.privatesettings)
         const publicsettings = JSON.parse(sitedb.publicsettings)
@@ -101,9 +101,7 @@ async function checkDatabases() {
       }
     }
     app.set('sites', sites)
-    //console.log("app.sites", app.get('sites'))
 
-    //"transport-from": "root@phdcc.co.uk", "admin-email": "cc+papersdev@phdcc.com"
     // Use first site to set mail transport
     const site = sites[0]
     const privatesettings = site.privatesettings
@@ -146,7 +144,7 @@ async function checkDatabases() {
     const transport = app.get('transport')
     if (transport && privatesettings['admin-email']) {
       utils.setMailTransport(transport, privatesettings['email-from'], privatesettings['admin-email'], site.name)
-      utils.async_mail( false, site.name + ". API RESTARTED", 'Server time: ' + global.starttime)
+      utils.async_mail(false, site.name + ' - API RESTARTED ' + process.env.version, 'Server time: ' + global.starttime)
     }
     app.set('initresult', 1)
   } catch (error) {
@@ -166,7 +164,7 @@ app.use(function (req, res, next) {
   const userip = req.headers['x-forwarded-for'] // x-forwarded-server
   req.userip = userip
   console.log('=== ', req.url)
-  logger.log4req(req, "+++Route:", process.env.BASEURL, req.url)
+  logger.log4req(req, '+++Route:', process.env.BASEURL, req.url)
   //console.log(req.headers)
   next()
 })
@@ -182,7 +180,7 @@ app.use(apiRouter.router)
 // catch everything else
 app.use(function (req, res, next) {
   console.log('UNROUTED', req.url, req.method, req.headers)
-  logger.error4req("Unrouted request:", req.url)
+  logger.error4req('Unrouted request:', req.url)
   next(createError(404, 'Unrecognised request'))
 })
 
@@ -203,18 +201,18 @@ app.use(function (err, req, res, next) {
 
 var now = new Date();
 global.starttime = now.toISOString()
-console.log("STARTED: ", global.starttime, process.pid)
+console.log('STARTED: ', global.starttime, process.pid)
 let startupSeconds = parseInt(process.env.ST) || 15;
 if (startupSeconds < 1) startupSeconds = 1
-console.log("startupSeconds:" + startupSeconds)
+console.log('startupSeconds:' + startupSeconds)
 let intervalMinutes = parseInt(process.env.IM) || 17;
 if (intervalMinutes < 1) intervalMinutes = 1
-console.log("intervalMinutes:" + intervalMinutes)
+console.log('intervalMinutes:' + intervalMinutes)
 const intervalSeconds = 60 * intervalMinutes;
 setTimeout(background_runner, startupSeconds * 1000, app);
 setInterval(background_runner, intervalSeconds * 1000, app);
 
-logger.log("papers API app started: process ", process.pid);
+logger.log('papers API app started: process ', process.pid);
 
 
 module.exports = app
