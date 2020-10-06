@@ -69,7 +69,7 @@ router.get('/downloads/anon/:pubid', async function (req, res, next) {
       for (const dbentryvalue of await dbentry.getEntryValues()) {
         const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
         const formfield = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
-        if (formfield.hidewhengrading) continue
+        if (formfield.hideatgrading) continue // Doesn't check that submit is at this grading
         const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
         anonStream.write(formfield.label + '\r' + stringvalue + '\r\r')
       }
