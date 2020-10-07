@@ -209,8 +209,16 @@ async function sendMail(req, res, next) {
     let subject = Handlebars.compile(mailsubject)
     let body = Handlebars.compile(mailtext)
 
+    const dbsite = await req.dbpub.getSite()
+    if (!dbsite) {
+      logger.log4req(req, 'Could not find site so not sending mails')
+      return
+    }
+    const siteurl = 'https://' + dbsite.url + '/'
+
     const now = (new Date()).toLocaleString()
     const data = {
+      siteurl,
       user: models.sanitise(models.users, req.dbuser),
       now,
     }
