@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
     alias: { type: Sequelize.STRING(50), allowNull: false },
     name: { type: Sequelize.STRING(50), allowNull: false },
     title: { type: Sequelize.STRING, allowNull: false },
-    startdate: { type: Sequelize.DATEONLY, allowNull: true },
+    description: { type: Sequelize.TEXT, allowNull: false },
+    startdate: { type: Sequelize.DATEONLY, allowNull: true }, // Used to sort pubs
     email: { type: Sequelize.STRING, allowNull: false },
     tz: { type: Sequelize.STRING(50), allowNull: true },
   }
