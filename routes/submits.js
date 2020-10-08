@@ -552,7 +552,7 @@ async function getPubSubmits(req, res, next) {
           const addstage = _.find(flow.stages, stage => { return stage.id === accepting.flowstageId })
           if (addstage && req.isauthor) {
             flow.actions.push({
-              name: 'Add '+addstage.name,
+              name: 'Add new '+addstage.name,
               route: '/panel/' + pubid + '/' + flow.id + '/add/' + addstage.id
             })
           }

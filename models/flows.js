@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
     name: { type: Sequelize.STRING(50), allowNull: false },
+    description: { type: Sequelize.TEXT, allowNull: false },
   }
   const flows = sequelize.define('flows', fields)
   flows.fields = fields
