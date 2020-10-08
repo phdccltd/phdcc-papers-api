@@ -83,7 +83,7 @@ async function getMyRoles(req) {
  *  needs: req.currentstatus, req.myroles, req.pub
  *  return true if ihaveactions
  */
-async function addActions(req, flow, submit) {
+async function addAuthorStageActions(req, flow, submit) {
   submit.actions = [] // Allowable actions
   if (!submit.ismine) return false
   let ihaveactions = false
@@ -106,8 +106,30 @@ async function addActions(req, flow, submit) {
   }
   return ihaveactions
 }
+
 /* ************************ */
-/* isActionableSubmit
+/*
+ *  return true if ihaveactions
+ */
+async function addRoleStageActions(req, flow, submit) {
+  if (submit.ismine) return false
+  let ihaveactions = false
+  for (const stage of flow.stages) {
+    if (stage.rolecanadd) {
+      const hasRole = _.find(req.myroles, (role) => { return role.id === stage.rolecanadd })
+      if (hasRole) {
+        const route = '/panel/' + req.dbpub.id + '/' + flow.id + '/' + submit.id + '/add/' + stage.id
+        submit.actions.push({ name: 'Add ' + stage.name, route, show: 3, dograde: 0 })
+        ihaveactions = true
+      }
+    }
+  }
+  return ihaveactions
+}
+
+
+/* ************************ */
+/* isReviewableSubmit
  *  return true if this submit should be shown to the user
  *   - ismine
  *   - owner
@@ -118,7 +140,7 @@ async function addActions(req, flow, submit) {
  *  If showing, then set submit.actions or submit.actionsdone
 */
 
-async function isActionableSubmit(req, flow, submit) {
+async function isReviewableSubmit(req, flow, submit) {
 
   let includethissubmit = false
 
@@ -293,8 +315,9 @@ module.exports = {
   getSubmitCurrentStatus,
   getSubmitFlowPub,
   getMyRoles,
-  addActions,
-  isActionableSubmit,
+  addAuthorStageActions,
+  addRoleStageActions,
+  isReviewableSubmit,
   getFlowWithFlowgrades,
   getEntryFormFields,
   getEntryStringValue,

@@ -93,7 +93,7 @@ async function addGrading(req, res, next){
       await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
       req.dbsubmitgradings = await req.dbsubmit.getGradings()
 
-      const includethissubmit = await dbutils.isActionableSubmit(req, flow, false)
+      const includethissubmit = await dbutils.isReviewableSubmit(req, flow, false)
 
       console.log('includethissubmit ihavegraded', includethissubmit, req.ihavegraded)
 

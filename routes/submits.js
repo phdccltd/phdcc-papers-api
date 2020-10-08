@@ -436,11 +436,15 @@ async function getEntry(req, res, next) {
 
       req.dbsubmitgradings = await req.dbsubmit.getGradings()
 
-      const ihaveactions = await dbutils.addActions(req, flow, submit)
+      let ihaveactions = await dbutils.addAuthorStageActions(req, flow, submit)
 
-      ////////// Filter submits
+      if (await dbutils.addRoleStageActions(req, flow, submit)) {
+        ihaveactions = true
+      }
+
+      ////////// Filter submits ie only show if you are reviewing
       if (!ihaveactions) {
-        const includethissubmit = await dbutils.isActionableSubmit(req, flow, false)
+        const includethissubmit = await dbutils.isReviewableSubmit(req, flow, false)
         if (!includethissubmit) {
           return utils.giveup(req, res, 'Not your submit entry')
         }
@@ -583,7 +587,11 @@ async function getPubSubmits(req, res, next) {
         }
 
         ////////// Add actions to Add next stage (if appropriate).  Sets submit.actions
-        const ihaveactions = await dbutils.addActions(req, flow, submit)
+        let ihaveactions = await dbutils.addAuthorStageActions(req, flow, submit)
+
+        if (await dbutils.addRoleStageActions(req, flow, submit)) {
+          ihaveactions = true
+        }
 
         ////////// We'll need the entries (ordered by flowstage weight) so we can get action links
         const dbentries = await dbsubmit.getEntries({
@@ -598,7 +606,7 @@ async function getPubSubmits(req, res, next) {
         req.iamgrading = false
         req.iamleadgrader = false
         if (!ihaveactions && !req.onlyanauthor && !req.isowner) {
-          const includethissubmit = await dbutils.isActionableSubmit(req, flow, submit)
+          const includethissubmit = await dbutils.isReviewableSubmit(req, flow, submit)
           if (!includethissubmit) continue
         }
 

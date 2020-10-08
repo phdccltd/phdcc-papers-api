@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     // id, createdAt and updatedAt: added automatically
     weight: { type: Sequelize.INTEGER, allowNull: false },
     name: { type: Sequelize.STRING(50), allowNull: false },
+    rolecanadd: { type: Sequelize.INTEGER, allowNull: false },
   }
   const flowstages = sequelize.define('flowstages', fields)
   flowstages.fields = fields
