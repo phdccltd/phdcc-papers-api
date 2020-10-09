@@ -116,38 +116,88 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
 
     const now = new Date()
     const nowstring = now.toISOString().substring(0, 16).replace(/:/g, '-')
-    const dirName = 'summary-' + nowstring
-    fs.mkdirSync(TMPDIR + dirName, { recursive: true })
-    fs.mkdirSync(TMPDIR + dirName + '/papers', { recursive: true })
 
-    ////////
+    const flow = {}
+    const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
+    flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
 
     const dbflowgrades = await dbflow.getFlowgrades({ where: { displayflowstageId: flowstageid } })
     if (dbflowgrades.length !== 1) return utils.giveup(req, res, 'dbpubcheck.id and dbpub.id mismatch')
     const dbflowgrade = dbflowgrades[0]
 
-    const header = ['Paper"\r\nid', 'Status', 'Title']
-    for (const dbflowgradescore of await dbflowgrade.getFlowgradescores()) {
+    const flowgradename = dbflowgrade.name.replace(/\s/g, '-') + '-'
+    const dirName = 'summary-' + flowgradename + nowstring
+    fs.mkdirSync(TMPDIR + dirName, { recursive: true })
+    fs.mkdirSync(TMPDIR + dirName + '/papers', { recursive: true })
+
+    //  Paper id	Status	Title	Accept	Reject	Conflict-of-interest	Insufficient background	WillReview	WillReviewers	Comments
+    const header = ['Paper id', 'Status', 'Title']
+    const dbflowgradescores = await dbflowgrade.getFlowgradescores()
+    for (const dbflowgradescore of dbflowgradescores) {
       header.push(dbflowgradescore.name)
     }
     if (dbflowgrade.canopttoreview) header.push('WillReview')
     if (dbflowgrade.cancomment) header.push('Comment')
 
-    const flowstageFilename = dbflowstage.name.replace(/\s/g, '-') + nowstring + '.csv'
-    const flowstageStream = await openFile(TMPDIR + dirName + '/' + flowstageFilename)
+    const flowgradeFilename = flowgradename + nowstring + '.csv'
+    const flowgradeStream = await openFile(TMPDIR + dirName + '/' + flowgradeFilename)
 
-    writeCSVline(flowstageStream, header)
+    writeCSVline(flowgradeStream, header)
 
     const dbsubmits = await dbflow.getSubmits()
     for (const dbsubmit of dbsubmits) {
-      console.log('Submit: ', dbsubmit.id)
-      const submitOut = [dbsubmit.id, , dbsubmit.name]
-      writeCSVline(flowstageStream, submitOut)
 
-      //Paper id	Status	Title	Accept	Reject	Conflict-of-interest	Insufficient background	WillReview	WillReviewers	Comments
+      const req = { onlyanauthor: false }
+      const submit = { ismine: false }
+      await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
+
+      let status = 'UNKNOWN'
+      if (req.currentstatus) {
+        const flowstatus = _.find(flow.statuses, (flowstatus) => { return flowstatus.id === req.currentstatus.flowstatusId })
+        if (flowstatus) status = flowstatus.status
+      }
+
+      // Zero counts for this submit
+      for (const dbflowgradescore of await dbflowgradescores) {
+        dbflowgradescore.count = 0
+      }
+
+      // Go through gradings, counting scores
+      let willreview = ''
+      let comments = ''
+      const dbsubmitgradings = await dbsubmit.getGradings()
+      for (const dbsubmitgrading of dbsubmitgradings) {
+        if (dbsubmitgrading.flowgradeId !== dbflowgrade.displayflowstageId) continue
+
+        for (const dbflowgradescore of dbflowgradescores) {
+          if (dbsubmitgrading.flowgradescoreId === dbflowgradescore.id) {
+            dbflowgradescore.count++
+          }
+        }
+        if (dbsubmitgrading.canreview) {
+          const dbuser = await models.users.findByPk(dbsubmitgrading.userId)
+          if (dbuser) {
+            if (willreview.length > 0) willreview += ','
+            willreview += dbuser.username
+          }
+        }
+        if (dbsubmitgrading.comment.length>0) {
+          if (comments.length > 0) comments += ' | '
+          comments += dbsubmitgrading.comment
+        }
+      }
+
+      const submitOut = [dbsubmit.id, status, dbsubmit.name]
+      for (const dbflowgradescore of dbflowgradescores) {
+        submitOut.push(dbflowgradescore.count)
+      }
+      if (dbflowgrade.canopttoreview) submitOut.push(willreview)
+      if (dbflowgrade.cancomment) submitOut.push(comments)
+
+      writeCSVline(flowgradeStream, submitOut)
     }
 
-    await closeFile(flowstageStream)
+    await closeFile(flowgradeStream)
 
     //const wf1Stream = await openFile(TMPDIR + dirName + '/papers/hello.txt')
     //wf1Stream.write('Hello\rthere\r\r')
