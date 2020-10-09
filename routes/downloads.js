@@ -5,7 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const mime = require('mime-types')
 const Sequelize = require('sequelize')
-const _ = require('lodash/core')
+const _ = require('lodash')
 const archiver = require('archiver')
 const models = require('../models')
 const utils = require('../utils')
@@ -114,6 +114,11 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
 
     ////////////////
 
+    const flowstagefilename = dbflowstage.name.replace(/\s/g, '-')+'.txt'
+
+    const baseentry = {}
+    await dbutils.getEntryFormFields(baseentry, flowstageid)
+
     const now = new Date()
     const nowstring = now.toISOString().substring(0, 16).replace(/:/g, '-')
 
@@ -146,6 +151,28 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
 
     const dbsubmits = await dbflow.getSubmits()
     for (const dbsubmit of dbsubmits) {
+
+      const paperdir = TMPDIR + dirName + '/papers/' + dbsubmit.id
+      fs.mkdirSync(paperdir, { recursive: true })
+
+      const outpath = path.join(paperdir, flowstagefilename)
+      const anonStream = await openFile(outpath)
+      anonStream.write('Paper no: ' + dbsubmit.id+'\r')
+      anonStream.write('Title: ' + dbsubmit.name + '\r')
+
+      const dbentries = await dbsubmit.getEntries({ where: { flowstageId: flowstageid } })  // Only returns one
+      for (const dbentry of dbentries) {
+        const entry = _.cloneDeep(baseentry)
+        entry.values = []
+        for (const dbentryvalue of await dbentry.getEntryValues()) {
+          const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
+          const formfield = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
+          if (formfield.hideatgrading) continue // Doesn't check that submit is at this grading
+          const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
+          anonStream.write(formfield.label + '\r' + stringvalue + '\r\r')
+        }
+      }
+      await closeFile(anonStream)
 
       const req = { onlyanauthor: false }
       const submit = { ismine: false }
