@@ -5,7 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const mime = require('mime-types')
 const Sequelize = require('sequelize')
-const _ = require('lodash')
+const _ = require('lodash/core')
 const archiver = require('archiver')
 const models = require('../models')
 const utils = require('../utils')
@@ -19,7 +19,9 @@ const TMPDIR = '/tmp/papers/'
 /* ************************ */
 /* GET: Get anonymised stage entries */
 /* ACCESS: OWNER-ONLY NOT TESTED */
-router.get('/downloads/anon/:pubid', async function (req, res, next) {
+router.get('/downloads/anon/:pubid', downloadAnonymousStage)
+
+async function downloadAnonymousStage(req, res, next) {
   const pubid = parseInt(req.params.pubid)
   const flowstageid = parseInt(req.query.flowstageid)
   console.log('GET /downloads/anon', pubid, flowstageid)
@@ -64,15 +66,7 @@ router.get('/downloads/anon/:pubid', async function (req, res, next) {
 
       const entry = {}
       await dbutils.getEntryFormFields(entry, flowstageid)
-
-      entry.values = []
-      for (const dbentryvalue of await dbentry.getEntryValues()) {
-        const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
-        const formfield = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
-        if (formfield.hideatgrading) continue // Doesn't check that submit is at this grading
-        const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
-        anonStream.write(formfield.label + '\r' + stringvalue + '\r\r')
-      }
+      await writeAnonEntryValues(entry.fields, dbentry, anonStream)
     }
     await closeFile(anonStream)
 
@@ -85,12 +79,14 @@ router.get('/downloads/anon/:pubid', async function (req, res, next) {
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
-})
+}
 
 /* ************************ */
 /* GET: Get anonymised summary for publication */
 /* ACCESS: OWNER-ONLY NOT TESTED */
-router.get('/downloads/summary/:pubid', async function (req, res, next) {
+router.get('/downloads/summary/:pubid', downloadSummary)
+
+async function downloadSummary(req, res, next) {
   const pubid = parseInt(req.params.pubid)
   const flowstageid = parseInt(req.query.flowstageid)
   console.log('GET /downloads/summary', pubid, flowstageid)
@@ -116,8 +112,8 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
 
     const flowstagefilename = dbflowstage.name.replace(/\s/g, '-')+'.txt'
 
-    const baseentry = {}
-    await dbutils.getEntryFormFields(baseentry, flowstageid)
+    const entry = {}
+    await dbutils.getEntryFormFields(entry, flowstageid)
 
     const now = new Date()
     const nowstring = now.toISOString().substring(0, 16).replace(/:/g, '-')
@@ -131,23 +127,24 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
     const dbflowgrade = dbflowgrades[0]
 
     const flowgradename = dbflowgrade.name.replace(/\s/g, '-') + '-'
-    const dirName = 'summary-' + flowgradename + nowstring
+    //const dirName = 'summary-' + flowgradename + nowstring
+    const dirName = 'summary-' + nowstring
     fs.mkdirSync(TMPDIR + dirName, { recursive: true })
     fs.mkdirSync(TMPDIR + dirName + '/papers', { recursive: true })
 
     //  Paper id	Status	Title	Accept	Reject	Conflict-of-interest	Insufficient background	WillReview	WillReviewers	Comments
-    const header = ['Paper id', 'Status', 'Title']
+    const summaryHeader = ['Paper id', 'Status', 'Title']
     const dbflowgradescores = await dbflowgrade.getFlowgradescores()
     for (const dbflowgradescore of dbflowgradescores) {
-      header.push(dbflowgradescore.name)
+      summaryHeader.push(dbflowgradescore.name)
     }
-    if (dbflowgrade.canopttoreview) header.push('WillReview')
-    if (dbflowgrade.cancomment) header.push('Comment')
+    if (dbflowgrade.canopttoreview) summaryHeader.push('WillReview')
+    if (dbflowgrade.cancomment) summaryHeader.push('Comment')
 
     const flowgradeFilename = flowgradename + nowstring + '.csv'
     const flowgradeStream = await openFile(TMPDIR + dirName + '/' + flowgradeFilename)
 
-    writeCSVline(flowgradeStream, header)
+    writeCSVline(flowgradeStream, summaryHeader)
 
     const dbsubmits = await dbflow.getSubmits()
     for (const dbsubmit of dbsubmits) {
@@ -160,17 +157,9 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
       anonStream.write('Paper no: ' + dbsubmit.id+'\r')
       anonStream.write('Title: ' + dbsubmit.name + '\r')
 
-      const dbentries = await dbsubmit.getEntries({ where: { flowstageId: flowstageid } })  // Only returns one
-      for (const dbentry of dbentries) {
-        const entry = _.cloneDeep(baseentry)
-        entry.values = []
-        for (const dbentryvalue of await dbentry.getEntryValues()) {
-          const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
-          const formfield = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
-          if (formfield.hideatgrading) continue // Doesn't check that submit is at this grading
-          const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
-          anonStream.write(formfield.label + '\r' + stringvalue + '\r\r')
-        }
+      const dbentries1 = await dbsubmit.getEntries({ where: { flowstageId: flowstageid } })  // Only returns one
+      for (const dbentry of dbentries1) {
+        await writeAnonEntryValues(entry.fields, dbentry, anonStream)
       }
       await closeFile(anonStream)
 
@@ -214,22 +203,122 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
         }
       }
 
-      const submitOut = [dbsubmit.id, status, dbsubmit.name]
+      const flowgradeLine = [dbsubmit.id, status, dbsubmit.name]
       for (const dbflowgradescore of dbflowgradescores) {
-        submitOut.push(dbflowgradescore.count)
+        flowgradeLine.push(dbflowgradescore.count)
       }
-      if (dbflowgrade.canopttoreview) submitOut.push(willreview)
-      if (dbflowgrade.cancomment) submitOut.push(comments)
+      if (dbflowgrade.canopttoreview) flowgradeLine.push(willreview)
+      if (dbflowgrade.cancomment) flowgradeLine.push(comments)
 
-      writeCSVline(flowgradeStream, submitOut)
+      writeCSVline(flowgradeStream, flowgradeLine)
     }
-
     await closeFile(flowgradeStream)
 
-    //const wf1Stream = await openFile(TMPDIR + dirName + '/papers/hello.txt')
-    //wf1Stream.write('Hello\rthere\r\r')
-    //await closeFile(wf1Stream)
 
+    /////////////////////
+    // FIND ALL SUBMISSIONS FOR THIS PUBLICATION
+
+    const submissionsFilename = 'submissions-' + nowstring + '.csv'
+    const submissionsStream = await openFile(TMPDIR + dirName + '/' + submissionsFilename)
+
+    const subcols = []
+    subcols.push({ id: -15, name: 'Paper id'})
+    subcols.push({ id: -14, name: 'Submitter' })
+    subcols.push({ id: -13, name: 'Type' })
+    subcols.push({ id: -12, name: 'Status' })
+    subcols.push({ id: -11, name: 'Title' })
+    let nextfreesubcolid = -10
+
+    const subrows = []
+    const stagesfound = []
+
+    for (const dbflow of await req.dbpub.getFlows()) {
+      const flow = {}
+      const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
+      flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
+
+      const dbflowfields = []
+      for (const dbstage of await dbflow.getFlowStages()) {
+        const stageformfields = await models.formfields.findAll({ where: { formtypeid: dbstage.id } })
+        dbflowfields.push(...stageformfields)
+      }
+
+      const dbsubmits = await dbflow.getSubmits()
+      for (const dbsubmit of dbsubmits) {
+        const row = {}
+        row.cols = []
+        subrows.push(row)
+
+        const req = { onlyanauthor: false }
+        const submit = { ismine: false }
+        await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
+
+        let status = 'UNKNOWN'
+        if (req.currentstatus) {
+          const flowstatus = _.find(flow.statuses, (flowstatus) => { return flowstatus.id === req.currentstatus.flowstatusId })
+          if (flowstatus) status = flowstatus.status
+        }
+
+        const dbauthor = await models.users.findByPk(dbsubmit.userId)
+        const authorusername = dbauthor ? dbauthor.username : 'UNKNOWN'
+
+        row.cols.push({ id: -15, value: dbsubmit.id })
+        row.cols.push({ id: -14, value: authorusername })
+        row.cols.push({ id: -13, value: dbflow.name })
+        row.cols.push({ id: -12, value: status })
+        row.cols.push({ id: -11, value: dbsubmit.name })
+
+        const dbentries = await dbsubmit.getEntries({ order: [['id', 'ASC']] })
+        for (const dbentry of dbentries) {
+          const dbflowstage = await dbentry.getFlowstage()
+          let foundstage = _.find(stagesfound, (stage) => { return stage.id === dbflowstage.id })
+          if (!foundstage) {
+            foundstage = { id: dbflowstage.id }
+            foundstage.colid = nextfreesubcolid++
+            subcols.push({ id: foundstage.colid, name: dbflowstage.name+' date' })
+            stagesfound.push(foundstage)
+          }
+          row.cols.push({ id: foundstage.colid, value: dbentry.dt.toISOString() })
+
+          for (const dbentryvalue of await dbentry.getEntryValues()) {
+            const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
+            const formfield = _.find(dbflowfields, field => { return field.id === entryvalue.formfieldId })
+            if (formfield) {
+              if (!formfield.includeindownload) continue
+              let stringvalue = ''
+              if (formfield.includeindownload == 2) {
+                stringvalue = (entryvalue.integer === 1) ? dbentry.dt.toISOString() : 'No'
+              } else {
+                stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
+              }
+              const hcol = _.find(subcols, (h) => { return h.id === formfield.id })
+              if (!hcol) subcols.push({ id: formfield.id, name: formfield.label})
+              row.cols.push({ id: formfield.id, value: stringvalue })
+            }
+            //else console.log('field not found', entryvalue.id)
+          }
+        }
+      }
+    }
+
+    const sortedcols = subcols.sort((a, b) => { return a.id-b.id })
+    console.log(sortedcols)
+    const submissionsHeader = []
+    for (const col of sortedcols) {
+      submissionsHeader.push(col.name)
+    }
+    writeCSVline(submissionsStream, submissionsHeader)
+
+    for (const row of subrows) {
+      const submissionsLine = []
+      for (const col of sortedcols) {
+        const v = _.find(row.cols, (o) => { return o.id === col.id })
+        const sv = v ? v.value : ''
+        submissionsLine.push(sv)
+      }
+      writeCSVline(submissionsStream, submissionsLine)
+    }
+    await closeFile(submissionsStream)
 
     // Make zip file from directory
     const saveFilename = await makeZipOfDirectory(dirName)
@@ -243,7 +332,7 @@ router.get('/downloads/summary/:pubid', async function (req, res, next) {
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
-})
+}
 
 /* ************************ */
 function openFile(path) {
@@ -363,6 +452,18 @@ function deleteFolderRecursivelySync(dirpath) {
     }
   })
   fs.rmdirSync(dirpath)
+}
+
+/* ************************ */
+
+async function writeAnonEntryValues(fields, dbentry, anonStream) {
+  for (const dbentryvalue of await dbentry.getEntryValues()) {
+    const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
+    const formfield = _.find(fields, field => { return field.id === entryvalue.formfieldId })
+    if (formfield.hideatgrading) continue // Doesn't check that submit is at this grading
+    const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
+    anonStream.write(formfield.label + '\r' + stringvalue + '\r\r')
+  }
 }
 
 /* ************************ */

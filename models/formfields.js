@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     maxwords: { type: Sequelize.INTEGER, allowNull: true },
     maxchars: { type: Sequelize.INTEGER, allowNull: true },
     hideatgrading: { type: DataTypes.INTEGER, allowNull: false },
+    includeindownload: { type: DataTypes.INTEGER, allowNull: false },
   }
   const formfields = sequelize.define('formfields', fields)
   formfields.fields = fields
