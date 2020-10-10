@@ -302,7 +302,6 @@ async function downloadSummary(req, res, next) {
     }
 
     const sortedcols = subcols.sort((a, b) => { return a.id-b.id })
-    console.log(sortedcols)
     const submissionsHeader = []
     for (const col of sortedcols) {
       submissionsHeader.push(col.name)
