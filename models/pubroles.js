@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
     canviewall: { type: DataTypes.BOOLEAN, allowNull: false },
     defaultrole: { type: DataTypes.BOOLEAN, allowNull: false },
     isreviewer: { type: DataTypes.BOOLEAN, allowNull: false },
+    userRequested: { type: DataTypes.BOOLEAN, allowNull: false },
+    userDeniedAccess: { type: DataTypes.BOOLEAN, allowNull: false },
 }
   const pubroles = sequelize.define('pubroles', fields)
   pubroles.fields = fields

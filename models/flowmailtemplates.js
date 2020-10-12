@@ -13,8 +13,10 @@ module.exports = (sequelize, DataTypes) => {
 
   flowmailtemplates.associate = function (dbs) {
     // Adds flowmailtemplates.flowId Sequelize.INTEGER allowNull:false
-    dbs.flows.hasMany(dbs.flowmailtemplates, { as: 'FlowMailTemplates', foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete flow while flowmailtemplates exist
-    dbs.flowmailtemplates.belongsTo(dbs.flows, { foreignKey: { allowNull: false }})
+    dbs.flows.hasMany(dbs.flowmailtemplates, { as: 'FlowMailTemplates', foreignKey: { allowNull: true }, onDelete: 'RESTRICT' })  // Cannot delete flow while flowmailtemplates exist
+    dbs.flowmailtemplates.belongsTo(dbs.flows, { foreignKey: { allowNull: true }})
+    dbs.pubs.hasMany(dbs.flowmailtemplates, { as: 'FlowMailTemplates', foreignKey: { allowNull: true }, onDelete: 'RESTRICT' })  // Cannot delete pub while flowmailtemplates exist
+    dbs.flowmailtemplates.belongsTo(dbs.pubs, { foreignKey: { allowNull: true } })
  }
 
   return flowmailtemplates

@@ -175,13 +175,14 @@ async function register(req, res, next) {
       const dbuser = await models.users.create(params)
       if (!dbuser) return utils.giveup(req, res, 'user not created')
 
+      // Tell owner that new user needs roles added
       const dbsite = await models.sites.findByPk(req.site.id)
       const dbpubs = await dbsite.getPubs()
       for (const dbpub of dbpubs) {
-        const dbpubroles = await dbpub.getPubroles({ where: { defaultrole: true } })
-        if (dbpubroles.length > 0) {
+        const dbuserRequestedRoles = await dbpub.getPubroles({ where: { userRequested: true } })
+        if (dbuserRequestedRoles.length > 0) {
           await dbpub.addUser(dbuser)
-          for (const dbpubrole of dbpubroles) {
+          for (const dbpubrole of dbuserRequestedRoles) {
             await dbpubrole.addUser(dbuser)
           }
         }
