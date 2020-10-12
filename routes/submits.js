@@ -633,6 +633,9 @@ async function getPubSubmits(req, res, next) {
         // - If author: return when grading at a status in authorcanseeatthesestatuses
         // - If reviewer: add/see your own (but can't see earlier abstract scores)
 
+        // If owner, then return summary in actionsdone
+        const ownergradingsummary = []
+
         let authorhasgradingstosee = false
         submit.gradings = []
         for (const dbgrading of req.dbsubmitgradings) {
@@ -679,12 +682,23 @@ async function getPubSubmits(req, res, next) {
                 }
               }
               submit.gradings.push(grading)
+              if (req.isowner) {
+                const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
+                if (flowgrade) {
+                  const existinggrade = _.find(ownergradingsummary, (og) => { return og.id === flowgrade.id })
+                  if (existinggrade) existinggrade.count++
+                  else ownergradingsummary.push({ id: flowgrade.id, name: flowgrade.name, count: 1})
+                }
+              }
             }
           }
         }
         if (authorhasgradingstosee) {
           const route = '/panel/' + pubid + '/' + flow.id + '/' + submit.id
           submit.actions.push({ name: 'See reviews', route, show: 1, dograde: 0 })
+        }
+        for (const og of ownergradingsummary) {
+          submit.actionsdone.push({ id: -og.id, name: og.name + ': ' + og.count + ' done' })
         }
 
         submit.actionable = submit.actions.length>0
