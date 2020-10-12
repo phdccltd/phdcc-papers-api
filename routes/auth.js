@@ -179,12 +179,41 @@ async function register(req, res, next) {
       const dbsite = await models.sites.findByPk(req.site.id)
       const dbpubs = await dbsite.getPubs()
       for (const dbpub of dbpubs) {
+        let anyRoleRequested = false
         const dbuserRequestedRoles = await dbpub.getPubroles({ where: { userRequested: true } })
         if (dbuserRequestedRoles.length > 0) {
           await dbpub.addUser(dbuser)
           for (const dbpubrole of dbuserRequestedRoles) {
             await dbpubrole.addUser(dbuser)
+            anyRoleRequested = true
           }
+        }
+        if (anyRoleRequested) {
+          // Send per-pub user-just-registered mail
+          //CHANGE TO const dbmailrules = await dbpubs.getMailTemplates({where:{sendOnSiteRegister: true}})
+          const dbmailrules = await models.flowmailrules.findAll({
+            where: {
+              sendOnSiteRegister: true
+            }
+          })
+          for (const dbmailrule of dbmailrules) {
+            if (dbmailrule.bccToOwners) { // CHANGE
+              console.log(dbmailrule.id, 'SEND REGISTERED MAIL TO OWNER', dbpub.id)
+            }
+          }
+        }
+      }
+
+      // Send site-wide welcome mail
+      const dbmailrules = await models.flowmailrules.findAll({
+        where: {
+          //pubId: null,  // CHANGE: ADD THIS IN
+          sendOnSiteRegister: true
+        }
+      })
+      for (const dbmailrule of dbmailrules) {
+        if (dbmailrule.sendToUser) {
+          console.log(dbmailrule.id, 'SEND NEW-TO-SITE MAIL')
         }
       }
 
@@ -266,7 +295,7 @@ function logout(req, res) {
 function getuser(req, res) {
   logger.log4req(req, "getuser")
   if (!req.ppuser) return utils.giveup(req, res, 'Not logged in unexpectedly')
-  console.log(req.ppuser)
+  //console.log(req.ppuser)
 
   const rvuser = {
     id: req.dbuser.id,

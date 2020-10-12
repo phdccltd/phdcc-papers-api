@@ -26,9 +26,15 @@ module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
     name: { type: Sequelize.STRING(50), allowNull: false },
+    //When to send:
+    //-flowstatusId - defined below
+    //-flowgradeId - defined below
     sendReviewReminderDays: { type: Sequelize.INTEGER, allowNull: false },
     sendLeadReminderDays: { type: Sequelize.INTEGER, allowNull: false },
     sendReviewChaseUpDays: { type: Sequelize.INTEGER, allowNull: false },
+    sendOnSiteRegister: { type: DataTypes.BOOLEAN, allowNull: false },
+    sendOnRoleGiven: { type: Sequelize.INTEGER, allowNull: false }, // 
+    //Who to send to:
     sendToAuthor: { type: DataTypes.BOOLEAN, allowNull: false },
     bccToOwners: { type: DataTypes.BOOLEAN, allowNull: false },
     sendToUser: { type: DataTypes.BOOLEAN, allowNull: false },
