@@ -292,15 +292,18 @@ async function getEntryStringValue(v, formfield){
       }
     } else if (formfield.type === 'rolelookups') {
       stringvalue = ''
-      if (v.string != null) {
+      if (v.string != null && v.string.length > 0) {
         const aselections = v.string.split(',')
         for (const sel of aselections) {
-          const dbuser = await models.users.findByPk(parseInt(sel))
-          if (stringvalue.length > 0) stringvalue += ' - '
-          if (dbuser) {
-            stringvalue += dbuser.name
-          } else {
-            stringvalue += sel
+          const userid = parseInt(sel)
+          if (Number.isInteger(userid)) {
+            const dbuser = await models.users.findByPk(userid)
+            if (stringvalue.length > 0) stringvalue += ' - '
+            if (dbuser) {
+              stringvalue += dbuser.name
+            } else {
+              stringvalue += sel
+            }
           }
         }
       }
