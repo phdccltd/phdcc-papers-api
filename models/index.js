@@ -32,6 +32,7 @@ Object.keys(dbs).forEach((modelName) => {
 dbs.sequelize = sequelize
 
 dbs.sanitise = (model, dbobj) => {
+  if (!dbobj) return dbobj
   if (model.fields) {
     const sanobj = {}
     sanobj.id = dbobj.id

@@ -16,6 +16,7 @@ const jwt = require('jsonwebtoken')
 const models = require('../models')
 const logger = require('../logger')
 const utils = require('../utils')
+const mailutils = require('./mailutils')
 
 //////////////////////
 // LOGIN devolved checker
@@ -190,10 +191,11 @@ async function register(req, res, next) {
         }
         if (anyRoleRequested) {
           // Send per-pub user-just-registered mail
-          const dbpubmails = await dbpubs.getMailTemplates({where:{sendOnSiteRegister: true}})
+          const dbpubmails = await dbpub.getMailTemplates({where:{sendOnSiteRegister: true}})
           for (const dbpubmail of dbpubmails) {
             if (dbpubmail.bccToOwners) { // CHANGE
               console.log(dbpubmail.id, 'SEND REGISTERED MAIL TO OWNER', dbpub.id)
+              mailutils.sendOneTemplate(dbpubmail, false, dbpub, false, dbuser, false, false, false, false)
             }
           }
         }
@@ -208,13 +210,14 @@ async function register(req, res, next) {
       })
       for (const dbpubmail of dbpubmails) {
         if (dbpubmail.sendToUser) {
-          console.log(dbpubmail.id, 'SEND NEW-TO-SITE MAIL')
+          mailutils.sendOneTemplate(dbpubmail, req.site, false, false, dbuser, false, false, false, false)
         }
       }
 
-      const token = jwt.sign({ id: dbuser.id }, process.env.JWT_SECRET)
-
+      // Always send mail to site owner
       utils.async_mail(false, req.site.name + ". API User registered: " + username, 'Name: ' + params.name+'\r\nEmail: ' + params.email)
+
+      const token = jwt.sign({ id: dbuser.id }, process.env.JWT_SECRET)
       utils.returnOK(req, res, { token }, 'user')
     } catch (e) {
       logger.log(e.message)
