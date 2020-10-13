@@ -2,6 +2,7 @@ const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
+const mailutils = require('./mailutils')
 
 /* ************************ */
 /* POST+DELETE: Delete pub user role  */
@@ -61,7 +62,7 @@ async function addUserRole(req, res, next) {
     const pubid = parseInt(req.params.pubid)
     const userid = parseInt(req.params.userid)
     const roleid = parseInt(req.params.roleid)
-    console.log('addUserRole', pubid, userid, roleid)
+    //console.log('addUserRole', pubid, userid, roleid)
 
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -84,6 +85,21 @@ async function addUserRole(req, res, next) {
     await dbpubrole.addUser(dbuser)
 
     present = await dbpubrole.hasUser(dbuser)
+
+    if (present) {
+      const dbpubmails = await models.pubmailtemplates.findAll({
+        where: {
+          pubId: pubid,
+          sendOnRoleGiven: roleid
+        }
+      })
+      for (const dbpubmail of dbpubmails) {
+        if (dbpubmail.sendToUser) {
+          mailutils.sendOneTemplate(dbpubmail, false, dbpub, false, dbuser, false, false, false, false) // dbuser is user affected, not current user
+        }
+      }
+      
+    }
 
     const ok = present
     utils.returnOK(req, res, ok, 'ok')
