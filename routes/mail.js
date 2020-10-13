@@ -10,29 +10,26 @@ const dbutils = require('./dbutils')
 const router = Router()
 
 /* ************************ */
-/* GET all mail templates for this flow */
+/* GET all mail templates for this publication */
 /* ACCESS: OWNER-ONLY NOT TESTED */
-router.get('/mail/templates/:flowid', async function (req, res, next) {
-  const flowid = parseInt(req.params.flowid)
-  //console.log('GET /mail/templates', flowid)
+router.get('/mail/templates/:pubid', async function (req, res, next) {
+  const pubid = parseInt(req.params.pubid)
+  //console.log('GET /mail/templates', pubid)
   try {
-    const dbflow = await models.flows.findByPk(flowid)
-    if (!dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, 'No pub found for flowid ' + flowid)
+    const dbpub = await models.pubs.findByPk(pubid)
+    if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
     // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
     const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === dbpub.id && mypubrole.isowner })
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
-    const dbmailtemplates = await dbflow.getFlowMailTemplates()
-    const mailtemplates = models.sanitiselist(dbmailtemplates, models.flowmailtemplates)
+    const dbpubmails = await dbpub.getMailTemplates({ order: [['weight', 'ASC']] })
+    const pubmails = models.sanitiselist(dbpubmails, models.pubmailtemplates)
 
-    logger.log4req(req, 'GOT mailtemplates for flow', flowid)
+    logger.log4req(req, 'GOT pubmails for pub', pubid)
 
-    utils.returnOK(req, res, mailtemplates, 'mailtemplates')
+    utils.returnOK(req, res, pubmails, 'pubmails')
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
@@ -40,8 +37,8 @@ router.get('/mail/templates/:flowid', async function (req, res, next) {
 
 /* ************************ */
 /* POST: Add/Edit or Delete mail template */
-router.post('/mail/templates/:flowid', async function (req, res, next) {
-  //console.log('/mail/templates/:flowid', req.headers['x-http-method-override'])
+router.post('/mail/templates/:pubid', async function (req, res, next) {
+  //console.log('/mail/templates/:pubid', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'DELETE') {
     return await deleteMailTemplate(req, res, next)
   }
@@ -55,14 +52,11 @@ router.post('/mail/templates/:flowid', async function (req, res, next) {
 /* POST add/edit mail template for this flow */
 /* ACCESS: OWNER-ONLY NOT TESTED */
 async function deleteMailTemplate(req, res, next) {
-  const flowid = parseInt(req.params.flowid)
-  //console.log('DELETE /mail/templates', flowid)
+  const pubid = parseInt(req.params.pubid)
+  //console.log('DELETE /mail/templates', pubid)
   try {
-    const dbflow = await models.flows.findByPk(flowid)
-    if (!dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, 'No pub found for flowid ' + flowid)
+    const dbpub = await models.pubs.findByPk(pubid)
+    if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
     // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
@@ -70,12 +64,12 @@ async function deleteMailTemplate(req, res, next) {
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const templateid = req.body.templateid
-    const dbmailtemplate = await models.flowmailtemplates.findByPk(templateid)
+    const dbmailtemplate = await models.pubmailtemplates.findByPk(templateid)
     if (!dbmailtemplate) return utils.giveup(req, res, 'Cannot find mailtemplate ' + templateid)
 
-    const dbtemplatesflow = await dbmailtemplate.getFlow()
-    if (!dbtemplatesflow) return utils.giveup(req, res, 'Cannot find flow for mailtemplate')
-    if (dbtemplatesflow.id !== flowid) return utils.giveup(req, res, 'Edit mailtemplate flowid mismatch ' + dbtemplatesflow.id + ' ' + flowid)
+    const dbtemplatepub = await dbmailtemplate.getPub()
+    if (!dbtemplatepub) return utils.giveup(req, res, 'Cannot find pub for mailtemplate')
+    if (dbtemplatepub.id !== pubid) return utils.giveup(req, res, 'Edit mailtemplate pubid mismatch ' + dbtemplatepub.id + ' ' + pubid)
 
     await dbmailtemplate.destroy()
 
@@ -92,14 +86,11 @@ async function deleteMailTemplate(req, res, next) {
 /* POST add/edit mail template for this flow */
 /* ACCESS: OWNER-ONLY NOT TESTED */
 async function addEditMailTemplate(req, res, next) {
-  const flowid = parseInt(req.params.flowid)
-  //console.log('POST /mail/templates', flowid)
+  const pubid = parseInt(req.params.pubid)
+  //console.log('POST /mail/templates', pubid)
   try {
-    const dbflow = await models.flows.findByPk(flowid)
-    if (!dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
-
-    const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, 'No pub found for flowid ' + flowid)
+    const dbpub = await models.pubs.findByPk(pubid)
+    if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
     // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
@@ -113,12 +104,12 @@ async function addEditMailTemplate(req, res, next) {
 
     let ok = false
     if (templateid) {
-      const dbmailtemplate = await models.flowmailtemplates.findByPk(templateid)
+      const dbmailtemplate = await models.pubmailtemplates.findByPk(templateid)
       if (!dbmailtemplate) return utils.giveup(req, res, 'Cannot find mailtemplate ' + templateid)
 
-      const dbtemplatesflow = await dbmailtemplate.getFlow()
-      if (!dbtemplatesflow) return utils.giveup(req, res, 'Cannot find flow for mailtemplate')
-      if (dbtemplatesflow.id !== flowid) return utils.giveup(req, res, 'Edit mailtemplate flowid mismatch ' + dbtemplatesflow.id + ' ' + flowid)
+      const dbtemplatepub = await dbmailtemplate.getPub()
+      if (!dbtemplatepub) return utils.giveup(req, res, 'Cannot find pub for mailtemplate')
+      if (dbtemplatepub.id !== pubid) return utils.giveup(req, res, 'Edit mailtemplate pubid mismatch ' + dbtemplatepub.id + ' ' + pubid)
 
       dbmailtemplate.name = templatename
       dbmailtemplate.subject = templatesubject
@@ -128,12 +119,22 @@ async function addEditMailTemplate(req, res, next) {
       ok = true
     } else {
       const params = {
-        flowId: flowid,
+        pubId: pubid,
+        weight: 0,
         name: templatename,
         subject: templatesubject,
         body: templatebody,
+        sendReviewReminderDays: 0,
+        sendLeadReminderDays: 0,
+        sendReviewChaseUpDays: 0,
+        sendOnSiteRegister: false,
+        sendOnRoleGiven: 0,
+        sendToAuthor: false,
+        bccToOwners: false,
+        sendToUser: false,
+        sendToReviewers: false,
       }
-      const dbmailtemplate = await models.flowmailtemplates.create(params)
+      const dbmailtemplate = await models.pubmailtemplates.create(params)
       if (!dbmailtemplate) return utils.giveup(req, res, 'mailtemplate not created')
       logger.log4req(req, 'CREATED new mailtemplate', dbmailtemplate.id)
       ok = true

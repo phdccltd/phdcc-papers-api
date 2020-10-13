@@ -190,30 +190,25 @@ async function register(req, res, next) {
         }
         if (anyRoleRequested) {
           // Send per-pub user-just-registered mail
-          //CHANGE TO const dbmailrules = await dbpubs.getMailTemplates({where:{sendOnSiteRegister: true}})
-          const dbmailrules = await models.flowmailrules.findAll({
-            where: {
-              sendOnSiteRegister: true
-            }
-          })
-          for (const dbmailrule of dbmailrules) {
-            if (dbmailrule.bccToOwners) { // CHANGE
-              console.log(dbmailrule.id, 'SEND REGISTERED MAIL TO OWNER', dbpub.id)
+          const dbpubmails = await dbpubs.getMailTemplates({where:{sendOnSiteRegister: true}})
+          for (const dbpubmail of dbpubmails) {
+            if (dbpubmail.bccToOwners) { // CHANGE
+              console.log(dbpubmail.id, 'SEND REGISTERED MAIL TO OWNER', dbpub.id)
             }
           }
         }
       }
 
       // Send site-wide welcome mail
-      const dbmailrules = await models.flowmailrules.findAll({
+      const dbpubmails = await models.pubmailtemplates.findAll({
         where: {
-          //pubId: null,  // CHANGE: ADD THIS IN
+          pubId: null,
           sendOnSiteRegister: true
         }
       })
-      for (const dbmailrule of dbmailrules) {
-        if (dbmailrule.sendToUser) {
-          console.log(dbmailrule.id, 'SEND NEW-TO-SITE MAIL')
+      for (const dbpubmail of dbpubmails) {
+        if (dbpubmail.sendToUser) {
+          console.log(dbpubmail.id, 'SEND NEW-TO-SITE MAIL')
         }
       }
 

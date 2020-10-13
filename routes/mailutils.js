@@ -20,19 +20,19 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
     }
   }
 
-  let dbmailrules = []
+  let dbpubmails = []
   if (dbflowstatus) {
-    dbmailrules = await dbflowstatus.getFlowMailRules()
+    dbpubmails = await dbflowstatus.getPubMails()
   } else if (dbflowgrade) {
-    dbmailrules = await dbflowgrade.getFlowMailRules()
+    dbpubmails = await dbflowgrade.getPubMails()
   }
-  for (const dbmailrule of dbmailrules) {
+  for (const dbpubmail of dbpubmails) {
 
     // Ignore reminder rules
-    if (dbmailrule.sendReviewReminderDays !== 0 || dbmailrule.sendLeadReminderDays !== 0 || dbmailrule.sendReviewChaseUpDays !== 0) {
+    if (dbpubmail.sendReviewReminderDays !== 0 || dbpubmail.sendLeadReminderDays !== 0 || dbpubmail.sendReviewChaseUpDays !== 0) {
       continue
     }
-    //console.log('sendOutMails dbmailrule', dbmailrule.id, dbmailrule.flowmailtemplateId, dbmailrule.name, dbmailrule.sendToUser, dbmailrule.sendToAuthor, dbmailrule.bccToOwners)
+    //console.log('sendOutMails dbpubmail', dbpubmail.id, dbpubmail.pubmailtemplateId, dbpubmail.name, dbpubmail.sendToUser, dbpubmail.sendToAuthor, dbpubmail.bccToOwners)
 
     const dbflow = await req.dbsubmit.getFlow()
     if (!dbflow) {
@@ -46,7 +46,7 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
     }
 
     const bccOwners = []
-    if (dbmailrule.bccToOwners) {
+    if (dbpubmail.bccToOwners) {
       const dbownerroles = await dbpub.getPubroles({ where: { isowner: true } })
       for (const dbownerrole of dbownerroles) {
         const dbownerusers = await dbownerrole.getUsers()
@@ -57,7 +57,7 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
     }
 
     const recipients = []
-    const dbpubrole = await dbmailrule.getPubrole()
+    const dbpubrole = await dbpubmail.getPubrole()
     if (dbpubrole) {
       const dbusers = await dbpubrole.getUsers()
       for (const dbuser of dbusers) {
@@ -67,15 +67,15 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
 
     const dbauthor = await req.dbsubmit.getUser()
     const author = dbauthor ? models.sanitise(models.users, dbauthor) : false
-    if (dbmailrule.sendToAuthor && author) {
+    if (dbpubmail.sendToAuthor && author) {
       recipients.push(author.email)
     }
 
-    if (dbmailrule.sendToUser) {
+    if (dbpubmail.sendToUser) {
       recipients.push(req.dbuser.email)
     }
 
-    if (dbmailrule.sendToReviewers) {
+    if (dbpubmail.sendToReviewers) {
       const dbreviewers = await req.dbsubmit.getReviewers()
       for (const dbreviewer of dbreviewers) {
         const dbuser = await dbreviewer.getUser()
@@ -85,13 +85,12 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
       }
     }
 
-    const dbtemplate = await dbmailrule.getFlowmailtemplate()
-    let subject = Handlebars.compile(dbtemplate.subject)
-    let body = Handlebars.compile(dbtemplate.body)
+    let subject = Handlebars.compile(dbpubmail.subject)
+    let body = Handlebars.compile(dbpubmail.body)
 
     if (recipients.length === 0) {
-      logger.log4req(req, 'No recipients for ' + dbtemplate.name)
-      console.log('No recipients for ' + dbtemplate.name)
+      logger.log4req(req, 'No recipients for ' + dbpubmail.name)
+      console.log('No recipients for ' + dbpubmail.name)
       continue
     }
     //console.log('recipients', recipients.join(','))

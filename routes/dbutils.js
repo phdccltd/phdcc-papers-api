@@ -280,19 +280,21 @@ async function getEntryStringValue(v, formfield){
       stringvalue = v.integer ? 'Yes' : 'No'
     } else if (formfield.type === 'lookup' || formfield.type === 'lookups') {
       stringvalue = ''
-      const aselections = v.string.split(',')
-      for (const sel of aselections) {
-        const dbpublookupvalue = await models.publookupvalues.findByPk(parseInt(sel))
-        if (stringvalue.length > 0) stringvalue += ' - '
-        if (dbpublookupvalue) {
-          stringvalue += dbpublookupvalue.text
-        } else {
-          stringvalue += sel
+      if (v.string !== null && v.string.length > 0) {
+        const aselections = v.string.split(',')
+        for (const sel of aselections) {
+          const dbpublookupvalue = await models.publookupvalues.findByPk(parseInt(sel))
+          if (stringvalue.length > 0) stringvalue += ' - '
+          if (dbpublookupvalue) {
+            stringvalue += dbpublookupvalue.text
+          } else {
+            stringvalue += sel
+          }
         }
       }
     } else if (formfield.type === 'rolelookups') {
       stringvalue = ''
-      if (v.string != null && v.string.length > 0) {
+      if (v.string !== null && v.string.length > 0) {
         const aselections = v.string.split(',')
         for (const sel of aselections) {
           const userid = parseInt(sel)

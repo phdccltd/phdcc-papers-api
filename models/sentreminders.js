@@ -9,8 +9,8 @@ module.exports = (sequelize, DataTypes) => {
   sentreminders.fields = fields
 
   sentreminders.associate = function (dbs) {
-    dbs.flowmailrules.hasMany(dbs.sentreminders, { as: 'SentReminders', foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete flowmailrules while sentreminders exist
-    dbs.sentreminders.belongsTo(dbs.flowmailrules, { foreignKey: { allowNull: false } })
+    dbs.pubmailtemplates.hasMany(dbs.sentreminders, { as: 'SentReminders', foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete pubmailtemplates while sentreminders exist
+    dbs.sentreminders.belongsTo(dbs.pubmailtemplates, { foreignKey: { allowNull: false } })
 
     dbs.sentreminders.belongsTo(dbs.submits, { foreignKey: { allowNull: true } })
 
