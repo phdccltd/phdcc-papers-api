@@ -201,8 +201,28 @@ async function getPubUsers(req, res, next) {
   }
 }
 
+/* ************************ */
+/* GET: Masquerade */
+async function handleMasquerade(req, res, next) {
+  try {
+    const userid = parseInt(req.params.userid)
+    console.log('GET /users/masquerade/', userid)
+
+    if (!req.dbuser.super) return utils.giveup(req, res, 'No joy')
+
+    const dbuser = await models.users.findByPk(userid)
+    if (!dbuser) return utils.giveup(req, res, 'Cannot find userid ' + userid)
+
+    const ok = true
+    utils.returnOK(req, res, ok, 'ok')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+}
+
 module.exports = {
   removePubUser,
   handleUserRole,
+  handleMasquerade,
   getPubUsers,
 }

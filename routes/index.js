@@ -102,6 +102,9 @@ router.post('/users/pub/:pubid/:userid', users.removePubUser)
 /* GET: GET PUB USERS */
 router.get('/users/pub/:pubid', users.getPubUsers)
 
+/* GET: MASQUERADE */
+router.get('/users/masquerade/:userid', users.handleMasquerade)
+
 //////////////////////
 // /pubs/*
 router.use(pubsRouter)

@@ -261,13 +261,21 @@ function loaduser(req, res, next) {
     async (err, ppuser, info) => {
       if (ppuser) {
         // DOUBLE-CHECK THAT USER OK?
-        const user = await models.users.findByPk(ppuser.id)
-        if (!user) {
+        let dbuser = await models.users.findByPk(ppuser.id)
+        if (!dbuser) {
           logger.log4req(req, 'Stale login', ppuser.id)
           return utils.giveup(req, res, 'Stale login')
         }
-        req.dbuser = user
-        const newppuser = { id: user.id }
+        if (dbuser.super && dbuser.actas > 0) {
+          console.log('MASQUERADING AS', dbuser.actas)
+          const actas = await models.users.findByPk(dbuser.actas)
+          if (actas) {
+            actas.actas = dbuser.id
+            dbuser = actas
+          }
+        }
+        req.dbuser = dbuser
+        const newppuser = { id: dbuser.id }
         if (!_.isEqual(newppuser, ppuser)) {
           console.log('AUTH LOADUSER ppuser refreshed', newppuser, ppuser)
         }
@@ -283,7 +291,20 @@ function loaduser(req, res, next) {
 }
 
 /* DELETE: LOGOUT */
-function logout(req, res) {
+async function logout(req, res) {
+  if (req.dbuser.actas > 0) { // If this is super masquerading as user
+    try {
+      console.log('Stopping masquerade of ', req.dbuser.id,'by',req.dbuser.actas)
+      const dbsuper = await models.users.findByPk(req.dbuser.actas)
+      if (dbsuper) {
+        dbsuper.actas = 0
+        await dbsuper.save()
+      }
+    } catch (e) {
+      console.log('logout clear actas fail', e.message)
+    }
+  }
+
   logger.log4req(req, "Logging out ", req.ppuser.id, req.dbuser.username)
   req.logout()
   utils.returnOK(req, res, 'Logged out')

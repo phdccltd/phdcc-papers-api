@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   const users = sequelize.define('users', {
       password: { type: Sequelize.STRING, allowNull: false },
+      actas: { type: Sequelize.INTEGER, allowNull: false },
       ...fields
     },
     {
