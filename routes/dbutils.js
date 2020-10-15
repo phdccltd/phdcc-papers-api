@@ -201,8 +201,9 @@ async function isReviewableSubmit(req, flow, submit) {
         const entrytograde = _.find(submit.entries, (entry) => { return entry.flowstageId === flowgrade.displayflowstageId })
         if (entrytograde) {
           route = '/panel/' + req.dbpub.id + '/' + flow.id + '/' + submit.id + '/' + entrytograde.id
-          submit.actions.push({ name: flowgrade.name + ' needed', gradename: 'Add ' + flowgrade.name, route, flowgradeid: flowgrade.id, show: 3, dograde: 4 })
+          submit.actions.push({ name: flowgrade.name + ' needed', gradename: 'Add ' + flowgrade.name, route, flowgradeid: flowgrade.id, show: 3, dograde: 4, entrytograde: entrytograde.id })
           submit.user = 'author redacted'
+          req.entergradingcount++
         }
       }
       if (req.ihavegraded && submit) {

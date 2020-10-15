@@ -564,6 +564,7 @@ async function getPubSubmits(req, res, next) {
       }
 
       ////////// GO THROUGH ALL FLOW'S SUBMITS
+      req.entergradingcount = 0
       for (const dbsubmit of dbsubmits) {
         req.dbsubmit = dbsubmit
         const submit = models.sanitise(models.submits, dbsubmit)
@@ -705,6 +706,33 @@ async function getPubSubmits(req, res, next) {
 
         ////////// Add submit to return list
         flow.submits.push(submit)
+      }
+      // Add Next and Previous buttons for graders
+      if (req.entergradingcount > 1) {
+        const submitswithgradingstodo = []
+        for (const submit of flow.submits) {
+          if (submit.actions.length > 0) {
+            const action = submit.actions[0]
+            if (action.dograde === 4) {
+              submitswithgradingstodo.push(submit)
+            }
+          }
+        }
+        if (submitswithgradingstodo.length > 1) {
+          for (let submitno = 0; submitno < submitswithgradingstodo.length; submitno++) {
+            const submit = submitswithgradingstodo[submitno]
+            if (submitno < submitswithgradingstodo.length - 1) {
+              const nextsubmit = submitswithgradingstodo[submitno+1]
+              const route = '/panel/' + req.dbpub.id + '/' + nextsubmit.flowId + '/' + nextsubmit.id + '/' + nextsubmit.actions[0].entrytograde
+              submit.actions.push({ name: 'Next', gradename: '', route, flowgradeid: 0, show: 4, dograde: 0 })
+            }
+            if (submitno > 0) {
+              const prevsubmit = submitswithgradingstodo[submitno - 1]
+              const route = '/panel/' + req.dbpub.id + '/' + prevsubmit.flowId + '/' + prevsubmit.id + '/' + prevsubmit.actions[0].entrytograde
+              submit.actions.push({ name: 'Previous', gradename: '', route, flowgradeid: 0, show: 4, dograde: 0 })
+            }
+          }
+        }
       }
 
       //console.log('flow.actions', flow.actions)

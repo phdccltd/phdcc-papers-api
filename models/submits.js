@@ -23,7 +23,9 @@ module.exports = (sequelize, DataTypes) => {
     dbs.submits.belongsTo(dbs.flows, { foreignKey: { allowNull: false }})
     // Adds submits.userId Sequelize.INTEGER allowNull:false
     dbs.users.hasMany(dbs.submits, { foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete user while submits exist
-    dbs.submits.belongsTo(dbs.users, { foreignKey: { allowNull: false }})
+    dbs.submits.belongsTo(dbs.users, { foreignKey: { allowNull: false } })
+
+    dbs.submits.fields.flowId = true // Helps Next/Previous grading
  }
 
   return submits
