@@ -280,7 +280,7 @@ function loaduser(req, res, next) {
           console.log('AUTH LOADUSER ppuser refreshed', newppuser, ppuser)
         }
         req.ppuser = newppuser
-        logger.log4req(req, 'User is', req.ppuser.id, req.dbuser.username, req.dbuser.name)
+        logger.log4req(req, 'User', req.dbuser.username, req.url)
         next()
         return
       }
@@ -294,7 +294,7 @@ function loaduser(req, res, next) {
 async function logout(req, res) {
   if (req.dbuser.actas > 0) { // If this is super masquerading as user
     try {
-      console.log('Stopping masquerade of ', req.dbuser.id,'by',req.dbuser.actas)
+      logger.log4req(req, 'Stopping masquerade')
       const dbsuper = await models.users.findByPk(req.dbuser.actas)
       if (dbsuper) {
         dbsuper.actas = 0

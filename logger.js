@@ -39,6 +39,7 @@ module.exports.log4req = log4req
 function logfull() {
   let userip = null
   let userid = null
+  let actid = null
   let level = null
   let originalUrl = null
   if (arguments.length >= 1) {
@@ -49,7 +50,8 @@ function logfull() {
     const req = arguments[1]
     if (req) {
       userip = req.headers['x-forwarded-for'] // x-forwarded-server
-      if (req.user) userid = req.user.id
+      if (req.dbuser) userid = req.dbuser.id
+      if (req.dbuser && 'actas' in req.dbuser) actid = req.dbuser.actas
       originalUrl = req.originalUrl
     }
   }
@@ -71,6 +73,7 @@ function logfull() {
         models.logs.create({
           ip: userip,
           userid: userid,
+          actid: actid,
           level: level,
           url: originalUrl,
           msg: allargstring

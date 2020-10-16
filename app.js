@@ -163,9 +163,7 @@ app.use(express.json())
 app.use(function (req, res, next) {
   const userip = req.headers['x-forwarded-for'] // x-forwarded-server
   req.userip = userip
-  console.log('=== ', req.url)
-  logger.log4req(req, '+++Route:', process.env.BASEURL, req.url)
-  //console.log(req.headers)
+  //logger.log4req(req, '+++Route:', process.env.BASEURL, req.url)
   next()
 })
 

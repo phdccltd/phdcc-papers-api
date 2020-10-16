@@ -213,6 +213,9 @@ async function handleMasquerade(req, res, next) {
     const dbuser = await models.users.findByPk(userid)
     if (!dbuser) return utils.giveup(req, res, 'Cannot find userid ' + userid)
 
+    req.dbuser.actas = userid
+    req.dbuser.save()
+
     const ok = true
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {

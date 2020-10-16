@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     // id, createdAt and updatedAt: added automatically
     ip: { type: Sequelize.STRING, allowNull: true },
     userid: { type: Sequelize.INTEGER, allowNull: true },
+    actid: { type: Sequelize.INTEGER, allowNull: true },
     level: { type: Sequelize.ENUM('info', 'warning', 'error') , allowNull: true },
     url: { type: Sequelize.STRING, allowNull: true },
     msg: { type: Sequelize.TEXT, allowNull: true }
