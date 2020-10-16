@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     formtypeid: { type: Sequelize.INTEGER, allowNull: false },
     label: { type: Sequelize.STRING, allowNull: false },
     help: { type: Sequelize.STRING, allowNull: false },
+    helplink: { type: Sequelize.STRING, allowNull: false },
     weight: { type: Sequelize.INTEGER, allowNull: false },
     type: { type: Sequelize.STRING, allowNull: false },
     required: { type: DataTypes.BOOLEAN, allowNull: false },
