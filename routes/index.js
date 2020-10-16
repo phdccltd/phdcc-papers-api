@@ -32,10 +32,11 @@ router.use(function (req, res, next) {
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", 0);
 
+  // NO: requests come through as non-xhr
   // If production, then don't allow vanilla web requests
-  if (req.app.get('env')=='production') {
-    if (!req.xhr) return utils.giveup(req, res, 'Non-XHR requests not permitted')
-  }
+  //if (req.app.get('env')=='production') {
+  //  if (!req.xhr) return utils.giveup(req, res, 'Non-XHR requests not permitted')
+  //}
 
   // req.baseUrl is eg /user/login for call at /api/user/login
   req.fullurl = req.baseUrl + req.url // eg /user
