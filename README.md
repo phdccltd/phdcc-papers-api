@@ -11,7 +11,7 @@ In the mean time please contact us at https://phdcc.com/feedback.html for help.
 
 ## Base usage
 
-The following command will get and run the API code. However before running you need to configure a database and set various environment variables - see below.
+The following commands will get and run the API code. However before running you need to configure a database and set various environment variables - see below.
 
 ```
 # Grab the code
@@ -34,6 +34,11 @@ pm2 start server.js --name papersapi
 A similar (but slightly different) setup process is needed for the client code server
 [phdcc-papers](https://github.com/phdccltd/phdcc-papers).
 
+## Terms of use and Privacy
+
+If setting Papers up on your own server, you need to configure a "Terms of use" site page which would detail terms which the user must agree to, 
+along with details of how their personal information is kept secret and shared eg to reviewers.
+
 ## Requirements
 
 * nodejs, including npm and git
@@ -47,14 +52,9 @@ A similar (but slightly different) setup process is needed for the client code s
 
 In addition, taking regular database backups is recommended, eg daily. The separate files directory should also be backed up.
 
-## Terms of use and Privacy
-
-If setting Papers up on your own server, you need to configure a "Terms of use" site page which would detail terms which the user must agree to, 
-along with details of how their personal information is kept secret and shared eg to reviewers.
-
 ## Database
 
-Running this API app will automatically create and update the required tables in the database specified by the environment variables.
+Running this API component will automatically create and update the required tables in the database specified by the environment variables.
 A fresh install currently needs data added to various database tables to get the site running.
 
 ## Configuration
@@ -92,13 +92,14 @@ pm2 save
 ```
 
 Test that the processes restart after rebooting.
-Typically, both Papers apps are configured to send a mail when they restart.
+Typically, both Papers components are configured to send a mail when they restart.
 
 You can see what processes are running using the command `pm2 ps`. 
 If need be, you can stop and start named apps eg `pm2 stop papersapi`, `pm2 restart papers`, etc.
 
-To allow for log file recycling, you can ask PM2 to restart all processes once a day using a [crontab]{https://linuxhandbook.com/crontab/) entry, eg overnight.
-List your current crontab table using `crontab -l`. Use `crontab -e` to edit your crontab table. This line restarts all PM2 processes at 03:17 every day:
+To allow for log file recycling, you can ask PM2 to restart all processes once a day using a [crontab](https://linuxhandbook.com/crontab/) entry, eg overnight.
+List your current crontab table using `crontab -l`. Use `crontab -e` to edit your crontab table. 
+This crontab line restarts all PM2 processes at 03:17 every day, server-time:
 
 ```
 17 3 * * * /usr/bin/node /usr/bin/pm2 restart all >/dev/null 2>/dev/null
@@ -134,16 +135,16 @@ The Papers components use external packages which are likely to be updated every
 The above update process will safely bring in any updates to packages. 
 
 If need be, you use the `npm audit` command to check for any security vulnerabilities.
-It will advise that `npm audit fix` will fix these; this command should be used with caution. Running `npm update` is usually safer.
+It may advise that `npm audit fix` will fix these; this command should be used with caution. Running `npm update` is usually safer.
 
 
 ## Serving requests
 
-The two Papers nodejs components should be served by a non-root user on the system, 
+The two Papers nodejs web components should be served by a non-root user on the system, 
 each responding on an internal port that is not exposed publicly.
 A public-facing web server such as apache or nginx will act as the public interface,
 proxying requests to the relevant component via the internal ports.
-The public-facing server will deal with redirects to HTTPS and SSL certificates.
+The public-facing server should deal with redirects to HTTPS and SSL certificates.
 
 The instructions below are for apache. Here's a link to [instructions for nginx](https://pm2.keymetrics.io/docs/tutorials/pm2-nginx-production-setup) for one port.
 
