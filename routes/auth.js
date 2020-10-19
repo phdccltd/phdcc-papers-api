@@ -2,7 +2,7 @@
 
 const { Router } = require('express')
 
-const _ = require('lodash/core')
+const _lang = require('lodash/lang')
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const bcrypt = require('bcrypt')
@@ -276,7 +276,7 @@ function loaduser(req, res, next) {
         }
         req.dbuser = dbuser
         const newppuser = { id: dbuser.id }
-        if (!_.isEqual(newppuser, ppuser)) {
+        if (!_lang.isEqual(newppuser, ppuser)) {
           console.log('AUTH LOADUSER ppuser refreshed', newppuser, ppuser)
         }
         req.ppuser = newppuser
