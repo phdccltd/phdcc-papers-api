@@ -14,7 +14,7 @@ const logger = require('./logger')
 const utils = require('./utils')
 const background_runner = require('./task')
 
-var now = new Date();
+var now = new Date()
 global.starttime = now.toISOString()
 
 logger.log('PAPERS STARTING: ', global.starttime, process.pid, 'LOGMODE', process.env.LOGMODE)
@@ -34,7 +34,7 @@ async function checkDatabases() {
     console.log('Connection has been established successfully.')
 
     // TODO??: Replace with migrations https://sequelize.org/master/manual/migrations.html
-    await db.sequelize.sync({ alter: true });
+    await db.sequelize.sync({ alter: true })
     console.log('All models were synchronized successfully')
     await models.logs.create({ msg: 'Started' })
     console.log('Logged start')
@@ -72,7 +72,7 @@ async function checkDatabases() {
           password: await bcrypt.hash('asecret', saltRounds),
           super: true
         }
-        const user = await models.users.create(params);
+        const user = await models.users.create(params)
         if (!user) return routes.giveup(req, res, 'user not created')
         console.log('User created', params.name)
       }
@@ -167,7 +167,7 @@ app.use(function (req, res, next) {
   next()
 })
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')))
 
 // Require API routes
 const apiRouter = require('./routes')
@@ -186,10 +186,10 @@ app.use(function (req, res, next) {
 app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   console.log('ERROR', err.message)
-  //console.log(req.app.get('env'));
-  //console.log(err);
-  //res.locals.message = err.message;
-  //res.locals.error = {};
+  //console.log(req.app.get('env'))
+  //console.log(err)
+  //res.locals.message = err.message
+  //res.locals.error = {}
 
   // render the error page
   res.status(err.status || 500).send(err.message)
@@ -197,20 +197,22 @@ app.use(function (err, req, res, next) {
 
 
 
-var now = new Date();
+var now = new Date()
 global.starttime = now.toISOString()
 console.log('STARTED: ', global.starttime, process.pid)
-let startupSeconds = parseInt(process.env.ST) || 15;
+let startupSeconds = parseInt(process.env.ST) || 15
 if (startupSeconds < 1) startupSeconds = 1
 console.log('startupSeconds:' + startupSeconds)
-let intervalMinutes = parseInt(process.env.IM) || 17;
+let intervalMinutes = parseInt(process.env.IM) || 17
 if (intervalMinutes < 1) intervalMinutes = 1
 console.log('intervalMinutes:' + intervalMinutes)
-const intervalSeconds = 60 * intervalMinutes;
-setTimeout(background_runner, startupSeconds * 1000, app);
-setInterval(background_runner, intervalSeconds * 1000, app);
+const intervalSeconds = 60 * intervalMinutes
+if (!process.env.TESTING) {
+  setTimeout(background_runner, startupSeconds * 1000, app)
+  setInterval(background_runner, intervalSeconds * 1000, app)
+}
 
-logger.log('papers API app started: process ', process.pid);
+logger.log('papers API app started: process ', process.pid)
 
 
 module.exports = app
