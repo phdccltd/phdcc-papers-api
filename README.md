@@ -2,11 +2,11 @@
 
 API for the **Papers** [PHDCC journal/conference abstract and paper submission and review system](https://www.phdcc.com/papers/).
 
-This API is intended for use in conjunction with [phdcc-papers](https://github.com/chriscant/phdcc-papers).
+This API is intended for use in conjunction with [phdcc-papers](https://github.com/phdccltd/phdcc-papers).
 
-This nodejs API code can be set up to listen for web requests on an internal port.
+This nodejs API code should set up to listen for web requests on an internal port.
 The public-facing server for a website will use a proxy to pass requests at `/api` to the API port.
-Here is an example Apache conf for the API and the main website [phdcc-papers](https://github.com/chriscant/phdcc-papers).
+Here is an example Apache conf for the API and the main website [phdcc-papers](https://github.com/phdccltd/phdcc-papers).
 
 ```<IfModule mod_ssl.c>
 <VirtualHost *:443>
@@ -39,7 +39,8 @@ Include /etc/letsencrypt/options-ssl-apache.conf
 
 Create a `.env` text file with the following secrets
 
-```PORT=portno
+```
+PORT=portno
 DATABASE='dbname'
 DBUSER='dbuser'
 DBPASS='dbpassword'
@@ -58,7 +59,7 @@ RECAPTCHA_BYPASS='Password to avoid recaptcha'
 # install dependencies
 $ npm install
 
-# serve with hot reload at localhost:3000
+# serve with hot reload at localhost port defined above
 $ npm run dev
 
 # build for production and launch server
