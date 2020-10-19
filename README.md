@@ -36,7 +36,7 @@ A similar (but slightly different) setup process is needed for the client code s
 
 ## Terms of use and Privacy
 
-If setting Papers up on your own server, you need to configure a "Terms of use" site page which would detail terms which the user must agree to, 
+If setting Papers up on your own server, you need to configure a "Terms of use" site page to list terms which the user must agree to on the register page,
 along with details of how their personal information is kept secret and shared eg to reviewers.
 
 ## Requirements
@@ -131,12 +131,13 @@ pm2 start papers
 
 ## npm updates and audit
 
-The Papers components use external packages which are likely to be updated every so often, sometimes with security updates.
-The above update process will safely bring in any updates to packages. 
+The Papers components uses external packages which are likely to be updated every so often, sometimes with security updates.
+The above update process will safely bring in any package updates.
 
 If need be, you use the `npm audit` command to check for any security vulnerabilities.
-It may advise that `npm audit fix` will fix these; this command should be used with caution. Running `npm update` is usually safer.
-
+It may advise that `npm audit fix` will fix these.
+Running `npm update` is another way of updating all packages.
+The Papers repositories should be updated regularly; updated as in the previous section is usually best.
 
 ## Serving requests
 
@@ -146,7 +147,7 @@ A public-facing web server such as apache or nginx will act as the public interf
 proxying requests to the relevant component via the internal ports.
 The public-facing server should deal with redirects to HTTPS and SSL certificates.
 
-The instructions below are for apache. Here's a link to [instructions for nginx](https://pm2.keymetrics.io/docs/tutorials/pm2-nginx-production-setup) for one port.
+The instructions below are for Apache. Here's a link to [instructions for nginx](https://pm2.keymetrics.io/docs/tutorials/pm2-nginx-production-setup) for one port.
 
 This Apache conf file sends API requests at `/api` to internal port 1234 and any other requests to port 1235.
 Let's Encrypt certificates are in use.
@@ -182,7 +183,7 @@ Let's Encrypt certificates are in use.
 
 ## Environment file .env
 
-Create a `.env` text file with the following secrets
+Create a `.env` text file in the root directory of the API component with the following secrets:
 
 ```
 PORT=portno
@@ -192,10 +193,12 @@ DBPASS='dbpassword'
 LOGSQL=false - set to true if you want all sequelize SQL logged
 LOGMODE=console - if you want logger output to the console
 BASEURL=/api
-JWT_SECRET='Secret used in authentication'
+JWT_SECRET='Some random secret characters for use in authentication'
 RECAPTCHA_SECRET_KEY='recaptcha secret key'
 RECAPTCHA_BYPASS='Password to avoid recaptcha'
 ```
+
+*Note: any values you put in this .env file will not be sent to the user.*
 
 ## Used with thanks
 
