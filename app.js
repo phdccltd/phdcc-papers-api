@@ -127,7 +127,7 @@ async function checkDatabases() {
               pass: privatesettings['transport-auth-pass'],
             }
           }
-          console.log('transportOptions', transportOptions)
+          //console.log('transportOptions', transportOptions)
           const transport = nodemailer.createTransport(transportOptions)
           if (transport) {
             const rv = await transport.verify()
