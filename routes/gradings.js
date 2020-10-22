@@ -57,7 +57,7 @@ async function deleteGrading(req, res, next){
 
 /* ************************ */
 /* POST: Add grading*/
-/* ACCESS: OWNER-ONLY TOTEST */
+/* ACCESS: OWNER-ONLY EDIT TOTEST */
 async function addGrading(req, res, next){
   const submitid = parseInt(req.params.submitid)
   //console.log('Add /gradings', submitid)
@@ -66,7 +66,7 @@ async function addGrading(req, res, next){
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
-    const gradingid = req.body.gradingid  // If non-zero then editing
+    const gradingid = req.body.gradingid  // If non-zero then editing. Normally undefined
     console.log('Add/Edit /gradings', submitid, gradingid)
 
     const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)

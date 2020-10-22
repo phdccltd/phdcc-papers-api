@@ -14,6 +14,8 @@ module.exports = (sequelize, DataTypes) => {
     lastlogin: { type: Sequelize.DATE, allowNull: true },
     super: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
     deleted: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+    resettoken: { type: Sequelize.STRING, allowNull: true },
+    resetexpires: { type: Sequelize.DATE, allowNull: true },
   }
   const users = sequelize.define('users', {
       password: { type: Sequelize.STRING, allowNull: false },

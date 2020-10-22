@@ -127,7 +127,7 @@ async function addEditMailTemplate(req, res, next) {
         sendReviewReminderDays: 0,
         sendLeadReminderDays: 0,
         sendReviewChaseUpDays: 0,
-        sendOnSiteRegister: false,
+        sendOnSiteAction: 0,
         sendOnRoleGiven: 0,
         sendToAuthor: false,
         bccToOwners: false,

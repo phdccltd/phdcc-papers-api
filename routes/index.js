@@ -80,6 +80,10 @@ router.post('/user/login', auth.login)
 /* POST: HANDLE REGISTER ATTEMPT */
 router.post('/user/register', auth.register)
 
+//////////////////////
+/* POST: HANDLE FORGOT PASSWORD */
+router.post('/user/forgot', auth.forgotpwd)
+
 /* ALL: CHECK LOGGED IN */
 // Must be logged in from now on
 router.use(auth.loaduser)

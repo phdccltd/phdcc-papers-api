@@ -8,6 +8,7 @@ const LocalStrategy = require('passport-local').Strategy
 const bcrypt = require('bcrypt')
 const saltRounds = 10
 const needle = require('needle')
+const crypto = require('crypto')
 
 const JWTstrategy = require('passport-jwt').Strategy
 const ExtractJWT = require('passport-jwt').ExtractJwt
@@ -191,7 +192,7 @@ async function register(req, res, next) {
         }
         if (anyRoleRequested) {
           // Send per-pub user-just-registered mail
-          const dbpubmails = await dbpub.getMailTemplates({where:{sendOnSiteRegister: true}})
+          const dbpubmails = await dbpub.getMailTemplates({ where: { sendOnSiteAction: models.pubmailtemplates.consts.SITE_REGISTER }})
           for (const dbpubmail of dbpubmails) {
             if (dbpubmail.bccToOwners) { // CHANGE
               console.log(dbpubmail.id, 'SEND REGISTERED MAIL TO OWNER', dbpub.id)
@@ -205,7 +206,7 @@ async function register(req, res, next) {
       const dbpubmails = await models.pubmailtemplates.findAll({
         where: {
           pubId: null,
-          sendOnSiteRegister: true
+          sendOnSiteAction: models.pubmailtemplates.consts.SITE_REGISTER
         }
       })
       for (const dbpubmail of dbpubmails) {
@@ -351,6 +352,7 @@ async function saveuser(req, res, next) {
     if (name) req.dbuser.name = name
     if (password) req.dbuser.password = password
     await req.dbuser.save()
+    logger.log4req(req, "auth saveuser OK")
     utils.returnOK(req, res, 'User updated')
     console.log("saveuser DONE OK")
   } catch (error) {
@@ -359,6 +361,75 @@ async function saveuser(req, res, next) {
   }
 }
 
+/* POST: FORGOTPWD */
+async function forgotpwd(req, res, next) {
+  try {
+    if (!('email' in req.body)) return utils.giveup(req, res, 'No email given')
+    if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+
+    const email = req.body.email.trim()
+    logger.log4req(req, "forgotpwd request", email)
+
+    async function doforgotpwd() {
+      const dbuser = await models.users.findOne({ where: { email: email } })
+      const forgotten = { err: false, msg: false }
+      if (!dbuser) {
+        forgotten.err = 'Email not found'
+      } else {
+        const buf = crypto.randomBytes(20)
+        dbuser.resettoken = buf.toString('hex')
+        dbuser.resetexpires = Date.now() + 3600000
+        dbuser.save()
+
+        const dbpubmails = await models.pubmailtemplates.findAll({
+          where: {
+            pubId: null,
+            sendOnSiteAction: models.pubmailtemplates.consts.SITE_FORGOTPWD
+          }
+        })
+
+        for (const dbpubmail of dbpubmails) {
+          console.log(dbpubmail.id, 'SEND FORGOT PASSWORD MAIL', email)
+          if (dbpubmail.sendToUser) {
+            // {{site.url}}/resetpwd?{{resettokens}}
+            const data = {
+              resettokens: 't=' + dbuser.resettoken
+            }
+            mailutils.sendOneTemplate(dbpubmail, req.site, false, false, dbuser, false, false, false, false, data)
+          }
+        }
+
+        forgotten.msg = 'Password reset sent. The link will expire in an hour.'
+      }
+      //console.log('forgotten', forgotten)
+      utils.returnOK(req, res, forgotten, 'forgotten')
+    }
+
+    const recaptchaResponseToken = req.body['g-recaptcha-response']
+    if (recaptchaResponseToken === process.env.RECAPTCHA_BYPASS) {
+      doforgotpwd()
+      return
+    }
+
+    const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + process.env.RECAPTCHA_SECRET_KEY + "&response=" + recaptchaResponseToken + "&remoteip=" + req.userip
+
+    needle.get(verificationURL, function (error, response, body) {
+      console.log("recaptchad", body)
+
+      if (body.success !== undefined && !body.success) {
+        return utils.giveup(req, res, 'Failed captcha verification')
+      }
+
+      doforgotpwd()
+
+    })
+  } catch (error) {
+    console.log(error)
+    return utils.exterminate(req, res, error)
+  }
+}
+
+
 module.exports = {
   passport: passport,
   login: login,
@@ -366,6 +437,7 @@ module.exports = {
   logout: logout,
   getuser: getuser,
   saveuser: saveuser,
-  loaduser: loaduser
+  loaduser: loaduser,
+  forgotpwd: forgotpwd,
 }
 

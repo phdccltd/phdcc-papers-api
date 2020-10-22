@@ -15,8 +15,8 @@ module.exports = (sequelize, DataTypes) => {
     sendReviewReminderDays: { type: Sequelize.INTEGER, allowNull: false },
     sendLeadReminderDays: { type: Sequelize.INTEGER, allowNull: false },
     sendReviewChaseUpDays: { type: Sequelize.INTEGER, allowNull: false },
-    sendOnSiteRegister: { type: DataTypes.BOOLEAN, allowNull: false },
-    sendOnRoleGiven: { type: Sequelize.INTEGER, allowNull: false }, // 
+    sendOnSiteAction: { type: DataTypes.INTEGER, allowNull: false },  // See consts below
+    sendOnRoleGiven: { type: Sequelize.INTEGER, allowNull: false },
     //Who to send to:
     sendToAuthor: { type: DataTypes.BOOLEAN, allowNull: false },
     bccToOwners: { type: DataTypes.BOOLEAN, allowNull: false },
@@ -39,7 +39,13 @@ module.exports = (sequelize, DataTypes) => {
     dbs.pubmailtemplates.belongsTo(dbs.flowgrades, { foreignKey: { allowNull: true } }) // flowgradeId (Trigger)
 
     dbs.pubmailtemplates.belongsTo(dbs.pubroles, { foreignKey: { allowNull: true } }) // pubroleId (Recipients)
- }
+  }
+
+  pubmailtemplates.consts = { // sendOnSiteAction constants
+    SITE_REGISTER: 1,
+    SITE_FORGOTPWD: 2,
+    SITE_PWDRESET: 3
+  }
 
   return pubmailtemplates
 }

@@ -150,7 +150,8 @@ The public-facing server should deal with redirects to HTTPS and SSL certificate
 The instructions below are for Apache. Here's a link to [instructions for nginx](https://pm2.keymetrics.io/docs/tutorials/pm2-nginx-production-setup) for one port.
 
 This Apache conf file sends API requests at `/api` to internal port 1234 and any other requests to port 1235.
-Let's Encrypt certificates are in use.
+Let's Encrypt certificates are in use. 
+Note that you may need to install the Apache modules `proxy` and `proxy_http`.
 
 ```
 <IfModule mod_ssl.c>
@@ -164,8 +165,7 @@ Let's Encrypt certificates are in use.
     ProxyRequests off
 
     <Proxy *>
-      Order deny,allow
-      Allow from all
+      Require all granted
     </Proxy>
 
     ProxyPass /api/ http://localhost:1234/

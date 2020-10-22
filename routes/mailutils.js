@@ -51,7 +51,7 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
 
 /* ************************ */
 
-async function sendOneTemplate(dbpubmail, site, dbpub, dbformfields, dbuser, dbsubmit, dbentry, grading, reqbody) {
+async function sendOneTemplate(dbpubmail, site, dbpub, dbformfields, dbuser, dbsubmit, dbentry, grading, reqbody, data) {
 
   const bccOwners = []
   if (dbpub && dbpubmail.bccToOwners) {
@@ -123,16 +123,15 @@ async function sendOneTemplate(dbpubmail, site, dbpub, dbformfields, dbuser, dbs
   site = { name: site.name, url: 'https://' + site.url + '/', publicsettings: site.publicsettings }
 
   const now = (new Date()).toLocaleString()
-  const data = {
-    site,
-    pub: models.sanitise(models.pubs, dbpub),
-    submit: models.sanitise(models.submits, dbsubmit),
-    entry: entryout,
-    grading,
-    author,
-    user: models.sanitise(models.users, dbuser),
-    now,
-  }
+  if (!data) data = {}
+  data.site = site
+  data.pub = models.sanitise(models.pubs, dbpub)
+  data.submit = models.sanitise(models.submits, dbsubmit)
+  data.entry = entryout
+  data.grading = grading
+  data.author = author
+  data.user = models.sanitise(models.users, dbuser)
+  data.now = now
   //console.log('sendOutMails', data)
   subject = subject(data)
   body = body(data)
