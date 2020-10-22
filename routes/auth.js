@@ -64,11 +64,41 @@ passport.use(new JWTstrategy({
 
 //////////////////////
 /* POST: HANDLE LOGIN ATTEMPT, using given passport */
-function login(req, res, next) {
+async function login(req, res, next) {
+
+  if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+
+  if ('reset' in req.body) {
+    const resettoken = req.body.reset.trim()
+    if (resettoken.length === 0) return utils.giveup(req, res, 'duff reset given')
+    const dbusers = await models.users.findAll({
+      where: {
+        resettoken: resettoken
+      }
+    })
+    if (dbusers.length !== 1) return utils.giveup(req, res, 'invalid reset')
+    const dbuser = dbusers[0]
+    console.log("login reset:", dbuser.id)
+
+    req.login(dbuser, { session: false }, async (err) => {
+      if (err) {
+        console.log("req.login err", err)
+        return utils.giveup(req, res, err.message)
+      }
+      dbuser.resettoken = null
+      dbuser.resetexpires = null
+      await dbuser.save()
+
+      logger.log4req(req, 'TOKEN LOGGED IN', dbuser.username, dbuser.id)
+      const ppuser = { id: dbuser.id }
+      const token = jwt.sign({ ppuser }, process.env.JWT_SECRET)
+      utils.returnOK(req, res, token, 'token')
+    })
+    return
+  }
 
   if (!('username' in req.body) || (req.body.username.trim().length === 0)) return utils.giveup(req, res, 'username not given')
   if (!('password' in req.body) || (req.body.password.trim().length === 0)) return utils.giveup(req, res, 'password not given')
-  if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
 
   function authenticate(postRegisterId) {
     //console.log("post login", req.body['username'])
@@ -89,9 +119,9 @@ function login(req, res, next) {
             return utils.giveup(req, res, 'postRegisterId mismatch')
           }
 
-          req.logIn(user, { session: false }, async (err) => {
+          req.login(user, { session: false }, async (err) => {
             if (err) {
-              console.log("req.logIn err", err)
+              console.log("req.login err", err)
               return utils.giveup(req, res, err.message)
             }
             logger.log4req(req, 'LOGGED IN', user.username, user.id)
