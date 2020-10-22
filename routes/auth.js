@@ -63,23 +63,20 @@ passport.use(new JWTstrategy({
 }))
 
 //////////////////////
-/* POST: HANDLE LOGIN ATTEMPT, using given passport */
-async function login(req, res, next) {
 
-  if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+async function doResetLogin(req, res, next) {
+  const resettoken = req.body.reset.trim()
+  if (resettoken.length === 0) return utils.giveup(req, res, 'duff reset given')
+  const dbusers = await models.users.findAll({
+    where: {
+      resettoken: resettoken
+    }
+  })
+  if (dbusers.length !== 1) return utils.giveup(req, res, 'invalid reset')
+  const dbuser = dbusers[0]
+  logger.log4req(req, 'login reset for', dbuser.id)
 
-  if ('reset' in req.body) {
-    const resettoken = req.body.reset.trim()
-    if (resettoken.length === 0) return utils.giveup(req, res, 'duff reset given')
-    const dbusers = await models.users.findAll({
-      where: {
-        resettoken: resettoken
-      }
-    })
-    if (dbusers.length !== 1) return utils.giveup(req, res, 'invalid reset')
-    const dbuser = dbusers[0]
-    console.log("login reset:", dbuser.id)
-
+  async function resetlogin() {
     req.login(dbuser, { session: false }, async (err) => {
       if (err) {
         console.log("req.login err", err)
@@ -94,8 +91,34 @@ async function login(req, res, next) {
       const token = jwt.sign({ ppuser }, process.env.JWT_SECRET)
       utils.returnOK(req, res, token, 'token')
     })
+  }
+
+  const recaptchaResponseToken = req.body['g-recaptcha-response']
+  if (recaptchaResponseToken === process.env.RECAPTCHA_BYPASS) {
+    resetlogin()
     return
   }
+
+  const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + process.env.RECAPTCHA_SECRET_KEY + "&response=" + recaptchaResponseToken + "&remoteip=" + req.userip
+
+  needle.get(verificationURL, function (error, response, body) {
+    console.log("recaptchad", body)
+
+    if (body.success !== undefined && !body.success) {
+      return utils.giveup(req, res, 'Failed captcha verification')
+    }
+
+    resetlogin()
+  })
+}
+
+//////////////////////
+/* POST: HANDLE LOGIN ATTEMPT, using given passport */
+async function login(req, res, next) {
+
+  if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+
+  if ('reset' in req.body) return await doResetLogin(req, res, next)
 
   if (!('username' in req.body) || (req.body.username.trim().length === 0)) return utils.giveup(req, res, 'username not given')
   if (!('password' in req.body) || (req.body.password.trim().length === 0)) return utils.giveup(req, res, 'password not given')
