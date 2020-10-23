@@ -61,7 +61,7 @@ function async_mail(toEmail, subject, message, bccEmail) {
     subject: subject,
     text: message
   }
-  params.replyTo = toEmail
+  params.replyTo = fromEmail
   if (bccEmail) params.bcc = bccEmail
 
   transport.sendMail(params, (err, info) => {
