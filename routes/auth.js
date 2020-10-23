@@ -47,14 +47,14 @@ passport.use(new JWTstrategy({
   secretOrKey: process.env.JWT_SECRET,
   jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken() // get from header authorization: 'bearer ...'
   /*function(req) { // Could use in testing
-      console.log("jwtFromRequest")
+      console.log('jwtFromRequest')
         const token = ExtractJWT.fromAuthHeaderAsBearerToken()(req)
-        console.log("token", token)
+        console.log('token', token)
         return token+'x'
       }*/
 }, async (decoded_token, done) => { // Only called if JWT verifies
   try {
-    //console.log("JWTstrategy", decoded_token) // { ppuser: { id: 1 }, iat: 1593427250 }
+    //console.log('JWTstrategy', decoded_token) // { ppuser: { id: 1 }, iat: 1593427250 }
     //Pass the user details to the next middleware
     return done(null, decoded_token.ppuser)
   } catch (error) {
@@ -67,19 +67,26 @@ passport.use(new JWTstrategy({
 async function doResetLogin(req, res, next) {
   const resettoken = req.body.reset.trim()
   if (resettoken.length === 0) return utils.giveup(req, res, 'duff reset given')
-  const dbusers = await models.users.findAll({
-    where: {
-      resettoken: resettoken
-    }
-  })
-  if (dbusers.length !== 1) return utils.giveup(req, res, 'invalid reset')
-  const dbuser = dbusers[0]
-  logger.log4req(req, 'login reset for', dbuser.id)
 
   async function resetlogin() {
+
+    console.log('resettoken', resettoken)
+    
+    const dbusers = await models.users.findAll({
+      where: {
+        resettoken: resettoken
+      }
+    })
+    console.log('dbusers.length', dbusers.length)
+    if (dbusers.length !== 1) return utils.giveup(req, res, 'Invalid password reset. The link may have been used already. Please restart the password reset process.')
+    const dbuser = dbusers[0]
+    logger.log4req(req, 'login reset for', dbuser.id)
+
+    if (Date.now() > dbuser.resetexpires.getTime()) return utils.giveup(req, res, 'Password reset link expired')
+
     req.login(dbuser, { session: false }, async (err) => {
       if (err) {
-        console.log("req.login err", err)
+        console.log('req.login err', err)
         return utils.giveup(req, res, err.message)
       }
       dbuser.resettoken = null
@@ -99,10 +106,10 @@ async function doResetLogin(req, res, next) {
     return
   }
 
-  const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + process.env.RECAPTCHA_SECRET_KEY + "&response=" + recaptchaResponseToken + "&remoteip=" + req.userip
+  const verificationURL = 'https://www.google.com/recaptcha/api/siteverify?secret=' + process.env.RECAPTCHA_SECRET_KEY + '&response=' + recaptchaResponseToken + '&remoteip=' + req.userip
 
   needle.get(verificationURL, function (error, response, body) {
-    console.log("recaptchad", body)
+    logger.log4req(req, 'recaptchad', body)
 
     if (body.success !== undefined && !body.success) {
       return utils.giveup(req, res, 'Failed captcha verification')
@@ -124,14 +131,13 @@ async function login(req, res, next) {
   if (!('password' in req.body) || (req.body.password.trim().length === 0)) return utils.giveup(req, res, 'password not given')
 
   function authenticate(postRegisterId) {
-    //console.log("post login", req.body['username'])
+    //console.log('post login', req.body['username'])
     passport.authenticate('login',  // Calls login function above which fills in user (or err)
       async (err, user, info) => {
         try {
-          //console.log("authenticate OVER:", err, info)
+          //console.log('authenticate OVER:', err, info)
           if (info) {
-            //logger.log("login authenticate info", user, info.message)
-            logger.log4req(req, "login authenticate info", info.message)
+            logger.log4req(req, 'login authenticate info', info.message)
           } else info = ''
 
           if (err || !user) {
@@ -144,7 +150,7 @@ async function login(req, res, next) {
 
           req.login(user, { session: false }, async (err) => {
             if (err) {
-              console.log("req.login err", err)
+              console.log('req.login err', err)
               return utils.giveup(req, res, err.message)
             }
             logger.log4req(req, 'LOGGED IN', user.username, user.id)
@@ -153,7 +159,7 @@ async function login(req, res, next) {
             utils.returnOK(req, res, token, 'token')
           })
         } catch (error) {
-          console.log("login exception", error)
+          console.log('login exception', error)
           utils.exterminate(req, res, error)
         }
       }
@@ -179,10 +185,10 @@ async function login(req, res, next) {
     return
   }
 
-  const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + process.env.RECAPTCHA_SECRET_KEY + "&response=" + recaptchaResponseToken + "&remoteip=" + req.userip
+  const verificationURL = 'https://www.google.com/recaptcha/api/siteverify?secret=' + process.env.RECAPTCHA_SECRET_KEY + '&response=' + recaptchaResponseToken + '&remoteip=' + req.userip
 
   needle.get(verificationURL, function (error, response, body) {
-    console.log("recaptchad", body)
+    logger.log4req(req, 'recaptchad', body)
 
     if (body.success !== undefined && !body.success) {
       return utils.giveup(req, res, 'Failed captcha verification')
@@ -269,7 +275,7 @@ async function register(req, res, next) {
       }
 
       // Always send mail to site owner
-      utils.async_mail(false, req.site.name + ". API User registered: " + username, 'Name: ' + params.name+'\r\nEmail: ' + params.email)
+      utils.async_mail(false, req.site.name + '. API User registered: ' + username, 'Name: ' + params.name+'\r\nEmail: ' + params.email)
 
       const token = jwt.sign({ id: dbuser.id }, process.env.JWT_SECRET)
       utils.returnOK(req, res, { token }, 'user')
@@ -289,10 +295,10 @@ async function register(req, res, next) {
     return
   }
 
-  const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + process.env.RECAPTCHA_SECRET_KEY + "&response=" + recaptchaResponseToken + "&remoteip=" + req.userip
+  const verificationURL = 'https://www.google.com/recaptcha/api/siteverify?secret=' + process.env.RECAPTCHA_SECRET_KEY + '&response=' + recaptchaResponseToken + '&remoteip=' + req.userip
 
   needle.get(verificationURL, function (error, response, body) {
-    console.log("recaptchad", body)
+    logger.log4req(req, 'recaptchad', body)
 
     if (body.success !== undefined && !body.success) {
       return utils.giveup(req, res, 'Failed captcha verification')
@@ -359,14 +365,14 @@ async function logout(req, res) {
     }
   }
 
-  logger.log4req(req, "Logging out ", req.ppuser.id, req.dbuser.username)
+  logger.log4req(req, 'Logging out ', req.ppuser.id, req.dbuser.username)
   req.logout()
   utils.returnOK(req, res, 'Logged out')
 }
 
 /* GET: GETUSER */
 function getuser(req, res) {
-  logger.log4req(req, "getuser")
+  logger.log4req(req, 'getuser')
   if (!req.ppuser) return utils.giveup(req, res, 'Not logged in unexpectedly')
   //console.log(req.ppuser)
 
@@ -384,11 +390,11 @@ function getuser(req, res) {
 /* POST+PATCH: SAVEUSER */
 async function saveuser(req, res, next) {
   if (req.headers['x-http-method-override'] !== 'PATCH') {
-    console.log("NOT saveuser")
+    console.log('NOT saveuser')
     next()
     return
   }
-  console.log("saveuser")
+  console.log('saveuser')
 
   try {
     if (!req.ppuser) return utils.giveup(req, res, 'Not logged in unexpectedly')
@@ -405,9 +411,8 @@ async function saveuser(req, res, next) {
     if (name) req.dbuser.name = name
     if (password) req.dbuser.password = password
     await req.dbuser.save()
-    logger.log4req(req, "auth saveuser OK")
+    logger.log4req(req, 'auth saveuser OK')
     utils.returnOK(req, res, 'User updated')
-    console.log("saveuser DONE OK")
   } catch (error) {
     console.log(error)
     return utils.exterminate(req, res, error)
@@ -421,7 +426,7 @@ async function forgotpwd(req, res, next) {
     if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
 
     const email = req.body.email.trim()
-    logger.log4req(req, "forgotpwd request", email)
+    logger.log4req(req, 'forgotpwd request', email)
 
     async function doforgotpwd() {
       const dbuser = await models.users.findOne({ where: { email: email } })
@@ -446,13 +451,13 @@ async function forgotpwd(req, res, next) {
           if (dbpubmail.sendToUser) {
             // {{site.url}}/resetpwd?{{resettokens}}
             const data = {
-              resettokens: 't=' + dbuser.resettoken
+              resettokens: dbuser.resettoken  // Don't use eg t= as = gets mangled sometimes in plain text to &#x3D;
             }
             mailutils.sendOneTemplate(dbpubmail, req.site, false, false, dbuser, false, false, false, false, data)
           }
         }
 
-        forgotten.msg = 'Password reset sent. The link will expire in an hour.'
+        forgotten.msg = 'Password reset email sent. The link will expire in an hour.'
       }
       //console.log('forgotten', forgotten)
       utils.returnOK(req, res, forgotten, 'forgotten')
@@ -464,10 +469,10 @@ async function forgotpwd(req, res, next) {
       return
     }
 
-    const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + process.env.RECAPTCHA_SECRET_KEY + "&response=" + recaptchaResponseToken + "&remoteip=" + req.userip
+    const verificationURL = 'https://www.google.com/recaptcha/api/siteverify?secret=' + process.env.RECAPTCHA_SECRET_KEY + '&response=' + recaptchaResponseToken + '&remoteip=' + req.userip
 
     needle.get(verificationURL, function (error, response, body) {
-      console.log("recaptchad", body)
+      logger.log4req(req, 'recaptchad', body)
 
       if (body.success !== undefined && !body.success) {
         return utils.giveup(req, res, 'Failed captcha verification')
