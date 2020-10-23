@@ -748,10 +748,10 @@ async function getPubSubmits(req, res, next) {
 router.get('/submits/pub/:pubid', getPubSubmits)
 
 /* ************************ */
-/* POST DELETE submit or PATCH submit title*/
+/* POST DELETE submit or PATCH submit edit*/
 router.post('/submits/:submitid', async function (req, res, next) {
   if (req.headers['x-http-method-override'] === 'PATCH') {
-    await editSubmitTitle(req, res, next)
+    await editSubmit(req, res, next)
     return
   }
   if (req.headers['x-http-method-override'] === 'DELETE') {
@@ -804,7 +804,7 @@ async function deleteSubmit(req, res, next) {
 /* ************************ */
 /* PATCH edit submit title */
 /* ACCESS: OWNER-ONLY TESTED */
-async function editSubmitTitle(req, res, next) {
+async function editSubmit(req, res, next) {
   const submitid = parseInt(req.params.submitid)
   try {
     console.log('changeSubmitTitle', req.params.submitid, req.body.newtitle)
@@ -814,10 +814,15 @@ async function editSubmitTitle(req, res, next) {
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
+    const newauthor = req.body.newauthor
+    if (newauthor) {  // Change if >0
+      req.dbsubmit.userId = newauthor
+    }
+
     req.dbsubmit.name = req.body.newtitle
     await req.dbsubmit.save()
 
-    logger.log4req(req, 'Edited submit title', submitid, req.body.newtitle)
+    logger.log4req(req, 'Edited submit', submitid, req.body.newtitle, newauthor)
 
     const ok = true
     utils.returnOK(req, res, ok, 'ok')

@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
     dbs.submits.belongsTo(dbs.users, { foreignKey: { allowNull: false } })
 
     dbs.submits.fields.flowId = true // Helps Next/Previous grading
+    dbs.submits.fields.userId = true // For submit edit author
  }
 
   return submits
