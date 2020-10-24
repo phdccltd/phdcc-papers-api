@@ -227,9 +227,13 @@ async function register(req, res, next) {
     }
     try {
       // Although username must be unique, explicitly check first
-      const existing = await models.users.findOne({ where: { username: username } })
-      if (existing) {
+      const existingusername = await models.users.findOne({ where: { username: username } })
+      if (existingusername) {
         return utils.giveup(req, res, 'username already in use')
+      }
+      const existingemail = await models.users.findOne({ where: { email: params.email } })
+      if (existingemail) {
+        return utils.giveup(req, res, 'email already in use')
       }
 
       // Create user now
