@@ -814,15 +814,17 @@ async function editSubmit(req, res, next) {
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
-    const newauthor = req.body.newauthor
-    if (newauthor) {  // Change if >0
-      req.dbsubmit.userId = newauthor
+    const newauthorid = req.body.newauthor
+    if (newauthorid) {  // Change if >0
+      const dbnewauthor = await models.users.findByPk(newauthorid)
+      if (!dbnewauthor) return utils.giveup(req, res, 'New author not found')
+      req.dbsubmit.userId = newauthorid
     }
 
     req.dbsubmit.name = req.body.newtitle
     await req.dbsubmit.save()
 
-    logger.log4req(req, 'Edited submit', submitid, req.body.newtitle, newauthor)
+    logger.log4req(req, 'Edited submit', submitid, req.body.newtitle, newauthorid)
 
     const ok = true
     utils.returnOK(req, res, ok, 'ok')
