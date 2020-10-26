@@ -6,7 +6,6 @@ const logger = require('../logger')
 /* ************************ */
 
 getSubmitCurrentStatus = async function (req, dbsubmit, submit, flow) {
-  if (!('onlyanauthor' in req)) throw new Error('onlyanauthor not in req')
   const dbstatuses = await dbsubmit.getStatuses({ order: [['id', 'DESC']] })
   submit.statuses = []
   req.currentstatus = false

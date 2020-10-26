@@ -40,8 +40,8 @@ async function handleEntryPost(req, res, next) {
 router.post('/submits/entry/:entryid', upload.array('files'), handleEntryPost)
 
 /* ************************ */
-/* ACCESS: TESTING */
-/* OPEN: TO TEST */
+/* ACCESS: TESTED */
+/* OPEN: TESTED */
 async function addEntry(req, res, next) {
   try {
     const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
@@ -54,30 +54,8 @@ async function addEntry(req, res, next) {
     const error = await dbutils.getSubmitFlowPub(req, 0)
     if (error) return utils.giveup(req, res, error)
 
-    // Set req.isowner, req.onlyanauthor and req.myroles for this publication
-    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
-
-    // Find this flow stage
-    const flowstageid = req.body.stageid
-    const dbflowstage = await models.flowstages.findByPk(flowstageid)
-    if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + flowstageid)
-
-    // Check I am allowed to submit this stage type
-    let oktoadd = false
-    if (dbflowstage.rolecanadd) {
-      const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.rolecanadd })
-      if (canadd) oktoadd = true
-    }
-    if (dbflowstage.pubroleId) {
-      const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.pubroleId })
-      if (canadd) oktoadd = true
-    }
-    if (!oktoadd) return utils.giveup(req, res, 'You are not allowed to add this entry')
-
-    // Check if this stage is open
-    const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
-    flow.acceptings = models.sanitiselist(await req.dbflow.getFlowAcceptings(), models.flowacceptings)
-    // TODO
+    const notallowed = await oktoadd(req, res)
+    if (!notallowed) return
 
     const now = new Date()
     const entry = {
@@ -164,6 +142,50 @@ async function addEntry(req, res, next) {
     console.log(e.stack)
   }
 }
+
+/* ************************ */
+async function oktoadd(req, res) {
+  if ('checkedoktoadd' in req) return true
+
+  // Set req.isowner, req.onlyanauthor and req.myroles for this publication
+  if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
+
+  // Find this flow stage
+  const flowstageid = parseInt(req.body.stageid)
+  const dbflowstage = await models.flowstages.findByPk(flowstageid)
+  if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + flowstageid)
+
+  // Check I am allowed to submit this stage type
+  let oktoadd = false
+  if (dbflowstage.rolecanadd) {
+    const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.rolecanadd })
+    if (canadd) oktoadd = true
+  }
+  if (dbflowstage.pubroleId) {
+    const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.pubroleId })
+    if (canadd) oktoadd = true
+  }
+  if (!oktoadd) return utils.giveup(req, res, 'You are not allowed to add this entry')
+
+  // Check if this stage is open
+  const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
+  flow.acceptings = models.sanitiselist(await req.dbflow.getFlowAcceptings(), models.flowacceptings)
+  const accepting = _.find(flow.acceptings, accepting => { return accepting.flowstageId === flowstageid })
+  if (accepting) {
+    if (accepting.flowstatusId === null) {
+      if (!accepting.open) return utils.giveup(req, res, 'Sorry, entries are closed at the moment')
+    } else {
+      const submit = {}
+      await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
+      if (req.currentstatus && (req.currentstatus.flowstatusId === accepting.flowstatusId)) {
+        if (!accepting.open) return utils.giveup(req, res, 'Sorry, entries are closed at the moment')
+      }
+    }
+  }
+  req.checkedoktoadd = true
+  return true
+}
+
 /* ************************ */
 /* POST add entry
     Get FormData using https://www.npmjs.com/package/multer
@@ -189,7 +211,7 @@ router.post('/submits/entry', upload.array('files'), async function (req, res, n
 /* ************************ */
 /* POST add new submit with first entry */
 /* ACCESS: TESTED */
-/* OPEN: TO TEST */
+/* OPEN: TESTED */
 async function addNewSubmit(req, res, next) {
   try {
     console.log('addSubmitEntry', req.params.flowid)
@@ -202,10 +224,10 @@ async function addNewSubmit(req, res, next) {
     req.dbpub = await req.dbflow.getPub()
     if (!req.dbpub) return utils.giveup(req, res, 'Could not find pub for flow', flowid)
 
-    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
-    if (req.myroles.length === 0) return utils.giveup(req, res, 'No permissions')
-    if (!req.isauthor) return utils.giveup(req, res, 'You are not an author')
+    const notallowed = await oktoadd(req, res)
+    if (!notallowed) return
 
+    // Start adding...
     const now = new Date()
     const submit = {
       flowId: flowid,
@@ -222,9 +244,6 @@ async function addNewSubmit(req, res, next) {
     req.dbsubmit = dbsubmit
     const rv = await addEntry(req, res, next)
     if (!rv) return
-
-    // Send mails TODO
-
 
     // All done
     utils.returnOK(req, res, rv, 'rv')
