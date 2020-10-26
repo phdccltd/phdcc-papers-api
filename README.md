@@ -102,8 +102,10 @@ List your current crontab table using `crontab -l`. Use `crontab -e` to edit you
 This crontab line restarts all PM2 processes at 03:17 every day, server-time:
 
 ```
-17 3 * * * /usr/bin/node /usr/bin/pm2 restart all >/dev/null 2>/dev/null
+17 3 * * * /usr/bin/node /usr/local/bin/pm2 restart all >/dev/null 2>/dev/null
 ```
+
+Check that the command actually works first, ie do `/usr/bin/node /usr/local/bin/pm2 restart all`. Use `whereis pm2` to find its location.
 
 ## Code updates
 

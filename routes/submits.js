@@ -40,6 +40,8 @@ async function handleEntryPost(req, res, next) {
 router.post('/submits/entry/:entryid', upload.array('files'), handleEntryPost)
 
 /* ************************ */
+/* ACCESS: TESTING */
+/* OPEN: TO TEST */
 async function addEntry(req, res, next) {
   try {
     const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
@@ -48,6 +50,34 @@ async function addEntry(req, res, next) {
       req.dbsubmit = await models.submits.findByPk(req.submitId)
       if (!req.dbsubmit) return utils.giveup(req, res, 'Could not find submit', req.submitId)
     }
+
+    const error = await dbutils.getSubmitFlowPub(req, 0)
+    if (error) return utils.giveup(req, res, error)
+
+    // Set req.isowner, req.onlyanauthor and req.myroles for this publication
+    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
+
+    // Find this flow stage
+    const flowstageid = req.body.stageid
+    const dbflowstage = await models.flowstages.findByPk(flowstageid)
+    if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + flowstageid)
+
+    // Check I am allowed to submit this stage type
+    let oktoadd = false
+    if (dbflowstage.rolecanadd) {
+      const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.rolecanadd })
+      if (canadd) oktoadd = true
+    }
+    if (dbflowstage.pubroleId) {
+      const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.pubroleId })
+      if (canadd) oktoadd = true
+    }
+    if (!oktoadd) return utils.giveup(req, res, 'You are not allowed to add this entry')
+
+    // Check if this stage is open
+    const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
+    flow.acceptings = models.sanitiselist(await req.dbflow.getFlowAcceptings(), models.flowacceptings)
+    // TODO
 
     const now = new Date()
     const entry = {
@@ -109,11 +139,6 @@ async function addEntry(req, res, next) {
     }
 
     // Add to submitstatuses
-    //console.log('addSubmitEntry flowstageid', req.body.stageid)
-    // Find this flow stage
-    const dbflowstage = await models.flowstages.findByPk(req.body.stageid)
-    if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + req.body.stageid)
-
     // Find flow status that should be set when this flow stage is submitted - usually just one
     const dbflowstatuses = await models.flowstatuses.findAll({ where: { submittedflowstageId: req.body.stageid } })
     for (const dbflowstatus of dbflowstatuses) {
@@ -164,6 +189,7 @@ router.post('/submits/entry', upload.array('files'), async function (req, res, n
 /* ************************ */
 /* POST add new submit with first entry */
 /* ACCESS: TESTED */
+/* OPEN: TO TEST */
 async function addNewSubmit(req, res, next) {
   try {
     console.log('addSubmitEntry', req.params.flowid)
@@ -210,6 +236,7 @@ router.post('/submits/submit/:flowid', upload.array('files'), addNewSubmit)
 
 /* ************************ */
 /* POST PUT edit entry */
+/* ACCESS: OWNER-ONLY TO TEST */
 async function editEntry(req, res, next) {
   try {
     console.log('editEntry', req.params.entryid)
@@ -302,6 +329,7 @@ async function editEntry(req, res, next) {
 
 /* ************************ */
 /* POST DELETE entry */
+/* ACCESS: OWNER-ONLY TO TEST */
 async function deleteEntry(req, res, next) {
   try {
     console.log('deleteEntry', req.entryid)
@@ -397,6 +425,7 @@ router.get('/submits/entry/:entryid/:entryvalueid', getEntryFile)
 
 /* ************************ */
 /* GET entry and associated formfields */
+/* ACCESS: TO TEST */
 async function getEntry(req, res, next) {
   try {
     const entryid = parseInt(req.params.entryid)
@@ -510,6 +539,7 @@ router.get('/submits/formfields/:flowstageId', getFlowFormFields)
  * - ?? Hide author details if grading
 
 */
+/* ACCESS: TO TEST */
 async function getPubSubmits(req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
