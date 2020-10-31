@@ -1,3 +1,4 @@
+/* eslint-env jest */
 // https://dev.to/nedsoft/testing-nodejs-express-api-with-jest-and-supertest-1km6
 // https://www.npmjs.com/package/supertest
 
@@ -23,7 +24,7 @@ describe('USER', () => {
         .send({
           username: 'jo',
           password: 'asecret',
-          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS,
+          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS
         })
       console.log(res1.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
       const rv1 = res1.body.ret === 0 && typeof res1.body.token === 'string'
@@ -32,8 +33,8 @@ describe('USER', () => {
       const res2 = await request(app)
         .get('/user')
         .set('authorization', 'bearer ' + token)
-      console.log(res2.body) // 
-      const rv2 = _.isEqual(res2.body, { ret: 0, status: 'OK', user: { id: 1, name: 'Jo', username: 'jo', super: true, "publicsettings": {} } })
+      console.log(res2.body) //
+      const rv2 = _.isEqual(res2.body, { ret: 0, status: 'OK', user: { id: 1, name: 'Jo', username: 'jo', super: true, publicsettings: {} } })
 
       spyclog.mockRestore()
       spycerror.mockRestore()

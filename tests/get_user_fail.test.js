@@ -1,3 +1,4 @@
+/* eslint-env jest */
 // https://dev.to/nedsoft/testing-nodejs-express-api-with-jest-and-supertest-1km6
 // https://www.npmjs.com/package/supertest
 
@@ -19,7 +20,7 @@ describe('USER', () => {
     } else {
       const res = await request(app)
         .get('/user')
-      console.log(res.body) // 
+      console.log(res.body) //
 
       spyclog.mockRestore()
       spycerror.mockRestore()
@@ -28,8 +29,6 @@ describe('USER', () => {
       expect(res.statusCode).toEqual(200)
       const rv = _.isEqual(res.body, { ret: 1, status: 'Not logged in' })
       expect(rv).toBe(true)
-
-
     }
   })
 })

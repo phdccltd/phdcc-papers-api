@@ -1,3 +1,4 @@
+/* eslint-env jest */
 // https://dev.to/nedsoft/testing-nodejs-express-api-with-jest-and-supertest-1km6
 // https://www.npmjs.com/package/supertest
 
@@ -23,7 +24,7 @@ describe('LOGIN', () => {
         .send({
           username: 'jo',
           password: 'wrongsecret',
-          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS,
+          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS
         })
       console.log(res.body)
 

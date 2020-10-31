@@ -11,7 +11,7 @@
     "testrel": "jest && coveralls < coverage/lcov.info",
     "lint": "eslint --ext .js --ignore-path .gitignore .",
     "lintfix": "eslint --fix --ext .js --ignore-path .gitignore .",
-    "standard": "standard app.js logger.js server.js task.js utils.js models/*.js routes/*.js"
+    "standard": "standard app.js logger.js server.js task.js utils.js models/*.js routes/*.js tests/*.js"
   },
   "license": "MIT",
   "dependencies": {
