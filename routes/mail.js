@@ -1,6 +1,5 @@
 const { Router } = require('express')
-const Sequelize = require('sequelize')
-const Handlebars = require("handlebars")
+const Handlebars = require('handlebars')
 const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
@@ -14,7 +13,7 @@ const router = Router()
 /* ACCESS: OWNER-ONLY NOT TESTED */
 router.get('/mail/templates/:pubid', async function (req, res, next) {
   const pubid = parseInt(req.params.pubid)
-  //console.log('GET /mail/templates', pubid)
+  // console.log('GET /mail/templates', pubid)
   try {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -38,7 +37,7 @@ router.get('/mail/templates/:pubid', async function (req, res, next) {
 /* ************************ */
 /* POST: Add/Edit or Delete mail template */
 router.post('/mail/templates/:pubid', async function (req, res, next) {
-  //console.log('/mail/templates/:pubid', req.headers['x-http-method-override'])
+  // console.log('/mail/templates/:pubid', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'DELETE') {
     return await deleteMailTemplate(req, res, next)
   }
@@ -51,9 +50,9 @@ router.post('/mail/templates/:pubid', async function (req, res, next) {
 /* ************************ */
 /* POST add/edit mail template for this flow */
 /* ACCESS: OWNER-ONLY NOT TESTED */
-async function deleteMailTemplate(req, res, next) {
+async function deleteMailTemplate (req, res, next) {
   const pubid = parseInt(req.params.pubid)
-  //console.log('DELETE /mail/templates', pubid)
+  // console.log('DELETE /mail/templates', pubid)
   try {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -75,7 +74,7 @@ async function deleteMailTemplate(req, res, next) {
 
     logger.log4req(req, 'DELETED mailtemplate', templateid)
 
-    ok = true
+    const ok = true
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
     utils.giveup(req, res, e.message)
@@ -85,9 +84,9 @@ async function deleteMailTemplate(req, res, next) {
 /* ************************ */
 /* POST add/edit mail template for this flow */
 /* ACCESS: OWNER-ONLY NOT TESTED */
-async function addEditMailTemplate(req, res, next) {
+async function addEditMailTemplate (req, res, next) {
   const pubid = parseInt(req.params.pubid)
-  //console.log('POST /mail/templates', pubid)
+  // console.log('POST /mail/templates', pubid)
   try {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -132,7 +131,7 @@ async function addEditMailTemplate(req, res, next) {
         sendToAuthor: false,
         bccToOwners: false,
         sendToUser: false,
-        sendToReviewers: false,
+        sendToReviewers: false
       }
       const dbmailtemplate = await models.pubmailtemplates.create(params)
       if (!dbmailtemplate) return utils.giveup(req, res, 'mailtemplate not created')
@@ -152,9 +151,9 @@ async function addEditMailTemplate(req, res, next) {
 
 router.post('/mail/:pubid', sendMail)
 
-async function sendMail(req, res, next) {
+async function sendMail (req, res, next) {
   const pubid = parseInt(req.params.pubid)
-  //console.log('POST /mail', pubid)
+  // console.log('POST /mail', pubid)
   try {
     req.dbpub = await models.pubs.findByPk(pubid)
     if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
@@ -179,7 +178,7 @@ async function sendMail(req, res, next) {
       recipients.push(dbuser.email)
     } else {
       const dbusers = await req.dbpub.getUsers()
-      if (selectedrole === -1) {  // All users
+      if (selectedrole === -1) { // All users
         for (const dbuser of dbusers) {
           recipients.push(dbuser.email)
         }
@@ -203,7 +202,6 @@ async function sendMail(req, res, next) {
           }
         }
       }
-
     }
     if (recipients.length === 0) return utils.giveup(req, res, 'No recipients')
 
@@ -221,18 +219,18 @@ async function sendMail(req, res, next) {
     const data = {
       siteurl,
       user: models.sanitise(models.users, req.dbuser),
-      now,
+      now
     }
     subject = subject(data)
     body = body(data)
 
     for (const recipient of recipients) {
-      utils.async_mail(recipient, subject, body)
+      utils.asyncMail(recipient, subject, body)
     }
 
     logger.log4req(req, 'Sending mail. Recipients:', recipients.length)
 
-    let ok = true
+    const ok = true
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
     utils.giveup(req, res, e.message)

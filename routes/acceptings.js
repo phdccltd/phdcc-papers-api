@@ -1,6 +1,4 @@
 const { Router } = require('express')
-const Sequelize = require('sequelize')
-const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
@@ -9,9 +7,9 @@ const dbutils = require('./dbutils')
 const router = Router()
 
 /* ************************ */
-/* POST: Add/Edit or Delete accepting*/
+/* POST: Add/Edit or Delete accepting */
 router.post('/acceptings/:flowid', async function (req, res, next) {
-  //console.log('/acceptings/:flowid', req.headers['x-http-method-override'])
+  // console.log('/acceptings/:flowid', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'DELETE') {
     return await deleteAccepting(req, res, next)
   }
@@ -22,11 +20,11 @@ router.post('/acceptings/:flowid', async function (req, res, next) {
 })
 
 /* ************************ */
-/* POST: Delete accepting*/
+/* POST: Delete accepting */
 /* ACCESS: OWNER-ONLY TOTEST */
-async function deleteAccepting(req, res, next){
+async function deleteAccepting (req, res, next) {
   const flowid = parseInt(req.params.flowid)
-  //console.log('DELETE /acceptings', flowid)
+  // console.log('DELETE /acceptings', flowid)
   try {
     req.dbflow = await models.flows.findByPk(flowid)
     if (!req.dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
@@ -59,11 +57,11 @@ async function deleteAccepting(req, res, next){
 }
 
 /* ************************ */
-/* POST: Add/Edit accepting*/
+/* POST: Add/Edit accepting */
 /* ACCESS: OWNER-ONLY TOTEST */
-async function addEditAccepting(req, res, next){
+async function addEditAccepting (req, res, next) {
   const flowid = parseInt(req.params.flowid)
-  //console.log('Add/Edit /acceptings', flowid)
+  // console.log('Add/Edit /acceptings', flowid)
   try {
     req.dbflow = await models.flows.findByPk(flowid)
     if (!req.dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
@@ -89,7 +87,7 @@ async function addEditAccepting(req, res, next){
       dbaccepting.flowstageId = parseInt(req.body.chosenstage)
       dbaccepting.open = req.body.chosenopen
       const chosenstatus = parseInt(req.body.chosenstatus)
-      dbaccepting.flowstatusId = chosenstatus ? chosenstatus : null
+      dbaccepting.flowstatusId = chosenstatus || null
 
       await dbaccepting.save()
       logger.log4req(req, 'UPDATED accepting', acceptingid)
@@ -99,9 +97,9 @@ async function addEditAccepting(req, res, next){
       const params = {
         flowId: flowid,
         flowstageId: parseInt(req.body.chosenstage),
-        open: req.body.chosenopen,
+        open: req.body.chosenopen
       }
-      
+
       const chosenstatus = parseInt(req.body.chosenstatus)
       if (chosenstatus) params.flowstatusId = chosenstatus
 

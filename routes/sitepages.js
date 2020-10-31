@@ -13,7 +13,7 @@ router.get('/sitepages', async function (req, res, next) {
     for (const dbsitepage of dbsitepages) {
       sitepages.push(models.sanitise(models.sitepages, dbsitepage))
     }
-    //console.log(sitepages)
+    // console.log(sitepages)
 
     utils.returnOK(req, res, sitepages, 'sitepages')
   } catch (e) {

@@ -1,11 +1,9 @@
 const _ = require('lodash/core')
 const models = require('../models')
-const utils = require('../utils')
-const logger = require('../logger')
 
 /* ************************ */
 
-getSubmitCurrentStatus = async function (req, dbsubmit, submit, flow) {
+async function getSubmitCurrentStatus (req, dbsubmit, submit, flow) {
   const dbstatuses = await dbsubmit.getStatuses({ order: [['id', 'DESC']] })
   submit.statuses = []
   req.currentstatus = false
@@ -20,7 +18,7 @@ getSubmitCurrentStatus = async function (req, dbsubmit, submit, flow) {
 
 /* ************************ */
 
-getSubmitFlowPub = async function (req, submitid) {
+async function getSubmitFlowPub (req, submitid) {
   if (submitid !== 0) {
     req.dbsubmit = await models.submits.findByPk(submitid)
   }
@@ -43,7 +41,7 @@ getSubmitFlowPub = async function (req, submitid) {
     returns false if not allowed access to publication
    Needs: req.dbuser, req.dbpub
 */
-async function getMyRoles(req) {
+async function getMyRoles (req) {
   req.isowner = false
   req.isauthor = false
   req.onlyanauthor = false
@@ -56,7 +54,7 @@ async function getMyRoles(req) {
 
   req.dbmypubroles = await req.dbuser.getRoles()
   req.myroles = []
-  for (const dbmypubrole of req.dbmypubroles){
+  for (const dbmypubrole of req.dbmypubroles) {
     if (dbmypubrole.pubId === req.dbpub.id) {
       const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
       req.myroles.push(mypubrole)
@@ -82,7 +80,7 @@ async function getMyRoles(req) {
  *  needs: req.currentstatus, req.myroles, req.pub
  *  return true if ihaveactions
  */
-async function addAuthorStageActions(req, flow, submit) {
+async function addAuthorStageActions (req, flow, submit) {
   submit.actions = [] // Allowable actions
   if (!submit.ismine) return false
   let ihaveactions = false
@@ -110,7 +108,7 @@ async function addAuthorStageActions(req, flow, submit) {
 /*
  *  return true if ihaveactions
  */
-async function addRoleStageActions(req, flow, submit) {
+async function addRoleStageActions (req, flow, submit) {
   if (submit.ismine) return false
   let ihaveactions = false
   for (const stage of flow.stages) {
@@ -126,7 +124,6 @@ async function addRoleStageActions(req, flow, submit) {
   return ihaveactions
 }
 
-
 /* ************************ */
 /* isReviewableSubmit
  *  return true if this submit should be shown to the user
@@ -139,8 +136,7 @@ async function addRoleStageActions(req, flow, submit) {
  *  If showing, then set submit.actions or submit.actionsdone
 */
 
-async function isReviewableSubmit(req, flow, submit) {
-
+async function isReviewableSubmit (req, flow, submit) {
   let includethissubmit = false
 
   req.iamgrading = false
@@ -159,9 +155,7 @@ async function isReviewableSubmit(req, flow, submit) {
 
   // Go through grades looking to see if currentstatus means that I need to grade
   for (const flowgrade of flow.flowgrades) {
-
     if (flowgrade.flowstatusId === req.currentstatus.flowstatusId) { // If we are at status where this grade possible
-
       // If I have already graded, don't add action later (but still show submit)
       let gradedid = false
       for (const dbsubmitgrading of req.dbsubmitgradings) {
@@ -172,7 +166,7 @@ async function isReviewableSubmit(req, flow, submit) {
       }
 
       let route = false
-      //console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
+      // console.log('flowgrade', submit.id, flowgrade.id, flowgrade.name, flowgrade.visibletorole, flowgrade.visibletoreviewers)
       if (flowgrade.visibletorole !== 0) {
         // Check if I have role that means I can grade
         const ihavethisrole = _.find(req.myroles, roles => { return roles.id === flowgrade.visibletorole })
@@ -206,7 +200,7 @@ async function isReviewableSubmit(req, flow, submit) {
         }
       }
       if (req.ihavegraded && submit) {
-        submit.actionsdone.push({ id: gradedid, name: flowgrade.name+' added'})
+        submit.actionsdone.push({ id: gradedid, name: flowgrade.name + ' added' })
       }
     }
   }
@@ -215,7 +209,7 @@ async function isReviewableSubmit(req, flow, submit) {
 
 /* ************************ */
 
-async function getFlowWithFlowgrades(dbflow) {
+async function getFlowWithFlowgrades (dbflow) {
   const flow = models.sanitise(models.flows, dbflow)
 
   // Get all grades for this flow
@@ -233,7 +227,7 @@ async function getFlowWithFlowgrades(dbflow) {
 /* Retrive formfields for entry
  * entry may be existing or newly created
  */
-async function getEntryFormFields(entry, flowstageId) {
+async function getEntryFormFields (entry, flowstageId) {
   const dbformfields = await models.formfields.findAll({
     where: {
       formtypeid: flowstageId
@@ -243,13 +237,13 @@ async function getEntryFormFields(entry, flowstageId) {
     ]
   })
   entry.fields = models.sanitiselist(dbformfields, models.formfields)
-  //????entry.publookups = []
+  // ????entry.publookups = []
   entry.pubrolelookups = []
   for (const dbformfield of dbformfields) {
     if (dbformfield.pubroleId != null) {
       const dbpubrole = await models.pubroles.findByPk(dbformfield.pubroleId)
       if (!dbpubrole) {
-        console.log('formfield: pubroleId not found', pubroleId)
+        console.log('formfield: pubroleId not found', dbformfield.pubroleId)
       } else {
         const dbusers = await dbpubrole.getUsers()
         const users = []
@@ -267,8 +261,7 @@ async function getEntryFormFields(entry, flowstageId) {
 
 /* ************************ */
 
-async function getEntryStringValue(v, formfield){
-
+async function getEntryStringValue (v, formfield) {
   let stringvalue = ''
   if (v.string) stringvalue = v.string
   else if (v.text) stringvalue = v.text
@@ -325,5 +318,5 @@ module.exports = {
   isReviewableSubmit,
   getFlowWithFlowgrades,
   getEntryFormFields,
-  getEntryStringValue,
+  getEntryStringValue
 }

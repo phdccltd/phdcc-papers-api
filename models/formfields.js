@@ -18,14 +18,14 @@ module.exports = (sequelize, DataTypes) => {
     maxwords: { type: Sequelize.INTEGER, allowNull: true },
     maxchars: { type: Sequelize.INTEGER, allowNull: true },
     hideatgrading: { type: DataTypes.INTEGER, allowNull: false },
-    includeindownload: { type: DataTypes.INTEGER, allowNull: false },
+    includeindownload: { type: DataTypes.INTEGER, allowNull: false }
   }
   const formfields = sequelize.define('formfields', fields)
   formfields.fields = fields
 
   formfields.associate = function (dbs) {
     // Adds formfields.publookupid Sequelize.INTEGER allowNull:true
-    dbs.publookups.hasMany(dbs.formfields, { foreignKey: { allowNull: true }, onDelete: 'RESTRICT' })  // Cannot delete pub while publookups exist
+    dbs.publookups.hasMany(dbs.formfields, { foreignKey: { allowNull: true }, onDelete: 'RESTRICT' }) // Cannot delete pub while publookups exist
     dbs.formfields.belongsTo(dbs.publookups, { foreignKey: { allowNull: true } })
 
     dbs.formfields.belongsTo(dbs.pubroles, { foreignKey: { allowNull: true } })

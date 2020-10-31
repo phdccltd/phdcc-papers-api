@@ -1,5 +1,3 @@
-const Sequelize = require('sequelize')
-
 module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id NOT created
@@ -21,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       through: dbs.pubuserroles,
       foreignKey: 'pubroleid'
     }) // becomes pubrole.getUsers
- }
+  }
 
   return pubuserroles
 }

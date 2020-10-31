@@ -19,15 +19,15 @@ module.exports = (sequelize, DataTypes) => {
     description: { type: Sequelize.TEXT, allowNull: false },
     startdate: { type: Sequelize.DATEONLY, allowNull: true }, // Used to sort pubs
     email: { type: Sequelize.STRING, allowNull: false },
-    tz: { type: Sequelize.STRING(50), allowNull: true },
+    tz: { type: Sequelize.STRING(50), allowNull: true }
   }
   const pubs = sequelize.define('pubs', fields)
   pubs.fields = fields
 
   pubs.associate = function (dbs) {
     // Adds pubs.siteId Sequelize.INTEGER allowNull:false
-    dbs.sites.hasMany(dbs.pubs, { foreignKey: { allowNull: false }, onDelete: 'RESTRICT' })  // Cannot delete site while pubs exist
-    dbs.pubs.belongsTo(dbs.sites, { foreignKey: { allowNull: false }})
+    dbs.sites.hasMany(dbs.pubs, { foreignKey: { allowNull: false }, onDelete: 'RESTRICT' }) // Cannot delete site while pubs exist
+    dbs.pubs.belongsTo(dbs.sites, { foreignKey: { allowNull: false } })
     dbs.pubs.fields.siteId = true
   }
 

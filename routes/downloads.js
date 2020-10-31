@@ -4,12 +4,10 @@ const { Router } = require('express')
 const fs = require('fs')
 const path = require('path')
 const mime = require('mime-types')
-const Sequelize = require('sequelize')
 const _ = require('lodash/core')
 const archiver = require('archiver')
 const models = require('../models')
 const utils = require('../utils')
-const logger = require('../logger')
 const dbutils = require('./dbutils')
 
 const router = Router()
@@ -21,7 +19,7 @@ const TMPDIR = '/tmp/papers/'
 /* ACCESS: OWNER-ONLY NOT TESTED */
 router.get('/downloads/anon/:pubid', downloadAnonymousStage)
 
-async function downloadAnonymousStage(req, res, next) {
+async function downloadAnonymousStage (req, res, next) {
   const pubid = parseInt(req.params.pubid)
   const flowstageid = parseInt(req.query.flowstageid)
   console.log('GET /downloads/anon', pubid, flowstageid)
@@ -38,14 +36,14 @@ async function downloadAnonymousStage(req, res, next) {
 
     const dbflow = await dbflowstage.getFlow()
     if (!dbflow) return utils.giveup(req, res, 'Cannot find dbflow')
-    
+
     const dbpubcheck = await dbflow.getPub()
     if (!dbpubcheck) return utils.giveup(req, res, 'Cannot find dbpubcheck')
     if (dbpubcheck.id !== req.dbpub.id) return utils.giveup(req, res, 'dbpubcheck.id and dbpub.id mismatch')
 
     fs.mkdirSync(TMPDIR, { recursive: true })
 
-    //////////
+    /// ///////
 
     const now = new Date()
     const saveFilename = dbflowstage.name.replace(/\s/g, '-') + '-' + now.toISOString().substring(0, 16).replace(/:/g, '-') + '.txt'
@@ -53,7 +51,7 @@ async function downloadAnonymousStage(req, res, next) {
     const outpath = path.join(TMPDIR, saveFilename)
     const anonStream = await openFile(outpath)
 
-    //////////
+    /// ///////
 
     const dbentries = await dbflowstage.getEntries()
     for (const dbentry of dbentries) {
@@ -61,7 +59,7 @@ async function downloadAnonymousStage(req, res, next) {
       if (!dbsubmit) continue
 
       anonStream.write('---------------------------------------------------\r')
-      anonStream.write('Paper no: ' + dbsubmit.id+'\r')
+      anonStream.write('Paper no: ' + dbsubmit.id + '\r')
       anonStream.write('Title: ' + dbsubmit.name + '\r')
 
       const entry = {}
@@ -70,7 +68,7 @@ async function downloadAnonymousStage(req, res, next) {
     }
     await closeFile(anonStream)
 
-    //////////
+    /// ///////
     // Send file
     sendFile(res, saveFilename)
 
@@ -86,7 +84,7 @@ async function downloadAnonymousStage(req, res, next) {
 /* ACCESS: OWNER-ONLY NOT TESTED */
 router.get('/downloads/summary/:pubid', downloadSummary)
 
-async function downloadSummary(req, res, next) {
+async function downloadSummary (req, res, next) {
   const pubid = parseInt(req.params.pubid)
   const flowstageid = parseInt(req.query.flowstageid)
   console.log('GET /downloads/summary', pubid, flowstageid)
@@ -108,9 +106,9 @@ async function downloadSummary(req, res, next) {
     if (!dbpubcheck) return utils.giveup(req, res, 'Cannot find dbpubcheck')
     if (dbpubcheck.id !== req.dbpub.id) return utils.giveup(req, res, 'dbpubcheck.id and dbpub.id mismatch')
 
-    ////////////////
+    /// /////////////
 
-    const flowstagefilename = dbflowstage.name.replace(/\s/g, '-')+'.txt'
+    const flowstagefilename = dbflowstage.name.replace(/\s/g, '-') + '.txt'
 
     const entry = {}
     await dbutils.getEntryFormFields(entry, flowstageid)
@@ -127,12 +125,12 @@ async function downloadSummary(req, res, next) {
     const dbflowgrade = dbflowgrades[0]
 
     const flowgradename = dbflowgrade.name.replace(/\s/g, '-') + '-'
-    //const dirName = 'summary-' + flowgradename + nowstring
+    // const dirName = 'summary-' + flowgradename + nowstring
     const dirName = 'summary-' + nowstring
     fs.mkdirSync(TMPDIR + dirName, { recursive: true })
     fs.mkdirSync(TMPDIR + dirName + '/papers', { recursive: true })
 
-    //  Paper id	Status	Title	Accept	Reject	Conflict-of-interest	Insufficient background	WillReview	WillReviewers	Comments
+    // Paper id, Status, Title, Accept, Reject, Conflict-of-interest, Insufficient background, WillReview, WillReviewers, Comments
     const summaryHeader = ['Paper id', 'Status', 'Title']
     const dbflowgradescores = await dbflowgrade.getFlowgradescores()
     for (const dbflowgradescore of dbflowgradescores) {
@@ -148,16 +146,15 @@ async function downloadSummary(req, res, next) {
 
     const dbsubmits = await dbflow.getSubmits()
     for (const dbsubmit of dbsubmits) {
-
       const paperdir = TMPDIR + dirName + '/papers/' + dbsubmit.id
       fs.mkdirSync(paperdir, { recursive: true })
 
       const outpath = path.join(paperdir, flowstagefilename)
       const anonStream = await openFile(outpath)
-      anonStream.write('Paper no: ' + dbsubmit.id+'\r')
+      anonStream.write('Paper no: ' + dbsubmit.id + '\r')
       anonStream.write('Title: ' + dbsubmit.name + '\r')
 
-      const dbentries1 = await dbsubmit.getEntries({ where: { flowstageId: flowstageid } })  // Only returns one
+      const dbentries1 = await dbsubmit.getEntries({ where: { flowstageId: flowstageid } }) // Only returns one
       for (const dbentry of dbentries1) {
         await writeAnonEntryValues(entry.fields, dbentry, anonStream)
       }
@@ -197,7 +194,7 @@ async function downloadSummary(req, res, next) {
             willreview += dbuser.username
           }
         }
-        if (dbsubmitgrading.comment.length>0) {
+        if (dbsubmitgrading.comment.length > 0) {
           if (comments.length > 0) comments += ' | '
           comments += dbsubmitgrading.comment
         }
@@ -214,15 +211,14 @@ async function downloadSummary(req, res, next) {
     }
     await closeFile(flowgradeStream)
 
-
-    /////////////////////
+    /// //////////////////
     // FIND ALL SUBMISSIONS FOR THIS PUBLICATION
 
     const submissionsFilename = 'submissions-' + nowstring + '.csv'
     const submissionsStream = await openFile(TMPDIR + dirName + '/' + submissionsFilename)
 
     const subcols = []
-    subcols.push({ id: -15, name: 'Paper id'})
+    subcols.push({ id: -15, name: 'Paper id' })
     subcols.push({ id: -14, name: 'Submitter' })
     subcols.push({ id: -13, name: 'Type' })
     subcols.push({ id: -12, name: 'Status' })
@@ -275,7 +271,7 @@ async function downloadSummary(req, res, next) {
           if (!foundstage) {
             foundstage = { id: dbflowstage.id }
             foundstage.colid = nextfreesubcolid++
-            subcols.push({ id: foundstage.colid, name: dbflowstage.name+' date' })
+            subcols.push({ id: foundstage.colid, name: dbflowstage.name + ' date' })
             stagesfound.push(foundstage)
           }
           row.cols.push({ id: foundstage.colid, value: dbentry.dt.toISOString() })
@@ -286,22 +282,22 @@ async function downloadSummary(req, res, next) {
             if (formfield) {
               if (!formfield.includeindownload) continue
               let stringvalue = ''
-              if (formfield.includeindownload == 2) {
+              if (formfield.includeindownload === 2) {
                 stringvalue = (entryvalue.integer === 1) ? dbentry.dt.toISOString() : 'No'
               } else {
                 stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
               }
               const hcol = _.find(subcols, (h) => { return h.id === formfield.id })
-              if (!hcol) subcols.push({ id: formfield.id, name: formfield.label})
+              if (!hcol) subcols.push({ id: formfield.id, name: formfield.label })
               row.cols.push({ id: formfield.id, value: stringvalue })
             }
-            //else console.log('field not found', entryvalue.id)
+            // else console.log('field not found', entryvalue.id)
           }
         }
       }
     }
 
-    const sortedcols = subcols.sort((a, b) => { return a.id-b.id })
+    const sortedcols = subcols.sort((a, b) => { return a.id - b.id })
     const submissionsHeader = []
     for (const col of sortedcols) {
       submissionsHeader.push(col.name)
@@ -334,7 +330,7 @@ async function downloadSummary(req, res, next) {
 }
 
 /* ************************ */
-function openFile(path) {
+function openFile (path) {
   return new Promise((resolve, reject) => {
     const stream = fs.createWriteStream(path)
     stream.on('open', async function (fd) {
@@ -343,7 +339,7 @@ function openFile(path) {
   })
 }
 /* ************************ */
-function closeFile(stream) {
+function closeFile (stream) {
   return new Promise((resolve, reject) => {
     stream.on('close', function (fd) {
       resolve()
@@ -353,10 +349,10 @@ function closeFile(stream) {
 }
 
 /* ************************ */
-function writeCSVline(stream, items) {
+function writeCSVline (stream, items) {
   let line = ''
   for (const item of items) {
-    if (typeof item !== 'undefined' && item!==null) {
+    if (typeof item !== 'undefined' && item !== null) {
       let escaped = item.toString()
       escaped = escaped.replace(/"/g, '""')
       escaped = escaped.replace(/\r/g, ' ')
@@ -370,22 +366,22 @@ function writeCSVline(stream, items) {
 }
 
 /* ************************ */
-function sendFile(res, saveFilename) {
+function sendFile (res, saveFilename) {
   const ContentType = mime.lookup(saveFilename)
-  var options = {
+  const options = {
     root: TMPDIR,
     dotfiles: 'deny',
     headers: {
       'Content-Type': ContentType,
       'Content-Disposition': 'attachment; filename="' + saveFilename + '"',
-      'Access-Control-Expose-Headers': 'Content-Disposition',
+      'Access-Control-Expose-Headers': 'Content-Disposition'
     }
   }
   res.sendFile(saveFilename, options)
 }
 
 /* ************************ */
-function deleteTempFiles(outpath, dirName) {
+function deleteTempFiles (outpath, dirName) {
   fs.unlink(outpath, err => { if (err) console.log(err) })
   if (dirName) {
     deleteFolderRecursivelySync(TMPDIR + dirName)
@@ -393,8 +389,7 @@ function deleteTempFiles(outpath, dirName) {
 }
 
 /* ************************ */
-async function makeZipOfDirectory(dirName) {
-
+async function makeZipOfDirectory (dirName) {
   const saveFilename = dirName + '.zip'
 
   const saveSummaryZip = new Promise((resolve, reject) => {
@@ -420,7 +415,7 @@ async function makeZipOfDirectory(dirName) {
     // good practice to catch this error explicitly
     archive.on('error', function (err) {
       console.log('archive error', err)
-      reject()
+      reject(new Error('Create archive failed'))
     })
 
     // pipe archive data to the file
@@ -440,7 +435,7 @@ async function makeZipOfDirectory(dirName) {
 
 /* ************************ */
 
-function deleteFolderRecursivelySync(dirpath) {
+function deleteFolderRecursivelySync (dirpath) {
   const files = fs.readdirSync(dirpath)
   files.forEach(file => {
     const path = dirpath + '/' + file
@@ -455,7 +450,7 @@ function deleteFolderRecursivelySync(dirpath) {
 
 /* ************************ */
 
-async function writeAnonEntryValues(fields, dbentry, anonStream) {
+async function writeAnonEntryValues (fields, dbentry, anonStream) {
   for (const dbentryvalue of await dbentry.getEntryValues()) {
     const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
     const formfield = _.find(fields, field => { return field.id === entryvalue.formfieldId })

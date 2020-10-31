@@ -2,7 +2,7 @@
 
 // https://docs.travis-ci.com/user/database-setup/#sqlite3
 
-function setupOnce() {
+function setupOnce () {
   console.log('JEST ONCE')
   process.env = {}
 

@@ -1,5 +1,7 @@
 # phdcc-papers-api
 
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+
 API for the **Papers** [PHDCC journal/conference abstract and paper submission and review system](https://www.phdcc.com/papers/).
 
 This API is intended for use in conjunction with [phdcc-papers](https://github.com/phdccltd/phdcc-papers).

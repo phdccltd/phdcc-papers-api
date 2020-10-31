@@ -1,7 +1,5 @@
 // `user` is real, `ppuser' is the JWT user in token only with 'id'
 
-const { Router } = require('express')
-
 const _lang = require('lodash/lang')
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
@@ -19,59 +17,58 @@ const logger = require('../logger')
 const utils = require('../utils')
 const mailutils = require('./mailutils')
 
-//////////////////////
+/// ///////////////////
 // LOGIN devolved checker
 passport.use('login', new LocalStrategy({
-    usernameField: 'username',
-    passwordField: 'password'
-  },
-  async (username, password, done) => {
-    try {
-      //console.log('verify', username)
-      const user = await models.users.findOne({ where: { username: username } })
-      if (!user) throw new Error('Incorrect username')
-      const match = await bcrypt.compare(password, user.password)
-      if (!match) throw new Error('Incorrect password')
-      user.lastlogin = new Date()
-      await user.save()
-      done(null, user, { message: 'Logged in Successfully' })
-    } catch (error) {
-      return done(error)
-    }
+  usernameField: 'username',
+  passwordField: 'password'
+},
+async (username, password, done) => {
+  try {
+    // console.log('verify', username)
+    const user = await models.users.findOne({ where: { username: username } })
+    if (!user) throw new Error('Incorrect username')
+    const match = await bcrypt.compare(password, user.password)
+    if (!match) throw new Error('Incorrect password')
+    user.lastlogin = new Date()
+    await user.save()
+    done(null, user, { message: 'Logged in Successfully' })
+  } catch (error) {
+    return done(error)
   }
+}
 ))
 
-//////////////////////
+/// ///////////////////
 // TOKEN devolved checker - checked for every post - verifies that the sent token is valid
 passport.use(new JWTstrategy({
   secretOrKey: process.env.JWT_SECRET,
   jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken() // get from header authorization: 'bearer ...'
-  /*function(req) { // Could use in testing
+  /* function(req) { // Could use in testing
       console.log('jwtFromRequest')
         const token = ExtractJWT.fromAuthHeaderAsBearerToken()(req)
         console.log('token', token)
         return token+'x'
-      }*/
-}, async (decoded_token, done) => { // Only called if JWT verifies
+      } */
+}, async (decodedToken, done) => { // Only called if JWT verifies
   try {
-    //console.log('JWTstrategy', decoded_token) // { ppuser: { id: 1 }, iat: 1593427250 }
-    //Pass the user details to the next middleware
-    return done(null, decoded_token.ppuser)
+    // console.log('JWTstrategy', decodedToken) // { ppuser: { id: 1 }, iat: 1593427250 }
+    // Pass the user details to the next middleware
+    return done(null, decodedToken.ppuser)
   } catch (error) {
     done(error)
   }
 }))
 
-//////////////////////
+/// ///////////////////
 
-async function doResetLogin(req, res, next) {
+async function doResetLogin (req, res, next) {
   const resettoken = req.body.reset.trim()
   if (resettoken.length === 0) return utils.giveup(req, res, 'duff reset given')
 
-  async function resetlogin() {
-
+  async function resetlogin () {
     console.log('resettoken', resettoken)
-    
+
     const dbusers = await models.users.findAll({
       where: {
         resettoken: resettoken
@@ -108,7 +105,7 @@ async function doResetLogin(req, res, next) {
 
   const verificationURL = 'https://www.google.com/recaptcha/api/siteverify?secret=' + process.env.RECAPTCHA_SECRET_KEY + '&response=' + recaptchaResponseToken + '&remoteip=' + req.userip
 
-  needle.get(verificationURL, function (error, response, body) {
+  needle.get(verificationURL, function (er, response, body) {
     logger.log4req(req, 'recaptchad', body)
 
     if (body.success !== undefined && !body.success) {
@@ -119,10 +116,9 @@ async function doResetLogin(req, res, next) {
   })
 }
 
-//////////////////////
+/// ///////////////////
 /* POST: HANDLE LOGIN ATTEMPT, using given passport */
-async function login(req, res, next) {
-
+async function login (req, res, next) {
   if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
 
   if ('reset' in req.body) return await doResetLogin(req, res, next)
@@ -130,12 +126,12 @@ async function login(req, res, next) {
   if (!('username' in req.body) || (req.body.username.trim().length === 0)) return utils.giveup(req, res, 'username not given')
   if (!('password' in req.body) || (req.body.password.trim().length === 0)) return utils.giveup(req, res, 'password not given')
 
-  function authenticate(postRegisterId) {
-    //console.log('post login', req.body['username'])
-    passport.authenticate('login',  // Calls login function above which fills in user (or err)
+  function authenticate (postRegisterId) {
+    // console.log('post login', req.body['username'])
+    passport.authenticate('login', // Calls login function above which fills in user (or err)
       async (err, user, info) => {
         try {
-          //console.log('authenticate OVER:', err, info)
+          // console.log('authenticate OVER:', err, info)
           if (info) {
             logger.log4req(req, 'login authenticate info', info.message)
           } else info = ''
@@ -187,7 +183,7 @@ async function login(req, res, next) {
 
   const verificationURL = 'https://www.google.com/recaptcha/api/siteverify?secret=' + process.env.RECAPTCHA_SECRET_KEY + '&response=' + recaptchaResponseToken + '&remoteip=' + req.userip
 
-  needle.get(verificationURL, function (error, response, body) {
+  needle.get(verificationURL, function (er, response, body) {
     logger.log4req(req, 'recaptchad', body)
 
     if (body.success !== undefined && !body.success) {
@@ -195,16 +191,14 @@ async function login(req, res, next) {
     }
 
     authenticate()
-
   })
 }
 
-//////////////////////
+/// ///////////////////
 /* POST: HANDLE REGISTER ATTEMPT, using given passport
    Simply creates user: if successful, caller must then do login
 */
-async function register(req, res, next) {
-
+async function register (req, res, next) {
   console.log('register')
   if (!('username' in req.body) || (req.body.username.trim().length === 0)) return utils.giveup(req, res, 'username not given')
   const username = req.body.username.trim()
@@ -218,12 +212,12 @@ async function register(req, res, next) {
 
   console.log('register', name)
 
-  async function createuser() {
+  async function createuser () {
     const params = {
       name: name,
       username: username,
       password: await bcrypt.hash(req.body.password.trim(), saltRounds),
-      email: req.body.email.trim(),
+      email: req.body.email.trim()
     }
     try {
       // Although username must be unique, explicitly check first
@@ -255,7 +249,7 @@ async function register(req, res, next) {
         }
         if (anyRoleRequested) {
           // Send per-pub user-just-registered mail
-          const dbpubmails = await dbpub.getMailTemplates({ where: { sendOnSiteAction: models.pubmailtemplates.consts.SITE_REGISTER }})
+          const dbpubmails = await dbpub.getMailTemplates({ where: { sendOnSiteAction: models.pubmailtemplates.consts.SITE_REGISTER } })
           for (const dbpubmail of dbpubmails) {
             if (dbpubmail.bccToOwners) { // CHANGE
               console.log(dbpubmail.id, 'SEND REGISTERED MAIL TO OWNER', dbpub.id)
@@ -279,7 +273,7 @@ async function register(req, res, next) {
       }
 
       // Always send mail to site owner
-      utils.async_mail(false, req.site.name + '. API User registered: ' + username, 'Name: ' + params.name+'\r\nEmail: ' + params.email)
+      utils.asyncMail(false, req.site.name + '. API User registered: ' + username, 'Name: ' + params.name + '\r\nEmail: ' + params.email)
 
       const token = jwt.sign({ id: dbuser.id }, process.env.JWT_SECRET)
       utils.returnOK(req, res, { token }, 'user')
@@ -301,7 +295,7 @@ async function register(req, res, next) {
 
   const verificationURL = 'https://www.google.com/recaptcha/api/siteverify?secret=' + process.env.RECAPTCHA_SECRET_KEY + '&response=' + recaptchaResponseToken + '&remoteip=' + req.userip
 
-  needle.get(verificationURL, function (error, response, body) {
+  needle.get(verificationURL, function (er, response, body) {
     logger.log4req(req, 'recaptchad', body)
 
     if (body.success !== undefined && !body.success) {
@@ -309,18 +303,15 @@ async function register(req, res, next) {
     }
 
     createuser()
-
   })
-
-
 }
 
-//////////////////////
+/// ///////////////////
 /* ALL: CHECK LOGGED IN */
 // Must be logged in from now on
 // req.ppuser is passport user
-function loaduser(req, res, next) {
-  //console.log('CHECK LOGGED IN')
+function loaduser (req, res, next) {
+  // console.log('CHECK LOGGED IN')
   passport.authenticate('jwt', { session: false },
     async (err, ppuser, info) => {
       if (ppuser) {
@@ -355,7 +346,7 @@ function loaduser(req, res, next) {
 }
 
 /* DELETE: LOGOUT */
-async function logout(req, res) {
+async function logout (req, res) {
   if (req.dbuser.actas > 0) { // If this is super masquerading as user
     try {
       logger.log4req(req, 'Stopping masquerade')
@@ -375,10 +366,10 @@ async function logout(req, res) {
 }
 
 /* GET: GETUSER */
-function getuser(req, res) {
+function getuser (req, res) {
   logger.log4req(req, 'getuser')
   if (!req.ppuser) return utils.giveup(req, res, 'Not logged in unexpectedly')
-  //console.log(req.ppuser)
+  // console.log(req.ppuser)
 
   const rvuser = {
     id: req.dbuser.id,
@@ -386,13 +377,13 @@ function getuser(req, res) {
     name: req.dbuser.name,
     super: req.dbuser.super,
     publicsettings: req.site.publicsettings,
-    sitepages: req.site.sitepages,
+    sitepages: req.site.sitepages
   }
   utils.returnOK(req, res, rvuser, 'user')
 }
 
 /* POST+PATCH: SAVEUSER */
-async function saveuser(req, res, next) {
+async function saveuser (req, res, next) {
   if (req.headers['x-http-method-override'] !== 'PATCH') {
     console.log('NOT saveuser')
     next()
@@ -424,7 +415,7 @@ async function saveuser(req, res, next) {
 }
 
 /* POST: FORGOTPWD */
-async function forgotpwd(req, res, next) {
+async function forgotpwd (req, res, next) {
   try {
     if (!('email' in req.body)) return utils.giveup(req, res, 'No email given')
     if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
@@ -432,7 +423,7 @@ async function forgotpwd(req, res, next) {
     const email = req.body.email.trim()
     logger.log4req(req, 'forgotpwd request', email)
 
-    async function doforgotpwd() {
+    async function doforgotpwd () {
       const dbuser = await models.users.findOne({ where: { email: email } })
       const forgotten = { err: false, msg: false }
       if (!dbuser) {
@@ -455,7 +446,7 @@ async function forgotpwd(req, res, next) {
           if (dbpubmail.sendToUser) {
             // {{site.url}}/resetpwd?{{resettokens}}
             const data = {
-              resettokens: dbuser.resettoken  // Don't use eg t= as = gets mangled sometimes in plain text to &#x3D;
+              resettokens: dbuser.resettoken // Don't use eg t= as = gets mangled sometimes in plain text to &#x3D;
             }
             mailutils.sendOneTemplate(dbpubmail, req.site, false, false, dbuser, false, false, false, false, data)
           }
@@ -463,7 +454,7 @@ async function forgotpwd(req, res, next) {
 
         forgotten.msg = 'Password reset email sent. The link will expire in an hour.'
       }
-      //console.log('forgotten', forgotten)
+      // console.log('forgotten', forgotten)
       utils.returnOK(req, res, forgotten, 'forgotten')
     }
 
@@ -475,7 +466,7 @@ async function forgotpwd(req, res, next) {
 
     const verificationURL = 'https://www.google.com/recaptcha/api/siteverify?secret=' + process.env.RECAPTCHA_SECRET_KEY + '&response=' + recaptchaResponseToken + '&remoteip=' + req.userip
 
-    needle.get(verificationURL, function (error, response, body) {
+    needle.get(verificationURL, function (er, response, body) {
       logger.log4req(req, 'recaptchad', body)
 
       if (body.success !== undefined && !body.success) {
@@ -483,14 +474,12 @@ async function forgotpwd(req, res, next) {
       }
 
       doforgotpwd()
-
     })
   } catch (error) {
     console.log(error)
     return utils.exterminate(req, res, error)
   }
 }
-
 
 module.exports = {
   passport: passport,
@@ -500,6 +489,5 @@ module.exports = {
   getuser: getuser,
   saveuser: saveuser,
   loaduser: loaduser,
-  forgotpwd: forgotpwd,
+  forgotpwd: forgotpwd
 }
-

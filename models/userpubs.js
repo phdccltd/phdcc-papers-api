@@ -4,8 +4,6 @@
 //      pub.hasUser(req.user)
 //      user.getPublications
 
-const Sequelize = require('sequelize')
-
 module.exports = (sequelize, DataTypes) => {
   const userpubs = sequelize.define('userpubs', {
     // id NOT created

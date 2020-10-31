@@ -1,3 +1,21 @@
+/*
+  1=pub-access 2=Author-access 3=Other-roles=access 4=only-if-open-to-author
+  5 6 7 8 Jest tests for 1 2 3 4
+  Y=Done N=Todo _=n/a *=urgent
+  12345678
+  Y_Y_N_N_  PUT     /submits/entry/:entryid                 editEntry         change entry
+  Y_Y_N_N_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
+  .YYYNNNN  POST    /submits/entry                          addEntry          add entry to existing submit
+  .YYYNNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
+* .NN_NNN_  GET     /submits/entry/:entryid/:entryvalueid   getEntryFile      download a file ie one field of an entry
+  .YY_NNN_  GET     /submits/entry/:entryid                 getEntry          get an entry
+  .NN_NNN_  GET     /submits/formfields/:flowstageId        getFlowFormFields get the list of fields used in a stage
+  .YYYNNNN  GET     /submits/pub/:pubid                     getPubSubmits
+  .YY_NNN_  PATCH   /submits/:submitid                      editSubmit        edit submit title and author
+  .YY_NNN_  DELETE  /submits/:submitid                      deleteSubmit      delete submit and all entries, etc
+  .YY_NNN_  DELETE  /submits/status/:id                     deleteSubmitStatus
+  .YY_NNN_  POST    /submits/status/:id                     addSubmitStatus
+*/
 const { Router } = require('express')
 const models = require('../models')
 const utils = require('../utils')
@@ -11,20 +29,26 @@ const dbutils = require('./dbutils')
 const mailutils = require('./mailutils')
 
 const TMPDIR = '/tmp/papers/'
-const TMPDIRARCHIVE = '/tmp/papers/archive'  // Without final slash.  Deleted files go here (to be deleted on server reboot)
+const TMPDIRARCHIVE = '/tmp/papers/archive' // Without final slash.  Deleted files go here (to be deleted on server reboot)
 
 const upload = multer({ dest: TMPDIR })
 
 const router = Router()
 
-  // PUT change whole entry
-  // PATCH change part of entry
-  // DELETE delete entry
+// PUT, PATCH and DELETE verbs are sent using POST with x-http-method-override header
+
+// PUT change whole entry
+// PATCH change part of entry
+// DELETE delete entry
 
 /* ************************ */
-/* POST DELETE and PUT entry */
-async function handleEntryPost(req, res, next) {
-  //console.log('/submits/entry/id ', req.headers['x-http-method-override'])
+/**
+* POST DELETE and PUT entry
+*
+* PARAMS, FORMDATA & ACCESS PUB: Done by called functions
+*/
+async function handleEntryPost (req, res, next) {
+  // console.log('/submits/entry/id ', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'PUT') {
     await editEntry(req, res, next)
     return
@@ -42,7 +66,7 @@ router.post('/submits/entry/:entryid', upload.array('files'), handleEntryPost)
 /* ************************ */
 /* ACCESS: TESTED */
 /* OPEN: TESTED */
-async function addEntry(req, res, next) {
+async function addEntry (req, res, next) {
   try {
     const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
 
@@ -69,11 +93,11 @@ async function addEntry(req, res, next) {
 
     if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
     for (const file of req.files) {
-      //console.log("FILE", file)
+      // console.log("FILE", file)
       const hyphenpos = file.originalname.indexOf('-')
       if (hyphenpos === -1) return utils.giveup(req, res, 'Bad file originalname format')
       file.formfieldid = parseInt(file.originalname.substring(0, hyphenpos))
-      file.originalname = file.originalname.substring(hyphenpos+1)
+      file.originalname = file.originalname.substring(hyphenpos + 1)
 
       // Move file to filesdir/<siteid>/<pubid>/<flowid>/<submitid>/<entryid>/
       let filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.body.submitid + '/' + dbentry.id
@@ -91,7 +115,7 @@ async function addEntry(req, res, next) {
       if (v.file) {
         let found = false
         for (const file of req.files) {
-          if (v.formfieldid == file.formfieldid) {
+          if (v.formfieldid === file.formfieldid) { // was ==
             v.file = file.filepath
             found = true
           }
@@ -104,7 +128,7 @@ async function addEntry(req, res, next) {
         string: v.string,
         text: v.text,
         integer: v.integer,
-        file: v.file,
+        file: v.file
       }
       const dbentryvalue = await models.entryvalues.create(entryvalue)
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
@@ -113,7 +137,7 @@ async function addEntry(req, res, next) {
 
     const rv = {
       id: dbentry.id,
-      submitid: req.submitId,
+      submitid: req.submitId
     }
 
     // Add to submitstatuses
@@ -124,9 +148,9 @@ async function addEntry(req, res, next) {
       const submitstatus = {
         dt: now,
         submitId: rv.submitid,
-        flowstatusId: dbflowstatus.id,
+        flowstatusId: dbflowstatus.id
       }
-      //console.log('addSubmitEntry submitstatus', submitstatus)
+      // console.log('addSubmitEntry submitstatus', submitstatus)
       const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
@@ -144,7 +168,7 @@ async function addEntry(req, res, next) {
 }
 
 /* ************************ */
-async function oktoadd(req, res) {
+async function oktoadd (req, res) {
   if ('checkedoktoadd' in req) return true
 
   // Set req.isowner, req.onlyanauthor and req.myroles for this publication
@@ -212,7 +236,7 @@ router.post('/submits/entry', upload.array('files'), async function (req, res, n
 /* POST add new submit with first entry */
 /* ACCESS: TESTED */
 /* OPEN: TESTED */
-async function addNewSubmit(req, res, next) {
+async function addNewSubmit (req, res, next) {
   try {
     console.log('addSubmitEntry', req.params.flowid)
 
@@ -253,23 +277,42 @@ async function addNewSubmit(req, res, next) {
 }
 router.post('/submits/submit/:flowid', upload.array('files'), addNewSubmit)
 
-/* ************************ */
-/* POST PUT edit entry */
-/* ACCESS: OWNER-ONLY TO TEST */
-async function editEntry(req, res, next) {
+/**
+* POST PUT edit entry
+*
+* PARAMS: entryid validated
+* FORMDATA: TODO better
+*
+* ACCESS PUB: DOES TESTS
+*        AUTHOR: NO. DOES TESTS
+*        OWNER-ONLY: YES. DOES TESTS
+*        OPEN: N/A
+*/
+
+async function editEntry (req, res, next) {
   try {
     console.log('editEntry', req.params.entryid)
     const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+    if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
 
-    // Don't need to change anything in entry ie leave creation dt alone
     const entryid = parseInt(req.params.entryid)
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
+    req.dbsubmit = await dbentry.getSubmit()
+    if (!req.dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
+
+    // Got dbsubmit, but get flow, pub, roles, etc
+    const error = await dbutils.getSubmitFlowPub(req, 0)
+    if (error) return utils.giveup(req, res, error)
+
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
+
+    // Don't need to change anything in entry ie leave creation dt alone
+
     // If replacement files given
-    if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
     for (const file of req.files) {
-      //console.log('editEntry',file)
+      // console.log('editEntry',file)
       const hyphenpos = file.originalname.indexOf('-')
       if (hyphenpos === -1) return utils.giveup(req, res, 'Bad file originalname format')
       file.formfieldid = parseInt(file.originalname.substring(0, hyphenpos))
@@ -292,7 +335,7 @@ async function editEntry(req, res, next) {
             // Do we need to delete?
             console.log('editEntry archivepath exists')
           }
-          let archivedir = path.dirname(archivepath)
+          const archivedir = path.dirname(archivepath)
           // Make archive dir
           fs.mkdirSync(archivedir, { recursive: true })
           // Move existing file to archive
@@ -309,31 +352,30 @@ async function editEntry(req, res, next) {
     }
 
     // OK: Now delete any existing entryvalues
-    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } })
+    const affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } })
     logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
 
     // And then store the new ones
     for (const sv of req.body.values) {
       const v = JSON.parse(sv)
-      if (v.string && v.string.length > 255) v.string = v.string.substring(0,255)
+      if (v.string && v.string.length > 255) v.string = v.string.substring(0, 255)
       if (v.file) {
         let found = false
         for (const file of req.files) {
-          if (v.formfieldid == file.formfieldid) {
+          if (v.formfieldid === file.formfieldid) { // was ==
             v.file = file.filepath
             found = true
           }
         }
         if (!found) return utils.giveup(req, res, 'entry value file not found: ' + v.formfieldid)
-      }
-      else if (v.existingfile) v.file = v.existingfile
+      } else if (v.existingfile) v.file = v.existingfile
       const entryvalue = {
         entryId: dbentry.id,
         formfieldId: v.formfieldid,
         string: v.string,
         text: v.text,
         integer: v.integer,
-        file: v.file,
+        file: v.file
       }
       const dbentryvalue = await models.entryvalues.create(entryvalue)
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
@@ -348,23 +390,42 @@ async function editEntry(req, res, next) {
 
 /* ************************ */
 /* POST DELETE entry */
-/* ACCESS: OWNER-ONLY TO TEST */
-async function deleteEntry(req, res, next) {
+/**
+* POST PUT edit entry
+*
+* PARAMS: entryid validated
+* FORMDATA: N/A
+*
+* ACCESS PUB: DOES TESTS
+*        AUTHOR: NO. DOES TESTS
+*        OWNER-ONLY: YES. DOES TESTS
+*        OPEN: N/A
+*/
+async function deleteEntry (req, res, next) {
   try {
     console.log('deleteEntry', req.entryid)
 
-    // Find entry and entryvalues; move any files to TMPDIRARCHIVE
     const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
 
     const entryid = parseInt(req.entryid)
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
+    req.dbsubmit = await dbentry.getSubmit()
+    if (!req.dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
+
+    // Got dbsubmit, but get flow, pub, roles, etc
+    const error = await dbutils.getSubmitFlowPub(req, 0)
+    if (error) return utils.giveup(req, res, error)
+
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
+
+    // Find entryvalues; move any files to TMPDIRARCHIVE
     const dbentryvalues = await dbentry.getEntryValues()
     for (const dbentryvalue of dbentryvalues) {
       if (dbentryvalue.file != null) {
         let base = path.dirname(dbentryvalue.file)
-        const filename = path.basename(dbentryvalue.file)
+        // const filename = path.basename(dbentryvalue.file)
         fs.mkdirSync(TMPDIRARCHIVE + base, { recursive: true })
         const frompath = filesdir + dbentryvalue.file
         if (!fs.existsSync(frompath)) {
@@ -380,12 +441,12 @@ async function deleteEntry(req, res, next) {
         // Delete any empty directories, down through hieracrhy
         while (base !== '/') {
           try {
-            fs.rmdirSync(filesdir+base)
+            fs.rmdirSync(filesdir + base)
             logger.log4req(req, 'Removed directory', filesdir + base)
           } catch (e) {
             break
           }
-          const dirname = path.basename(base)
+          // const dirname = path.basename(base)
           base = path.dirname(base)
         }
       }
@@ -406,7 +467,7 @@ async function deleteEntry(req, res, next) {
 
 /* ************************ */
 /* GET file for entry formfield */
-async function getEntryFile(req, res, next) {
+async function getEntryFile (req, res, next) {
   try {
     const entryid = parseInt(req.params.entryid)
     const entryvalueid = parseInt(req.params.entryvalueid)
@@ -421,17 +482,17 @@ async function getEntryFile(req, res, next) {
 
     const refEntry = await dbentryvalue.getEntry()
     if (!refEntry) return utils.giveup(req, res, 'Invalid refEntry')
-    if (refEntry.id!==entryid) return utils.giveup(req, res, 'Invalid refEntry.')
+    if (refEntry.id !== entryid) return utils.giveup(req, res, 'Invalid refEntry.')
 
     if (dbentryvalue.file === null) return utils.giveup(req, res, 'No file for that entry')
 
     const ContentType = mime.lookup(dbentryvalue.file)
     const filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
-    var options = {
+    const options = {
       root: filesdir,
       dotfiles: 'deny',
       headers: {
-        'Content-Type': ContentType,
+        'Content-Type': ContentType
       }
     }
     res.sendFile(dbentryvalue.file, options)
@@ -445,7 +506,7 @@ router.get('/submits/entry/:entryid/:entryvalueid', getEntryFile)
 /* ************************ */
 /* GET entry and associated formfields */
 /* ACCESS: TO TEST */
-async function getEntry(req, res, next) {
+async function getEntry (req, res, next) {
   try {
     const entryid = parseInt(req.params.entryid)
     console.log('GET /submits/entry/', entryid, req.dbuser.id)
@@ -459,7 +520,7 @@ async function getEntry(req, res, next) {
     if (!req.dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
 
     if (req.dbsubmit.userId !== req.dbuser.id) {
-      ////////// If not mine, then check if I can see it and set up for actions
+      /// /////// If not mine, then check if I can see it and set up for actions
       const submit = models.sanitise(models.submits, req.dbsubmit)
 
       // Got dbsubmit, but get flow, pub, roles, etc
@@ -479,7 +540,7 @@ async function getEntry(req, res, next) {
       submit.ismine = false
       await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
       if (!req.currentstatus) { // If no statuses, then give up here
-        return utils.giveup(req, res, "No statuses for this submit")
+        return utils.giveup(req, res, 'No statuses for this submit')
       }
 
       req.dbsubmitgradings = await req.dbsubmit.getGradings()
@@ -490,7 +551,7 @@ async function getEntry(req, res, next) {
         ihaveactions = true
       }
 
-      ////////// Filter submits ie only show if you are reviewing
+      /// /////// Filter submits ie only show if you are reviewing
       if (!ihaveactions) {
         const includethissubmit = await dbutils.isReviewableSubmit(req, flow, false)
         if (!includethissubmit) {
@@ -500,7 +561,7 @@ async function getEntry(req, res, next) {
     }
 
     const entry = models.sanitise(models.entries, dbentry)
-    
+
     await dbutils.getEntryFormFields(entry, dbentry.flowstageId)
 
     entry.values = []
@@ -513,7 +574,7 @@ async function getEntry(req, res, next) {
       entry.values.push(entryvalue)
     }
 
-    //console.log('entry', entry)
+    // console.log('entry', entry)
     logger.log4req(req, 'Returning entry', entryid)
     utils.returnOK(req, res, entry, 'entry')
   } catch (e) {
@@ -524,7 +585,7 @@ router.get('/submits/entry/:entryid', getEntry)
 
 /* ************************ */
 /* GET formfields for specified flowstageId */
-async function getFlowFormFields(req, res, next) {
+async function getFlowFormFields (req, res, next) {
   try {
     const flowstageId = parseInt(req.params.flowstageId)
     console.log('GET /submits/formfields/', flowstageId, req.dbuser.id)
@@ -534,7 +595,7 @@ async function getFlowFormFields(req, res, next) {
     const entry = {}
     await dbutils.getEntryFormFields(entry, flowstageId)
 
-    //console.log('entry', entry)
+    // console.log('entry', entry)
     logger.log4req(req, 'Returning formfields', flowstageId)
     utils.returnOK(req, res, entry, 'entry')
   } catch (e) {
@@ -542,7 +603,6 @@ async function getFlowFormFields(req, res, next) {
   }
 }
 router.get('/submits/formfields/:flowstageId', getFlowFormFields)
-
 
 /* ************************ */
 /* GET submits for publication
@@ -559,7 +619,7 @@ router.get('/submits/formfields/:flowstageId', getFlowFormFields)
 
 */
 /* ACCESS: TO TEST */
-async function getPubSubmits(req, res, next) {
+async function getPubSubmits (req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
     console.log('GET /submits/pub/', pubid)
@@ -570,11 +630,11 @@ async function getPubSubmits(req, res, next) {
     // Set req.isowner, req.onlyanauthor and req.myroles for this publication
     if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
-    //////////
+    /// ///////
     const dbflows = await req.dbpub.getFlows()
     const flows = []
     for (const dbflow of dbflows) {
-      ////////// FOR THIS FLOW
+      /// /////// FOR THIS FLOW
 
       const flow = await dbutils.getFlowWithFlowgrades(dbflow)
 
@@ -588,31 +648,31 @@ async function getPubSubmits(req, res, next) {
       }
 
       // Get all possible flow statuses
-      const dbstatuses = await dbflow.getFlowStatuses({ order: [ ['weight', 'ASC'] ]})
+      const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
       flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
 
       // Get 'acceptings' ie details of which flow stages are open
       flow.acceptings = models.sanitiselist(await dbflow.getFlowAcceptings(), models.flowacceptings)
 
       // Get all possible flow stages
-      const dbstages = await dbflow.getFlowStages({ order: [ ['weight', 'ASC']]})
+      const dbstages = await dbflow.getFlowStages({ order: [['weight', 'ASC']] })
       flow.stages = models.sanitiselist(dbstages, models.flowstages)
 
-      ////////// Set up flow-level actions that are possible
+      /// /////// Set up flow-level actions that are possible
       flow.actions = [] // Allowable actions
       for (const accepting of flow.acceptings) {
         if (_.isNull(accepting.flowstatusId) && accepting.open) {
           const addstage = _.find(flow.stages, stage => { return stage.id === accepting.flowstageId })
           if (addstage && req.isauthor) {
             flow.actions.push({
-              name: 'Add new '+addstage.name,
+              name: 'Add new ' + addstage.name,
               route: '/panel/' + pubid + '/' + flow.id + '/add/' + addstage.id
             })
           }
         }
       }
 
-      ////////// GO THROUGH ALL FLOW'S SUBMITS
+      /// /////// GO THROUGH ALL FLOW'S SUBMITS
       req.entergradingcount = 0
       for (const dbsubmit of dbsubmits) {
         req.dbsubmit = dbsubmit
@@ -636,23 +696,23 @@ async function getPubSubmits(req, res, next) {
           if (!req.isowner) continue
         }
 
-        ////////// Add actions to Add next stage (if appropriate).  Sets submit.actions
+        /// /////// Add actions to Add next stage (if appropriate).  Sets submit.actions
         let ihaveactions = await dbutils.addAuthorStageActions(req, flow, submit)
 
         if (await dbutils.addRoleStageActions(req, flow, submit)) {
           ihaveactions = true
         }
 
-        ////////// We'll need the entries (ordered by flowstage weight) so we can get action links
+        /// /////// We'll need the entries (ordered by flowstage weight) so we can get action links
         const dbentries = await dbsubmit.getEntries({
           include: { model: models.flowstages },
           order: [
-            [models.flowstages, 'weight', 'ASC'],
+            [models.flowstages, 'weight', 'ASC']
           ]
         })
         submit.entries = models.sanitiselist(dbentries, models.entries)
 
-        ////////// Filter submits
+        /// /////// Filter submits
         req.iamgrading = false
         req.iamleadgrader = false
         if (!ihaveactions && !req.onlyanauthor && !req.isowner) {
@@ -678,7 +738,7 @@ async function getPubSubmits(req, res, next) {
         submit.reviewers = returnreviewers ? reviewers : []
 
         // Decide which gradings to return
-        // - if owner then return all 
+        // - if owner then return all
         // - if canviewall then return all except if role means I'm grading
         // - If author: return when grading at a status in authorcanseeatthesestatuses
         // - If reviewer: add/see your own (but can't see earlier abstract scores)
@@ -694,7 +754,7 @@ async function getPubSubmits(req, res, next) {
             const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
             if (flowgrade && flowgrade.authorcanseeatthesestatuses) {
               const canseeat = flowgrade.authorcanseeatthesestatuses.split(',')
-              const found = _.find(canseeat, (flowgradeid) => { return parseInt(flowgradeid) === req.currentstatus.flowstatusId})
+              const found = _.find(canseeat, (flowgradeid) => { return parseInt(flowgradeid) === req.currentstatus.flowstatusId })
               if (found) {
                 returnthisone = true
                 submit.gradings.push({ flowgradeId: dbgrading.flowgradeId, comment: dbgrading.comment })
@@ -737,7 +797,7 @@ async function getPubSubmits(req, res, next) {
                 if (flowgrade) {
                   const existinggrade = _.find(ownergradingsummary, (og) => { return og.id === flowgrade.id })
                   if (existinggrade) existinggrade.count++
-                  else ownergradingsummary.push({ id: flowgrade.id, name: flowgrade.name, count: 1})
+                  else ownergradingsummary.push({ id: flowgrade.id, name: flowgrade.name, count: 1 })
                 }
               }
             }
@@ -751,9 +811,9 @@ async function getPubSubmits(req, res, next) {
           submit.actionsdone.push({ id: -og.id, name: og.name + ': ' + og.count + ' done' })
         }
 
-        submit.actionable = submit.actions.length>0
+        submit.actionable = submit.actions.length > 0
 
-        ////////// Add submit to return list
+        /// /////// Add submit to return list
         flow.submits.push(submit)
       }
       // Add Next and Previous buttons for graders
@@ -771,7 +831,7 @@ async function getPubSubmits(req, res, next) {
           for (let submitno = 0; submitno < submitswithgradingstodo.length; submitno++) {
             const submit = submitswithgradingstodo[submitno]
             if (submitno < submitswithgradingstodo.length - 1) {
-              const nextsubmit = submitswithgradingstodo[submitno+1]
+              const nextsubmit = submitswithgradingstodo[submitno + 1]
               const route = '/panel/' + req.dbpub.id + '/' + nextsubmit.flowId + '/' + nextsubmit.id + '/' + nextsubmit.actions[0].entrytograde
               submit.actions.push({ name: 'Next', gradename: '', route, flowgradeid: 0, show: 4, dograde: 0 })
             }
@@ -784,7 +844,7 @@ async function getPubSubmits(req, res, next) {
         }
       }
 
-      //console.log('flow.actions', flow.actions)
+      // console.log('flow.actions', flow.actions)
       flows.push(flow)
     }
 
@@ -797,7 +857,7 @@ async function getPubSubmits(req, res, next) {
 router.get('/submits/pub/:pubid', getPubSubmits)
 
 /* ************************ */
-/* POST DELETE submit or PATCH submit edit*/
+/* POST DELETE submit or PATCH submit edit */
 router.post('/submits/:submitid', async function (req, res, next) {
   if (req.headers['x-http-method-override'] === 'PATCH') {
     await editSubmit(req, res, next)
@@ -813,7 +873,7 @@ router.post('/submits/:submitid', async function (req, res, next) {
 /* ************************ */
 /* POST DELETE submit */
 /* ACCESS: OWNER-ONLY TESTED */
-async function deleteSubmit(req, res, next) {
+async function deleteSubmit (req, res, next) {
   const submitid = parseInt(req.params.submitid)
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
@@ -851,9 +911,9 @@ async function deleteSubmit(req, res, next) {
 }
 
 /* ************************ */
-/* PATCH edit submit title */
+/* PATCH edit submit title and author */
 /* ACCESS: OWNER-ONLY TESTED */
-async function editSubmit(req, res, next) {
+async function editSubmit (req, res, next) {
   const submitid = parseInt(req.params.submitid)
   try {
     console.log('changeSubmitTitle', req.params.submitid, req.body.newtitle)
@@ -864,7 +924,7 @@ async function editSubmit(req, res, next) {
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
     const newauthorid = req.body.newauthor
-    if (newauthorid) {  // Change if >0
+    if (newauthorid) { // Change if >0
       const dbnewauthor = await models.users.findByPk(newauthorid)
       if (!dbnewauthor) return utils.giveup(req, res, 'New author not found')
       req.dbsubmit.userId = newauthorid
@@ -896,24 +956,24 @@ router.post('/submits/status/:id', async function (req, res, next) {
 })
 
 /* ************************ */
-/* POST DELETE submit status*/
+/* POST DELETE submit status */
 /* ACCESS: OWNER-ONLY TESTED */
-async function deleteSubmitStatus(req, res, next) {
+async function deleteSubmitStatus (req, res, next) {
   try {
-    //console.log('deleteSubmitStatus', req.params.id)
+    // console.log('deleteSubmitStatus', req.params.id)
 
     const submitstatusid = parseInt(req.params.id)
     const dbsubmitstatus = await models.submitstatuses.findByPk(submitstatusid)
-    if (!dbsubmitstatus) return utils.giveup(req, res, "submitstatus not found")
+    if (!dbsubmitstatus) return utils.giveup(req, res, 'submitstatus not found')
 
     req.dbsubmit = await dbsubmitstatus.getSubmit()
-    if (!req.dbsubmit) return utils.giveup(req, res, "submit not found")
+    if (!req.dbsubmit) return utils.giveup(req, res, 'submit not found')
 
     const dbflow = await req.dbsubmit.getFlow()
-    if (!dbflow) return utils.giveup(req, res, "flow not found")
+    if (!dbflow) return utils.giveup(req, res, 'flow not found')
 
     const dbpub = await dbflow.getPub()
-    if (!dbpub) return utils.giveup(req, res, "pub not found")
+    if (!dbpub) return utils.giveup(req, res, 'pub not found')
 
     // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
@@ -931,13 +991,13 @@ async function deleteSubmitStatus(req, res, next) {
 }
 
 /* ************************ */
-/* POST POST add submit status*/
+/* POST POST add submit status */
 /* ACCESS: OWNER-ONLY TESTED */
-async function addSubmitStatus(req, res, next) {
+async function addSubmitStatus (req, res, next) {
   try {
     const submitid = parseInt(req.params.id)
     const newstatusid = parseInt(req.body.newstatusid)
-    //console.log('addSubmitStatus', submitid, newstatusid)
+    // console.log('addSubmitStatus', submitid, newstatusid)
 
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)

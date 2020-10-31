@@ -5,25 +5,22 @@ let fromEmail = false
 let adminEmail = false
 let sitename = false
 
-//////////////////////
 // Report error but don't call next
-function exterminate(req, res, err) {
-  logger.error4req(req, "EXTERMINATE", err)
+function exterminate (req, res, err) {
+  logger.error4req(req, 'EXTERMINATE', err)
   res.status(200).json({ ret: 1, status: err.message })
   return false
 }
 
-//////////////////////
 // Report error but don't call next
-function giveup(req, res, msg) {
+function giveup (req, res, msg) {
   logger.log4req(req, 'GIVEUP', msg)
   res.status(200).json({ ret: 1, status: msg })
   return false
 }
 
-//////////////////////
 // Return OK and don't call next
-function returnOK(req, res, msg, field) {
+function returnOK (req, res, msg, field) {
   const rv = { ret: 0 }
   if (typeof field === 'undefined') field = 'status'
   if (field !== 'status') rv.status = 'OK'
@@ -32,21 +29,18 @@ function returnOK(req, res, msg, field) {
   return true
 }
 
-//////////////////////
-function setMailTransport(_transport, _fromEmail, _adminEmail, _sitename) {
+function setMailTransport (_transport, _fromEmail, _adminEmail, _sitename) {
   transport = _transport
   fromEmail = _fromEmail
   adminEmail = _adminEmail
   sitename = _sitename
 }
 
-//////////////////////
-function getSiteName() {
+function getSiteName () {
   return sitename
 }
 
-//////////////////////
-function async_mail(toEmail, subject, message, bccEmail) {
+function asyncMail (toEmail, subject, message, bccEmail) {
   if (!transport || !fromEmail) {
     console.log(transport)
     console.log(fromEmail)
@@ -54,7 +48,7 @@ function async_mail(toEmail, subject, message, bccEmail) {
   }
   if (!toEmail) toEmail = adminEmail
   if (typeof (bccEmail) === 'undefined') bccEmail = false
-  
+
   const params = {
     from: fromEmail,
     to: toEmail,
@@ -66,28 +60,23 @@ function async_mail(toEmail, subject, message, bccEmail) {
 
   transport.sendMail(params, (err, info) => {
     if (err) {
-      logger.log("Send mail fail", subject, err)
+      logger.log('Send mail fail', subject, err)
       return
     }
-    logger.log("Sent mail OK", subject, info)
+    logger.log('Sent mail OK', subject, info)
   })
-
 }
 
-//////////////////////
-
-const async_sleep = function (ms) {
+const asyncSleep = function (ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
-
-//////////////////////
 
 module.exports = {
   exterminate,
   giveup,
   returnOK,
-  async_mail,
-  async_sleep,
+  asyncMail,
+  asyncSleep,
   setMailTransport,
   getSiteName
 }

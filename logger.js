@@ -5,12 +5,12 @@ const path = require('path')
 const rfs = require('rotating-file-stream')
 const utils = require('./utils')
 
-const logToConsole = process.env.LOGMODE=='console'
+const logToConsole = process.env.LOGMODE === 'console'
 
 let models = false
 
 const logDirectory = path.join(__dirname, 'log')
-fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)  // ensure log directory exists
+fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory) // ensure log directory exists
 
 // Create our own log
 const logstream = rfs.createStream('papersapp.log', {
@@ -18,25 +18,25 @@ const logstream = rfs.createStream('papersapp.log', {
   path: logDirectory
 })
 
-function log() {
+function log () {
   return logfull('info', false, ...arguments)
 }
 module.exports.log = log
 
 // warn4req(req,messages)
-function warn4req() {
+function warn4req () {
   return logfull('warning', ...arguments)
 }
 module.exports.warn4req = warn4req
 
 // log4req(req,messages)
-function log4req() {
+function log4req () {
   return logfull('info', ...arguments)
 }
 module.exports.log4req = log4req
 
 // logfull(level,req,messages)
-function logfull() {
+function logfull () {
   let userip = null
   let userid = null
   let actid = null
@@ -69,7 +69,7 @@ function logfull() {
 
   try {
     if (models) {
-      if (allargstring.indexOf('`logs`') === -1) {  // Don't log to db writing to the logs!
+      if (allargstring.indexOf('`logs`') === -1) { // Don't log to db writing to the logs!
         models.logs.create({
           ip: userip,
           userid: userid,
@@ -81,14 +81,14 @@ function logfull() {
       }
     }
   } catch (e) {
-    console.log('logger.log error',e)
+    console.log('logger.log error', e)
   }
   return allargstring
 }
 module.exports.logfull = logfull
 
-function logdb1() {   // Only logs first parameter to avoid sequelize log error: Converting circular structure to JSON
-  if (process.env.LOGSQL && process.env.LOGSQL.toLowerCase()=='true') {
+function logdb1 () { // Only logs first parameter to avoid sequelize log error: Converting circular structure to JSON
+  if (process.env.LOGSQL && process.env.LOGSQL.toLowerCase() === 'true') {
     if (arguments.length >= 1) {
       log(arguments[0])
     }
@@ -97,22 +97,21 @@ function logdb1() {   // Only logs first parameter to avoid sequelize log error:
 module.exports.logdb1 = logdb1
 
 // error(messages)
-function error() {
+function error () {
   error4req(false, ...arguments)
 }
 module.exports.error = error
 
 // error4req(req,messages)
-function error4req() {
+function error4req () {
   const allargstring = logfull('error', ...arguments)
-  utils.async_mail(false, utils.getSiteName() + ' error ' + arguments[1], allargstring)
+  utils.asyncMail(false, utils.getSiteName() + ' error ' + arguments[1], allargstring)
 }
 module.exports.error4req = error4req
 
-function setModels(m) {
+function setModels (m) {
   models = m
 }
 module.exports.setModels = setModels
 
 log('LOGGER LOADED')
-

@@ -1,5 +1,4 @@
 const { Router } = require('express')
-const Sequelize = require('sequelize')
 const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
@@ -10,9 +9,9 @@ const mailutils = require('./mailutils')
 const router = Router()
 
 /* ************************ */
-/* POST: Add or Delete grading*/
+/* POST: Add or Delete grading */
 router.post('/gradings/:submitid', async function (req, res, next) {
-  //console.log('/gradings/:submitid', req.headers['x-http-method-override'])
+  // console.log('/gradings/:submitid', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'DELETE') {
     return await deleteGrading(req, res, next)
   }
@@ -25,9 +24,9 @@ router.post('/gradings/:submitid', async function (req, res, next) {
 /* ************************ */
 /* POST: Delete grading */
 /* ACCESS: OWNER-ONLY TESTED */
-async function deleteGrading(req, res, next){
+async function deleteGrading (req, res, next) {
   const submitid = parseInt(req.params.submitid)
-  //console.log('DELETE /gradings', submitid)
+  // console.log('DELETE /gradings', submitid)
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
@@ -56,28 +55,28 @@ async function deleteGrading(req, res, next){
 }
 
 /* ************************ */
-/* POST: Add grading*/
+/* POST: Add grading */
 /* ACCESS: OWNER-ONLY EDIT TOTEST */
-async function addGrading(req, res, next){
+async function addGrading (req, res, next) {
   const submitid = parseInt(req.params.submitid)
-  //console.log('Add /gradings', submitid)
+  // console.log('Add /gradings', submitid)
   const flowgradeid = parseInt(req.body.flowgradeid)
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
-    const gradingid = req.body.gradingid  // If non-zero then editing. Normally undefined
+    const gradingid = req.body.gradingid // If non-zero then editing. Normally undefined
     console.log('Add/Edit /gradings', submitid, gradingid)
 
     const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
     if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found ' + flowgradeid)
-    //console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
+    // console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
     if (dbflowgrade.flowId !== req.dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
 
     const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
 
     // Re-find flowgrade and check score
-    const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === flowgradeid})
+    const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === flowgradeid })
     if (!flowgrade) return utils.giveup(req, res, 'flowgrade not found' + flowgradeid)
     const flowgradescoreId = parseInt(req.body.decision)
     const flowgradescore = _.find(flowgrade.scores, (score) => { return score.id === flowgradescoreId })
@@ -103,7 +102,7 @@ async function addGrading(req, res, next){
     }
 
     let ok = false
-    if (gradingid) {  // NOT TESTED
+    if (gradingid) { // NOT TESTED
       const dbgrading = await models.submitgradings.findByPk(gradingid)
       if (!dbgrading) return utils.giveup(req, res, 'Cannot find grading ' + gradingid)
 
@@ -115,8 +114,8 @@ async function addGrading(req, res, next){
       dbgrading.comment = req.body.comment
       dbgrading.canreview = req.body.canreview
 
-      //await dbgrading.save()
-      //logger.log4req(req, 'UPDATED grading', gradingid)
+      // await dbgrading.save()
+      // logger.log4req(req, 'UPDATED grading', gradingid)
 
       ok = false
     } else {
@@ -128,7 +127,7 @@ async function addGrading(req, res, next){
         flowgradeId: flowgradeid,
         flowgradescoreId,
         comment: req.body.comment,
-        canreview: req.body.canreview,
+        canreview: req.body.canreview
       }
       const dbgrading = await models.submitgradings.create(params)
       if (!dbgrading) return utils.giveup(req, res, 'grading not created')

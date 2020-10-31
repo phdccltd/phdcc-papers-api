@@ -1,6 +1,6 @@
 const process = require('process')
 const express = require('express')
-const cors = require('cors')  // https://github.com/expressjs/cors
+const cors = require('cors') // https://github.com/expressjs/cors
 const bodyParser = require('body-parser')
 const createError = require('http-errors')
 const path = require('path')
@@ -12,9 +12,9 @@ const db = require('./db')
 const models = require('./models')
 const logger = require('./logger')
 const utils = require('./utils')
-const background_runner = require('./task')
+const backgroundRunner = require('./task')
 
-var now = new Date()
+let now = new Date()
 global.starttime = now.toISOString()
 
 logger.log('PAPERS STARTING: ', global.starttime, process.pid, 'LOGMODE', process.env.LOGMODE)
@@ -28,7 +28,7 @@ app.use(cors())
 
 app.set('init', false)
 app.set('initresult', 0)
-async function checkDatabases() {
+async function checkDatabases () {
   try {
     await db.sequelize.authenticate()
     console.log('Connection has been established successfully.')
@@ -41,8 +41,9 @@ async function checkDatabases() {
 
     // Get rid of any excess INDEXES
     try {
-      const [results, metadata] = await db.sequelize.query('ALTER TABLE `users` DROP INDEX `username_2`;')
-      //console.log('DROP users index 2 ', results, metadata)
+      await db.sequelize.query('ALTER TABLE `users` DROP INDEX `username_2`;')
+      // const [results, metadata] =
+      // console.log('DROP users index 2 ', results, metadata)
     } catch (e) {
       // Ignore any errors
     }
@@ -53,11 +54,11 @@ async function checkDatabases() {
       const sites = await models.sites.findAll()
       console.log('sites', sites.length)
       if (sites.length === 0) {
-        let params = {
+        const params = {
           url: '',
           name: 'Test site',
           privatesettings: JSON.stringify({}),
-          publicsettings: JSON.stringify({}),
+          publicsettings: JSON.stringify({})
         }
         await models.sites.create(params)
         console.log('mock site created')
@@ -72,8 +73,8 @@ async function checkDatabases() {
           password: await bcrypt.hash('asecret', saltRounds),
           super: true
         }
-        const user = await models.users.create(params)
-        if (!user) return routes.giveup(req, res, 'user not created')
+        const dbuser = await models.users.create(params)
+        if (!dbuser) return
         console.log('User created', params.name)
       }
     }
@@ -81,11 +82,10 @@ async function checkDatabases() {
     // Make clean site info available to router
     const sites = []
     for (const sitedb of await models.sites.findAll()) {
-      //console.log('sitedb', sitedb)
       try {
         const privatesettings = JSON.parse(sitedb.privatesettings)
         const publicsettings = JSON.parse(sitedb.publicsettings)
-        const site = { id: sitedb.id, url: sitedb.url, name: sitedb.name, privatesettings: privatesettings ? privatesettings : {}, publicsettings: publicsettings ? publicsettings : {} }
+        const site = { id: sitedb.id, url: sitedb.url, name: sitedb.name, privatesettings: privatesettings || {}, publicsettings: publicsettings || {} }
         sites.push(site)
       } catch (e) {
         console.error('SYNTAX ERROR IN settings for site', sitedb.id, sitedb.privatesettings, sitedb.publicsettings)
@@ -94,7 +94,7 @@ async function checkDatabases() {
         }
       }
     }
-    if (sites.length == 0) {
+    if (sites.length === 0) {
       console.error('NO SITES IN DATABASE SO EXITING')
       if (!process.env.TESTING) {
         process.exit(2)
@@ -116,7 +116,7 @@ async function checkDatabases() {
           app.set('transport', transport)
         } else { // SMTP
           const transportOptions = {
-            host: privatesettings['transport-host'],
+            host: privatesettings['transport-host']
           }
           if (privatesettings['transport-port']) transportOptions.port = privatesettings['transport-port']
           if (privatesettings['transport-pool']) transportOptions.pool = privatesettings['transport-pool']
@@ -124,10 +124,9 @@ async function checkDatabases() {
             transportOptions.secure = privatesettings['transport-secure']
             transportOptions.auth = {
               user: privatesettings['transport-auth-user'],
-              pass: privatesettings['transport-auth-pass'],
+              pass: privatesettings['transport-auth-pass']
             }
           }
-          //console.log('transportOptions', transportOptions)
           const transport = nodemailer.createTransport(transportOptions)
           if (transport) {
             const rv = await transport.verify()
@@ -144,7 +143,7 @@ async function checkDatabases() {
     const transport = app.get('transport')
     if (transport && privatesettings['admin-email']) {
       utils.setMailTransport(transport, privatesettings['email-from'], privatesettings['admin-email'], site.name)
-      utils.async_mail(false, site.name + ' - API RESTARTED ' + process.env.version, 'Server time: ' + global.starttime)
+      utils.asyncMail(false, site.name + ' - API RESTARTED ' + process.env.version, 'Server time: ' + global.starttime)
     }
     app.set('initresult', 1)
   } catch (error) {
@@ -163,7 +162,7 @@ app.use(express.json())
 app.use(function (req, res, next) {
   const userip = req.headers['x-forwarded-for'] // x-forwarded-server
   req.userip = userip
-  //logger.log4req(req, '+++Route:', process.env.BASEURL, req.url)
+  // logger.log4req(req, '+++Route:', process.env.BASEURL, req.url)
   next()
 })
 
@@ -173,7 +172,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 const apiRouter = require('./routes')
 app.use(apiRouter.router)
 
-//app.use('/', indexRouter)
+// app.use('/', indexRouter)
 
 // catch everything else
 app.use(function (req, res, next) {
@@ -186,18 +185,12 @@ app.use(function (req, res, next) {
 app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   console.log('ERROR', err.message)
-  //console.log(req.app.get('env'))
-  //console.log(err)
-  //res.locals.message = err.message
-  //res.locals.error = {}
 
   // render the error page
   res.status(err.status || 500).send(err.message)
 })
 
-
-
-var now = new Date()
+now = new Date()
 global.starttime = now.toISOString()
 console.log('STARTED: ', global.starttime, process.pid)
 let startupSeconds = parseInt(process.env.ST) || 15
@@ -208,11 +201,10 @@ if (intervalMinutes < 1) intervalMinutes = 1
 console.log('intervalMinutes:' + intervalMinutes)
 const intervalSeconds = 60 * intervalMinutes
 if (!process.env.TESTING) {
-  setTimeout(background_runner, startupSeconds * 1000, app)
-  setInterval(background_runner, intervalSeconds * 1000, app)
+  setTimeout(backgroundRunner, startupSeconds * 1000, app)
+  setInterval(backgroundRunner, intervalSeconds * 1000, app)
 }
 
 logger.log('papers API app started: process ', process.pid)
-
 
 module.exports = app

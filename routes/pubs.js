@@ -1,5 +1,4 @@
 const { Router } = require('express')
-const Sequelize = require('sequelize')
 const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
@@ -8,7 +7,7 @@ const router = Router()
 
 /* GET pubs listing. */
 router.get('/pubs', async function (req, res, next) {
-  //console.log('GET /pubs')
+  // console.log('GET /pubs')
 
   try {
     const order = {
@@ -43,7 +42,7 @@ router.get('/pubs', async function (req, res, next) {
           if (mypubrole.isowner) pub.isowner = true
         }
       }
-      //pub.isowner = true // When testing add this fake ownership so subsequent tests fail
+      // pub.isowner = true // When testing add this fake ownership so subsequent tests fail
 
       const dbpubroles = await dbpub.getPubroles()
       pub.pubroles = models.sanitiselist(dbpubroles, models.pubroles)
@@ -85,6 +84,5 @@ router.get('/pubs', async function (req, res, next) {
     utils.giveup(req, res, e.message)
   }
 })
-
 
 module.exports = router

@@ -6,7 +6,7 @@ const mailutils = require('./mailutils')
 
 /* ************************ */
 /* POST+DELETE: Delete pub user role  */
-async function removePubUser(req, res, next) {
+async function removePubUser (req, res, next) {
   try {
     if (req.headers['x-http-method-override'] !== 'DELETE') return utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
     const pubid = parseInt(req.params.pubid)
@@ -41,11 +41,10 @@ async function removePubUser(req, res, next) {
   }
 }
 
-
 /* ************************ */
-/* POST: Create or Delete user role*/
-async function handleUserRole(req, res, next) {
-  //console.log('/users/pub/:pubid/:userid/:roleid', req.headers['x-http-method-override'])
+/* POST: Create or Delete user role */
+async function handleUserRole (req, res, next) {
+  // console.log('/users/pub/:pubid/:userid/:roleid', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'DELETE') {
     return await deleteUserRole(req, res, next)
   }
@@ -57,12 +56,12 @@ async function handleUserRole(req, res, next) {
 
 /* ************************ */
 /* POST: Add pub user role  */
-async function addUserRole(req, res, next) {
+async function addUserRole (req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
     const userid = parseInt(req.params.userid)
     const roleid = parseInt(req.params.roleid)
-    //console.log('addUserRole', pubid, userid, roleid)
+    // console.log('addUserRole', pubid, userid, roleid)
 
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -98,7 +97,6 @@ async function addUserRole(req, res, next) {
           mailutils.sendOneTemplate(dbpubmail, false, dbpub, false, dbuser, false, false, false, false) // dbuser is user affected, not current user
         }
       }
-      
     }
 
     const ok = present
@@ -110,7 +108,7 @@ async function addUserRole(req, res, next) {
 
 /* ************************ */
 /* POST+DELETE: Delete pub user role  */
-async function deleteUserRole(req, res, next) {
+async function deleteUserRole (req, res, next) {
   try {
     if (req.headers['x-http-method-override'] !== 'DELETE') return utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
 
@@ -129,7 +127,7 @@ async function deleteUserRole(req, res, next) {
 
     const dbpubrole = await models.pubroles.findByPk(roleid)
     if (!dbpubrole) return utils.giveup(req, res, 'Cannot find roleid ' + roleid)
-    if (dbpubrole.pubId !== dbpub.id) return utils.giveup(req, res, 'pubrole pub mismatch' + dbpubrole.pubId+' '+dbpub.id)
+    if (dbpubrole.pubId !== dbpub.id) return utils.giveup(req, res, 'pubrole pub mismatch' + dbpubrole.pubId + ' ' + dbpub.id)
 
     const dbuser = await models.users.findByPk(userid)
     if (!dbuser) return utils.giveup(req, res, 'Cannot find userid ' + userid)
@@ -148,10 +146,9 @@ async function deleteUserRole(req, res, next) {
   }
 }
 
-
 /* ************************ */
 /* GET: Get pub users and their roles */
-async function getPubUsers(req, res, next) {
+async function getPubUsers (req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
     console.log('GET /users/pub/', pubid, req.dbuser.id)
@@ -160,7 +157,7 @@ async function getPubUsers(req, res, next) {
     const dbmypubroles = await req.dbuser.getRoles()
     const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
-    //console.log('isowner', isowner.id, isowner.name)
+    // console.log('isowner', isowner.id, isowner.name)
 
     // Get publication
     const dbpub = await models.pubs.findByPk(pubid)
@@ -190,10 +187,10 @@ async function getPubUsers(req, res, next) {
 
     const pubusers = {
       users,
-      pubroles,
+      pubroles
     }
 
-    //console.log('pubusers', pubusers)
+    // console.log('pubusers', pubusers)
     logger.log4req(req, 'Returning pubusers', pubid)
     utils.returnOK(req, res, pubusers, 'pubusers')
   } catch (e) {
@@ -203,7 +200,7 @@ async function getPubUsers(req, res, next) {
 
 /* ************************ */
 /* GET: Masquerade */
-async function handleMasquerade(req, res, next) {
+async function handleMasquerade (req, res, next) {
   try {
     const userid = parseInt(req.params.userid)
     console.log('GET /users/masquerade/', userid)
@@ -227,5 +224,5 @@ module.exports = {
   removePubUser,
   handleUserRole,
   handleMasquerade,
-  getPubUsers,
+  getPubUsers
 }

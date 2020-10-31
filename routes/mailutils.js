@@ -1,5 +1,5 @@
 const _ = require('lodash/core')
-const Handlebars = require("handlebars")
+const Handlebars = require('handlebars')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
@@ -9,8 +9,7 @@ const dbutils = require('./dbutils')
 // req.dbsubmit must be set
 // CHECK: could assume that req.dbflow and req.dbpub set
 
-async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
-
+async function sendOutMails (req, dbflowstatus, dbflowgrade, dbentry, grading) {
   let dbformfields = false
   if (dbentry) {
     dbformfields = await models.formfields.findAll({ where: { formtypeid: dbentry.flowstageId } })
@@ -27,12 +26,11 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
     dbpubmails = await dbflowgrade.getPubMails()
   }
   for (const dbpubmail of dbpubmails) {
-
     // Ignore reminder rules
     if (dbpubmail.sendReviewReminderDays !== 0 || dbpubmail.sendLeadReminderDays !== 0 || dbpubmail.sendReviewChaseUpDays !== 0) {
       continue
     }
-    //console.log('sendOutMails dbpubmail', dbpubmail.id, dbpubmail.pubmailtemplateId, dbpubmail.name, dbpubmail.sendToUser, dbpubmail.sendToAuthor, dbpubmail.bccToOwners)
+    // console.log('sendOutMails dbpubmail', dbpubmail.id, dbpubmail.pubmailtemplateId, dbpubmail.name, dbpubmail.sendToUser, dbpubmail.sendToAuthor, dbpubmail.bccToOwners)
 
     const dbflow = await req.dbsubmit.getFlow()
     if (!dbflow) {
@@ -51,8 +49,7 @@ async function sendOutMails(req, dbflowstatus, dbflowgrade, dbentry, grading) {
 
 /* ************************ */
 
-async function sendOneTemplate(dbpubmail, site, dbpub, dbformfields, dbuser, dbsubmit, dbentry, grading, reqbody, data) {
-
+async function sendOneTemplate (dbpubmail, site, dbpub, dbformfields, dbuser, dbsubmit, dbentry, grading, reqbody, data) {
   const bccOwners = []
   if (dbpub && dbpubmail.bccToOwners) {
     const dbownerroles = await dbpub.getPubroles({ where: { isowner: true } })
@@ -104,7 +101,7 @@ async function sendOneTemplate(dbpubmail, site, dbpub, dbformfields, dbuser, dbs
     console.log('No recipients for ' + dbpubmail.name)
     return
   }
-  //console.log('recipients', recipients.join(','))
+  // console.log('recipients', recipients.join(','))
 
   let entryout = false
   if (dbentry) {
@@ -132,18 +129,18 @@ async function sendOneTemplate(dbpubmail, site, dbpub, dbformfields, dbuser, dbs
   data.author = author
   data.user = models.sanitise(models.users, dbuser)
   data.now = now
-  //console.log('sendOutMails', data)
+  // console.log('sendOutMails', data)
   subject = subject(data)
   body = body(data)
   let bcc = bccOwners.join(',')
   if (recipients.length > 0) {
     for (const recipient of recipients) {
-      utils.async_mail(recipient, subject, body, bcc)
+      utils.asyncMail(recipient, subject, body, bcc)
       bcc = false
     }
   } else {
     for (const bccOwner of bccOwners) {
-      utils.async_mail(bccOwner, subject, body, false)
+      utils.asyncMail(bccOwner, subject, body, false)
     }
   }
 }
@@ -151,5 +148,5 @@ async function sendOneTemplate(dbpubmail, site, dbpub, dbformfields, dbuser, dbs
 
 module.exports = {
   sendOutMails,
-  sendOneTemplate,
+  sendOneTemplate
 }
