@@ -1,13 +1,13 @@
 /*
   Y=Done N=Todo _=n/a *=urgent
   .-------1=pub-access
-  |.------2=Author-access
+  |.------2=Author-access or not
   ||.-----3=Other-roles=access
   |||.----4=only-if-open-to-author
   ||||....Jest tests for 1 2 3 4
   ||||||||
-  Y_Y_N_N_  PUT     /submits/entry/:entryid                 editEntry         change entry
-  Y_Y_N_N_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
+  YYY_NNN_  PUT     /submits/entry/:entryid                 editEntry         change entry
+  YYY_NNN_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
   YYYYNNNN  POST    /submits/entry                          addEntry          add entry to (existing) submit
   YYYYNNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
   YYY_NNN_  GET     /submits/entry/:entryid/:entryvalueid   getEntryFile      download a file ie one field of an entry
@@ -327,7 +327,7 @@ async function editEntry (req, res, next) {
       const dbentryvalues = await dbentry.getEntryValues()
       let existingfile = false
       for (const dbentryvalue of dbentryvalues) {
-        if (dbentryvalue.file != null && dbentryvalue.formfieldId === file.formfieldid) {
+        if (dbentryvalue.file !== null && dbentryvalue.formfieldId === file.formfieldid) {
           existingfile = dbentryvalue.file
           break
         }
@@ -427,7 +427,7 @@ async function deleteEntry (req, res, next) {
     // Find entryvalues; move any files to TMPDIRARCHIVE
     const dbentryvalues = await dbentry.getEntryValues()
     for (const dbentryvalue of dbentryvalues) {
-      if (dbentryvalue.file != null) {
+      if (dbentryvalue.file !== null) {
         let base = path.dirname(dbentryvalue.file)
         // const filename = path.basename(dbentryvalue.file)
         fs.mkdirSync(TMPDIRARCHIVE + base, { recursive: true })
