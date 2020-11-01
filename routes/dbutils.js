@@ -38,7 +38,8 @@ async function getSubmitFlowPub (req, submitid) {
 
 /* ************************ */
 /* getMyRoles
-    returns false if not allowed access to publication
+    Check user has some access to publication
+      returns false if not allowed access to publication
    Needs: req.dbuser, req.dbpub
 */
 async function getMyRoles (req) {
@@ -47,7 +48,6 @@ async function getMyRoles (req) {
   req.onlyanauthor = false
   req.canviewall = false
 
-  // Check user has access to publication
   const dbpubchecks = await req.dbuser.getPublications()
   const dbpubcheck = _.find(dbpubchecks, (dbpubcheck) => { return dbpubcheck.id === req.dbpub.id })
   if (!dbpubcheck) return false
