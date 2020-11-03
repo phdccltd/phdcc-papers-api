@@ -4,13 +4,13 @@ const _ = require('lodash/core')
 
 const name = 'Add simple flow'
 
-const roleDefaults = { isowner: false, canviewall:false, defaultrole: false, isreviewer:false, userRequested:false, userDeniedAccess:false }
+const roleDefaults = { isowner: false, canviewall: false, defaultrole: false, isreviewer: false, userRequested: false, userDeniedAccess: false }
 
 const statusDefaults = { visibletoauthor: false, ended: false, submittedflowstageId: null, cansubmitflowstageId: null, owneradvice: '' }
 
 const gradeDefaults = { visibletorole: false, visibletoreviewers: false, cancomment: false, canopttoreview: false, authorcanseeatthesestatuses: '', helptext: '', helplinktext: '', helplink: '' }
 
-function lookup(lookfor, lookin) {
+function lookup (lookfor, lookin) {
   if (lookfor) {
     const thing = _.find(lookin, thing => { return thing.name === lookfor })
     if (thing) {
@@ -20,7 +20,7 @@ function lookup(lookfor, lookin) {
   return null
 }
 
-async function runscript(models, configfilename, rv) {
+async function runscript (models, configfilename, rv) {
   if (!rv) rv = {}
 
   try {
@@ -39,13 +39,14 @@ async function runscript(models, configfilename, rv) {
       configtext = configtext.substring(0, dslashpos) + configtext.substring(endlinepos)
     }
     // console.log(configtext)
+    let config
     try {
       config = JSON.parse(configtext)
     } catch (e) {
       console.error('config file not in JSON format')
       return 0
     }
-    //console.log(config)
+    // console.log(config)
 
     console.log('PROCESSING:', config.name)
     if (config.pub) {
@@ -57,7 +58,7 @@ async function runscript(models, configfilename, rv) {
       for (const role of config.pub.role) {
         const newrole = { pubId: config.pub.db.id, ...roleDefaults, ...role }
         role.db = await models.pubroles.create(newrole)
-        if (!role.db) return 'Could not create role'+role.name
+        if (!role.db) return 'Could not create role' + role.name
         console.log('role.db created', role.name, role.db.id)
       }
       for (const publookup of config.pub.publookup) {
@@ -110,20 +111,20 @@ async function runscript(models, configfilename, rv) {
 
           // NOW ADD GRADE SCORES
           for (const score of grade.score) {
-            /*const newflowgradeProposalReject = {
+            /* const newflowgradeProposalReject = {
               flowgradeId: rv.grade.proposal.id,
               weight: 20,
               name: 'Reject'
             }
             rv.grade.score.proposalReject = await models.flowgradescores.create(newflowgradeProposalReject)
             if (!rv.grade.score.proposalReject) return 'Could not create flowgrade.score.proposalReject'
-            console.log('flowgrade.score.proposalReject created', rv.grade.score.proposalReject.id)*/
+            console.log('flowgrade.score.proposalReject created', rv.grade.score.proposalReject.id) */
           }
         }
       }
       // Form fields
       for (const formfield of config.pub.formfield) {
-        /*const newformfieldName = {
+        /* const newformfieldName = {
           pubId: rv.pub.id,
           formtype: 2,
           formtypeid: rv.stage.proposal.id,
@@ -144,7 +145,7 @@ async function runscript(models, configfilename, rv) {
         }
         rv.formfield.name = await models.formfields.create(newformfieldName)
         if (!rv.formfield.name) return 'Could not create formfield.name'
-        console.log('formfield.name created', rv.formfield.name.id)*/
+        console.log('formfield.name created', rv.formfield.name.id) */
       }
     }
   } catch (e) {
