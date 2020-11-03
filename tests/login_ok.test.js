@@ -22,13 +22,11 @@ describe('LOGIN', () => {
     if (initresult !== 1) {
       expect(initresult).toBe(1)
     } else {
-
       const error = await addsimpleflow.runscript(app.models)
       if (error) {
         console.log(error)
         expect(error).toBe(false)
       } else {
-
         const res = await request(app)
           .post('/user/login')
           .send({

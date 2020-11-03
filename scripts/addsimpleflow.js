@@ -1,10 +1,10 @@
 const name = 'Add simple flow'
 
-async function runscript(models) {
+async function runscript (models, rv) {
+  if (!rv) rv = {}
   console.log('ADD SIMPLE FLOW')
 
   try {
-
     const newpub = {
       siteId: 1,
       alias: 'TestPubAlias',
@@ -15,139 +15,316 @@ async function runscript(models) {
       email: 'noreply@example.org',
       tz: 'Europe/London'
     }
-    const dbpub = await models.pubs.create(newpub)
-    if (!dbpub) return 'Could not create pub'
-    console.log('dbpub created', dbpub.id)
+    rv.pub = await models.pubs.create(newpub)
+    if (!rv.pub) return 'Could not create pub'
+    console.log('pub created', rv.pub.id)
 
     const newflow = {
-      pubId: dbpub.id,
+      pubId: rv.pub.id,
       name: 'Paper',
       description: 'Proposal followed by Paper'
     }
-    const dbflow = await models.flows.create(newflow)
-    if (!dbflow) return 'Could not create flow'
-    console.log('dbflow created', dbflow.id)
+    rv.flow = await models.flows.create(newflow)
+    if (!rv.flow) return 'Could not create flow'
+    console.log('flow created', rv.flow.id)
 
+    rv.role = {}
     const newroleOwner = {
-      pubId: dbpub.id,
+      pubId: rv.pub.id,
       name: 'Owner',
       isowner: true,
       canviewall: false,
       defaultrole: false,
       isreviewer: false,
       userRequested: false,
-      userDeniedAccess: false,
+      userDeniedAccess: false
     }
-    const dbroleOwner = await models.pubroles.create(newroleOwner)
-    if (!dbroleOwner) return 'Could not create roleOwner'
-    console.log('dbroleOwner created', dbroleOwner.id)
+    rv.role.owner = await models.pubroles.create(newroleOwner)
+    if (!rv.role.owner) return 'Could not create role.owner'
+    console.log('role.owner created', rv.role.owner.id)
 
     const newroleAuthor = {
-      pubId: dbpub.id,
+      pubId: rv.pub.id,
       name: 'Author',
       isowner: false,
       canviewall: false,
       defaultrole: true,
       isreviewer: false,
       userRequested: false,
-      userDeniedAccess: false,
+      userDeniedAccess: false
     }
-    const dbroleAuthor = await models.pubroles.create(newroleAuthor)
-    if (!dbroleAuthor) return 'Could not create roleAuthor'
-    console.log('dbroleAuthor created', dbroleAuthor.id)
+    rv.role.author = await models.pubroles.create(newroleAuthor)
+    if (!rv.role.author) return 'Could not create role.author'
+    console.log('role.author created', rv.role.author.id)
 
     const newroleTeam = {
-      pubId: dbpub.id,
+      pubId: rv.pub.id,
       name: 'Team',
       isowner: false,
       canviewall: true,
       defaultrole: false,
       isreviewer: false,
       userRequested: false,
-      userDeniedAccess: false,
+      userDeniedAccess: false
     }
-    const dbroleTeam = await models.pubroles.create(newroleTeam)
-    if (!dbroleTeam) return 'Could not create roleTeam'
-    console.log('dbroleTeam created', dbroleTeam.id)
+    rv.role.team = await models.pubroles.create(newroleTeam)
+    if (!rv.role.team) return 'Could not create role.team'
+    console.log('role.team created', rv.role.team.id)
+
+    const newroleEditor = {
+      pubId: rv.pub.id,
+      name: 'Editor',
+      isowner: false,
+      canviewall: true,
+      defaultrole: false,
+      isreviewer: false,
+      userRequested: false,
+      userDeniedAccess: false
+    }
+    rv.role.editor = await models.pubroles.create(newroleEditor)
+    if (!rv.role.editor) return 'Could not create role.editor'
+    console.log('role.editor created', rv.role.editor.id)
 
     const newroleReviewer = {
-      pubId: dbpub.id,
+      pubId: rv.pub.id,
       name: 'Reviewer',
       isowner: false,
       canviewall: false,
       defaultrole: false,
       isreviewer: true,
       userRequested: false,
-      userDeniedAccess: false,
+      userDeniedAccess: false
     }
-    const dbroleReviewer = await models.pubroles.create(newroleReviewer)
-    if (!dbroleReviewer) return 'Could not create roleReviewer'
-    console.log('dbroleReviewer created', dbroleReviewer.id)
+    rv.role.reviewer = await models.pubroles.create(newroleReviewer)
+    if (!rv.role.reviewer) return 'Could not create role.reviewer'
+    console.log('role.reviewer created', rv.role.reviewer.id)
 
     const newroleLead = {
-      pubId: dbpub.id,
+      pubId: rv.pub.id,
       name: 'Lead',
       isowner: false,
       canviewall: false,
       defaultrole: false,
       isreviewer: true,
       userRequested: false,
-      userDeniedAccess: false,
+      userDeniedAccess: false
     }
-    const dbroleLead = await models.pubroles.create(newroleLead)
-    if (!dbroleLead) return 'Could not create roleLead'
-    console.log('dbroleLead created', dbroleLead.id)
+    rv.role.lead = await models.pubroles.create(newroleLead)
+    if (!rv.role.lead) return 'Could not create role.lead'
+    console.log('role.lead created', rv.role.lead.id)
 
     const newroleAccessRequested = {
-      pubId: dbpub.id,
+      pubId: rv.pub.id,
       name: 'Access Requested',
       isowner: false,
       canviewall: false,
       defaultrole: false,
       isreviewer: false,
       userRequested: true,
-      userDeniedAccess: false,
+      userDeniedAccess: false
     }
 
-    const dbroleAccessRequested = await models.pubroles.create(newroleAccessRequested)
-    if (!dbroleAccessRequested) return 'Could not create roleAccessRequested'
-    console.log('dbroleAccessRequested created', dbroleAccessRequested.id)
+    rv.role.accessRequested = await models.pubroles.create(newroleAccessRequested)
+    if (!rv.role.accessRequested) return 'Could not create role.accessRequested'
+    console.log('role.accessRequested created', rv.role.accessRequested.id)
 
     const newroleAccessDenied = {
-      pubId: dbpub.id,
+      pubId: rv.pub.id,
       name: 'Lead',
       isowner: false,
       canviewall: false,
       defaultrole: false,
       isreviewer: false,
       userRequested: false,
-      userDeniedAccess: true,
+      userDeniedAccess: true
     }
-    const dbroleAccessDenied = await models.pubroles.create(newroleAccessDenied)
-    if (!dbroleAccessDenied) return 'Could not create roleAccessDenied'
-    console.log('dbroleAccessDenied created', dbroleAccessDenied.id)
+    rv.role.accessDenied = await models.pubroles.create(newroleAccessDenied)
+    if (!rv.role.accessDenied) return 'Could not create role.accessDenied'
+    console.log('role.accessDenied created', rv.role.accessDenied.id)
 
+    rv.stage = {}
     const newstageProposal = {
-      flowId: dbflow.id,
+      flowId: rv.flow.id,
       weight: 10,
       name: 'Proposal',
-      pubroleId: dbroleAuthor.id,
+      pubroleId: rv.role.author.id,
       rolecanadd: 0
     }
-    const dbstageProposal = await models.flowstages.create(newstageProposal)
-    if (!dbstageProposal) return 'Could not create stageProposal'
-    console.log('dbstageProposal created', dbstageProposal.id)
+    rv.stage.proposal = await models.flowstages.create(newstageProposal)
+    if (!rv.stage.proposal) return 'Could not create stage.proposal'
+    console.log('stage.proposal created', rv.stage.proposal.id)
 
     const newstagePaper = {
-      flowId: dbflow.id,
+      flowId: rv.flow.id,
       weight: 20,
       name: 'Paper',
-      pubroleId: dbroleAuthor.id,
+      pubroleId: rv.role.author.id,
       rolecanadd: 0
     }
-    const dbstagePaper = await models.flowstages.create(newstagePaper)
-    if (!dbstagePaper) return 'Could not create stagePaper'
-    console.log('dbstagePaper created', dbstagePaper.id)
+    rv.stage.paper = await models.flowstages.create(newstagePaper)
+    if (!rv.stage.paper) return 'Could not create stage.paper'
+    console.log('stage.paper created', rv.stage.paper.id)
+
+    rv.status = {}
+    const newstatusProposalSubmitted = {
+      flowId: rv.flow.id,
+      weight: 10,
+      status: 'Proposal submitted',
+      visibletoauthor: true,
+      ended: false,
+      submittedflowstageId: rv.stage.proposal.id,
+      cansubmitflowstageId: 0,
+      owneradvice: 'Awaiting send to team'
+    }
+    rv.status.poposalSubmitted = await models.flowstatuses.create(newstatusProposalSubmitted)
+    if (!rv.status.poposalSubmitted) return 'Could not create status.poposalSubmitted'
+    console.log('status.poposalSubmitted created', rv.status.poposalSubmitted.id)
+
+    const newstatusProposalWithTeam = {
+      flowId: rv.flow.id,
+      weight: 20,
+      status: 'Proposal with team',
+      visibletoauthor: false,
+      ended: false,
+      submittedflowstageId: null,
+      cansubmitflowstageId: 0,
+      owneradvice: ''
+    }
+    rv.status.proposalWithTeam = await models.flowstatuses.create(newstatusProposalWithTeam)
+    if (!rv.status.proposalWithTeam) return 'Could not create status.proposalWithTeam'
+    console.log('status.proposalWithTeamcreated', rv.status.proposalWithTeam.id)
+
+    const newstatusProposalRejected = {
+      flowId: rv.flow.id,
+      weight: 30,
+      status: 'Proposal rejected',
+      visibletoauthor: true,
+      ended: true,
+      submittedflowstageId: null,
+      cansubmitflowstageId: 0,
+      owneradvice: ''
+    }
+    rv.status.proposalRejected = await models.flowstatuses.create(newstatusProposalRejected)
+    if (!rv.status.proposalRejected) return 'Could not create status.proposalRejected'
+    console.log('status.proposalRejected created', rv.status.proposalRejected.id)
+
+    const newstatusProposalAccepted = {
+      flowId: rv.flow.id,
+      weight: 40,
+      status: 'Proposal accepted',
+      visibletoauthor: true,
+      ended: false,
+      submittedflowstageId: null,
+      cansubmitflowstageId: rv.stage.paper.id,
+      owneradvice: ''
+    }
+    rv.status.proposalAccepted = await models.flowstatuses.create(newstatusProposalAccepted)
+    if (!rv.status.proposalAccepted) return 'Could not create status.proposalAccepted'
+    console.log('status.proposalAccepted created', rv.status.proposalAccepted.id)
+
+    const newstatusPaperSubmitted = {
+      flowId: rv.flow.id,
+      weight: 50,
+      status: 'Paper submitted',
+      visibletoauthor: true,
+      ended: false,
+      submittedflowstageId: rv.stage.paper.id,
+      cansubmitflowstageId: null,
+      owneradvice: 'Awaiting: send to reviewers'
+    }
+    rv.status.paperSubmitted = await models.flowstatuses.create(newstatusPaperSubmitted)
+    if (!rv.status.paperSubmitted) return 'Could not create status.paperSubmitted'
+    console.log('status.paperSubmitted created', rv.status.paperSubmitted.id)
+
+    const newstatusPaperWithReviewers = {
+      flowId: rv.flow.id,
+      weight: 60,
+      status: 'Paper with reviewers',
+      visibletoauthor: false,
+      ended: false,
+      submittedflowstageId: null,
+      cansubmitflowstageId: null,
+      owneradvice: ''
+    }
+    rv.status.paperWithReviewers = await models.flowstatuses.create(newstatusPaperWithReviewers)
+    if (!rv.status.paperWithReviewers) return 'Could not create status.paperWithReviewers'
+    console.log('status.paperWithReviewers created', rv.status.paperWithReviewers.id)
+
+    const newstatusPaperRejected = {
+      flowId: rv.flow.id,
+      weight: 70,
+      status: 'Paper rejected',
+      visibletoauthor: true,
+      ended: true,
+      submittedflowstageId: null,
+      cansubmitflowstageId: null,
+      owneradvice: ''
+    }
+    rv.status.paperRejected = await models.flowstatuses.create(newstatusPaperRejected)
+    if (!rv.status.paperRejected) return 'Could not create status.paperRejected'
+    console.log('status.paperRejected created', rv.status.paperRejected.id)
+
+    const newstatusPaperAccepted = {
+      flowId: rv.flow.id,
+      weight: 80,
+      status: 'Paper accepted',
+      visibletoauthor: true,
+      ended: true,
+      submittedflowstageId: null,
+      cansubmitflowstageId: null,
+      owneradvice: ''
+    }
+    rv.status.paperAccepted = await models.flowstatuses.create(newstatusPaperAccepted)
+    if (!rv.status.paperAccepted) return 'Could not create status.paperAccepted'
+    console.log('status.paperAccepted created', rv.status.paperAccepted.id)
+
+    rv.flowgrade = {}
+    const newflowgradeProposal = {
+      flowId: rv.flow.id,
+      name: 'Proposal score',
+      flowstatusId: rv.status.proposalWithTeam.id,
+      displayflowstageId: rv.stage.proposal.id,
+      visibletorole: rv.role.team.id,
+      visibletoreviewers: false,
+      cancomment: true,
+      canopttoreview: true,
+      authorcanseeatthesestatuses: null,
+      helptext: '',
+      helplinktext: '',
+      helplink: ''
+    }
+    rv.flowgrade.proposal = await models.flowgrades.create(newflowgradeProposal)
+    if (!rv.flowgrade.proposal) return 'Could not create flowgrade.proposal'
+    console.log('flowgrade.proposal created', rv.flowgrade.proposal.id)
+
+    const stati = [rv.status.paperAccepted, rv.status.paperRejected]
+    const newflowgradePaper = {
+      flowId: rv.flow.id,
+      name: 'Paper review',
+      flowstatusId: rv.status.paperWithReviewers.id,
+      displayflowstageId: rv.stage.paper.id,
+      visibletorole: 0,
+      visibletoreviewers: true,
+      cancomment: true,
+      canopttoreview: false,
+      authorcanseeatthesestatuses: stati.join(),
+      helptext: 'Grade this paper',
+      helplinktext: 'Need help?',
+      helplink: 'https://example.org/'
+    }
+    rv.flowgrade.paper = await models.flowgrades.create(newflowgradePaper)
+    if (!rv.flowgrade.paper) return 'Could not create flowgrade.paper'
+    console.log('flowgrade.paper created', rv.flowgrade.paper.id)
+
+    rv.flowgrade.score = {}
+    const newflowgradeProposalAccept = {
+      flowgradeId: rv.flowgrade.proposal.id,
+      weight: 10,
+      name: 'Accept'
+    }
+    rv.flowgrade.score.proposalAccept = await models.flowgradescores.create(newflowgradeProposalAccept)
+    if (!rv.flowgrade.score.proposalAccept) return 'Could not create flowgrade.score.proposalAccept'
+    console.log('flowgrade.score.proposalAccept created', rv.flowgrade.score.proposalAccept.id)
 
     return false
   } catch (e) {
