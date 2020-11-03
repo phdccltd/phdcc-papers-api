@@ -5,6 +5,7 @@ async function runscript (models, rv) {
   console.log('ADD SIMPLE FLOW')
 
   try {
+    // Publication
     const newpub = {
       siteId: 1,
       alias: 'TestPubAlias',
@@ -19,6 +20,7 @@ async function runscript (models, rv) {
     if (!rv.pub) return 'Could not create pub'
     console.log('pub created', rv.pub.id)
 
+    // Flow
     const newflow = {
       pubId: rv.pub.id,
       name: 'Paper',
@@ -28,6 +30,7 @@ async function runscript (models, rv) {
     if (!rv.flow) return 'Could not create flow'
     console.log('flow created', rv.flow.id)
 
+    // Publication roles
     rv.role = {}
     const newroleOwner = {
       pubId: rv.pub.id,
@@ -142,6 +145,7 @@ async function runscript (models, rv) {
     if (!rv.role.accessDenied) return 'Could not create role.accessDenied'
     console.log('role.accessDenied created', rv.role.accessDenied.id)
 
+    // Flow stages
     rv.stage = {}
     const newstageProposal = {
       flowId: rv.flow.id,
@@ -165,6 +169,7 @@ async function runscript (models, rv) {
     if (!rv.stage.paper) return 'Could not create stage.paper'
     console.log('stage.paper created', rv.stage.paper.id)
 
+    // Flow statuses
     rv.status = {}
     const newstatusProposalSubmitted = {
       flowId: rv.flow.id,
@@ -278,6 +283,7 @@ async function runscript (models, rv) {
     if (!rv.status.paperAccepted) return 'Could not create status.paperAccepted'
     console.log('status.paperAccepted created', rv.status.paperAccepted.id)
 
+    // Flow grades and flow grade scores
     rv.flowgrade = {}
     const newflowgradeProposal = {
       flowId: rv.flow.id,
@@ -296,6 +302,34 @@ async function runscript (models, rv) {
     rv.flowgrade.proposal = await models.flowgrades.create(newflowgradeProposal)
     if (!rv.flowgrade.proposal) return 'Could not create flowgrade.proposal'
     console.log('flowgrade.proposal created', rv.flowgrade.proposal.id)
+
+    rv.flowgrade.score = {}
+    const newflowgradeProposalAccept = {
+      flowgradeId: rv.flowgrade.proposal.id,
+      weight: 10,
+      name: 'Accept'
+    }
+    rv.flowgrade.score.proposalAccept = await models.flowgradescores.create(newflowgradeProposalAccept)
+    if (!rv.flowgrade.score.proposalAccept) return 'Could not create flowgrade.score.proposalAccept'
+    console.log('flowgrade.score.proposalAccept created', rv.flowgrade.score.proposalAccept.id)
+
+    const newflowgradeProposalReject = {
+      flowgradeId: rv.flowgrade.proposal.id,
+      weight: 20,
+      name: 'Reject'
+    }
+    rv.flowgrade.score.proposalReject = await models.flowgradescores.create(newflowgradeProposalReject)
+    if (!rv.flowgrade.score.proposalReject) return 'Could not create flowgrade.score.proposalReject'
+    console.log('flowgrade.score.proposalReject created', rv.flowgrade.score.proposalReject.id)
+
+    const newflowgradeProposalConflict = {
+      flowgradeId: rv.flowgrade.proposal.id,
+      weight: 30,
+      name: 'Conflict of Interest'
+    }
+    rv.flowgrade.score.proposalConflict = await models.flowgradescores.create(newflowgradeProposalConflict)
+    if (!rv.flowgrade.score.proposalConflict) return 'Could not create flowgrade.score.proposalConflict'
+    console.log('flowgrade.score.proposalConflict created', rv.flowgrade.score.proposalConflict.id)
 
     const stati = [rv.status.paperAccepted, rv.status.paperRejected]
     const newflowgradePaper = {
@@ -316,15 +350,52 @@ async function runscript (models, rv) {
     if (!rv.flowgrade.paper) return 'Could not create flowgrade.paper'
     console.log('flowgrade.paper created', rv.flowgrade.paper.id)
 
-    rv.flowgrade.score = {}
-    const newflowgradeProposalAccept = {
-      flowgradeId: rv.flowgrade.proposal.id,
+    const newflowgradePaperAccept = {
+      flowgradeId: rv.flowgrade.paper.id,
       weight: 10,
       name: 'Accept'
     }
-    rv.flowgrade.score.proposalAccept = await models.flowgradescores.create(newflowgradeProposalAccept)
-    if (!rv.flowgrade.score.proposalAccept) return 'Could not create flowgrade.score.proposalAccept'
-    console.log('flowgrade.score.proposalAccept created', rv.flowgrade.score.proposalAccept.id)
+    rv.flowgrade.score.paperAccept = await models.flowgradescores.create(newflowgradePaperAccept)
+    if (!rv.flowgrade.score.paperAccept) return 'Could not create flowgrade.score.paperAccept'
+    console.log('flowgrade.score.paperAccept created', rv.flowgrade.score.paperAccept.id)
+
+    const newflowgradePaperReject = {
+      flowgradeId: rv.flowgrade.paper.id,
+      weight: 20,
+      name: 'Reject'
+    }
+    rv.flowgrade.score.paperReject = await models.flowgradescores.create(newflowgradePaperReject)
+    if (!rv.flowgrade.score.paperReject) return 'Could not create flowgrade.score.paperReject'
+    console.log('flowgrade.score.paperReject created', rv.flowgrade.score.paperReject.id)
+
+    // Publication lookups
+    rv.publookup = {}
+    const newpublookupTopics = {
+      pubId: rv.pub.id,
+      name: 'Topics'
+    }
+    rv.publookup.topics = await models.publookups.create(newpublookupTopics)
+    if (!rv.publookup.topics) return 'Could not create publookup.topics'
+    console.log('publookup.topics created', rv.publookup.topics.id)
+
+    rv.publookup.value = {}
+    const newpublookupTopicClimate = {
+      publookupId: rv.publookup.topics.id,
+      weight: 10,
+      text: 'Climate Change'
+    }
+    rv.publookup.value.climate = await models.publookupvalues.create(newpublookupTopicClimate)
+    if (!rv.publookup.value.climate) return 'Could not create publookup.value.climate'
+    console.log('publookup.value.climate created', rv.publookup.value.climate.id)
+
+    const newpublookupTopicBiodiversity = {
+      publookupId: rv.publookup.topics.id,
+      weight: 20,
+      text: 'Biodiversity'
+    }
+    rv.publookup.value.biodiversity = await models.publookupvalues.create(newpublookupTopicBiodiversity)
+    if (!rv.publookup.value.biodiversity) return 'Could not create publookup.value.biodiversity'
+    console.log('publookup.value.biodiversity created', rv.publookup.value.biodiversity.id)
 
     return false
   } catch (e) {
