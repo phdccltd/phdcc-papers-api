@@ -397,6 +397,31 @@ async function runscript (models, rv) {
     if (!rv.publookup.value.biodiversity) return 'Could not create publookup.value.biodiversity'
     console.log('publookup.value.biodiversity created', rv.publookup.value.biodiversity.id)
 
+    // Form fields
+    rv.formfield = {}
+    const newformfieldName = {
+      pubId: rv.pub.id,
+      formtype: 2,
+      formtypeid: rv.stage.proposal.id,
+      label: 'Name',
+      help: 'Please enter your name',
+      helplink: '',
+      weight: 10,
+      type: 'string',
+      publookupid: null,
+      pubroleId: null,
+      required: true,
+      requiredif: '',
+      allowedfiletypes: '',
+      maxwords: null,
+      maxchars: null,
+      hideatgrading: 1,
+      includeindownload: 1
+    }
+    rv.formfield.name = await models.formfields.create(newformfieldName)
+    if (!rv.formfield.name) return 'Could not create formfield.name'
+    console.log('formfield.name created', rv.formfield.name.id)
+
     return false
   } catch (e) {
     return e.message
