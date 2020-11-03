@@ -4,16 +4,18 @@
 
 const request = require('supertest')
 const testhelper = require('./testhelper')
+const testsetup = require('./testsetup')
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
 
 process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
-const app = require('../app')
 
 describe('LOGIN', () => {
   it('Check correct login succeeds', async () => {
-    const initresult = await testhelper.waitUntilInited(app)
+    const app = require('../app')
+
+    const initresult = await app.checkDatabases(testsetup)
     console.log('initresult', initresult)
 
     if (initresult !== 1) {
@@ -28,13 +30,12 @@ describe('LOGIN', () => {
         })
       console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
 
-      spyclog.mockRestore()
-      spycerror.mockRestore()
-      console.log('All console output\n', testhelper.accumulogged())
-
       expect(res.statusCode).toEqual(200)
       const rv = res.body.ret === 0 && typeof res.body.token === 'string'
       expect(rv).toBe(true)
     }
+    spyclog.mockRestore()
+    spycerror.mockRestore()
+    console.log('All console output\n', testhelper.accumulogged())
   })
 })

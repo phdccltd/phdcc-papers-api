@@ -5,8 +5,6 @@ const bodyParser = require('body-parser')
 const createError = require('http-errors')
 const path = require('path')
 const nodemailer = require('nodemailer')
-const bcrypt = require('bcrypt')
-const saltRounds = 10
 
 const db = require('./db')
 const models = require('./models')
@@ -27,8 +25,7 @@ app.options('*', cors()) // include before other routes
 app.use(cors())
 
 app.set('init', false)
-app.set('initresult', 0)
-async function checkDatabases () {
+app.checkDatabases = async function (setupdb) {
   try {
     await db.sequelize.authenticate()
     console.log('Connection has been established successfully.')
@@ -50,33 +47,8 @@ async function checkDatabases () {
 
     logger.setModels(models) // Let logger log to db logs, if enabled
 
-    if (process.env.TESTING) {
-      const sites = await models.sites.findAll()
-      console.log('sites', sites.length)
-      if (sites.length === 0) {
-        const params = {
-          url: '',
-          name: 'Test site',
-          privatesettings: JSON.stringify({}),
-          publicsettings: JSON.stringify({})
-        }
-        await models.sites.create(params)
-        console.log('mock site created')
-      }
-
-      const users = await models.users.findAll()
-      if (users.length === 0) {
-        const params = {
-          name: 'Jo',
-          username: 'jo',
-          email: 'jo@example.com',
-          password: await bcrypt.hash('asecret', saltRounds),
-          super: true
-        }
-        const dbuser = await models.users.create(params)
-        if (!dbuser) return
-        console.log('User created', params.name)
-      }
+    if (setupdb) {
+      await setupdb(models)
     }
 
     // Make clean site info available to router
@@ -145,16 +117,18 @@ async function checkDatabases () {
       utils.setMailTransport(transport, privatesettings['email-from'], privatesettings['admin-email'], site.name)
       utils.asyncMail(false, site.name + ' - API RESTARTED ' + process.env.version, 'Server time: ' + global.starttime)
     }
-    app.set('initresult', 1)
+    return 1
   } catch (error) {
     console.error('Database init error:', error)
-    app.set('initresult', 2)
     if (!process.env.TESTING) {
       process.exit(3)
     }
+    return 2
   }
 }
-checkDatabases()
+if (!process.env.TESTING) {
+  app.checkDatabases()
+}
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.json())
