@@ -23,7 +23,7 @@ describe('LOGIN', () => {
       expect(initresult).toBe(1)
     } else {
       const simple = {}
-      const error = await addsimpleflow.runscript(app.models, simple)
+      const error = await addsimpleflow.runscript(app.models, 'addsimpleflow.json', simple)
       if (error) {
         console.log(error)
         expect(error).toBe(false)

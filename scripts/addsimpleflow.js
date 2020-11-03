@@ -1,7 +1,67 @@
+const fs = require('fs')
+const path = require('path')
+
 const name = 'Add simple flow'
 
-async function runscript (models, rv) {
+const roleDefaults = { isowner: false, canviewall:false, defaultrole: false, isreviewer:false, userRequested:false, userDeniedAccess:false }
+
+async function runscript(models, configfilename, rv) {
   if (!rv) rv = {}
+
+  try {
+    let configtext = fs.readFileSync(path.resolve(__dirname, configfilename), { encoding: 'utf8' })
+    if (configtext.charCodeAt(0) === 65279) { // Remove UTF-8 start character
+      configtext = configtext.slice(1)
+    }
+    while (true) {
+      const dslashpos = configtext.indexOf('//')
+      if (dslashpos === -1) break
+      const endlinepos = configtext.indexOf('\n', dslashpos)
+      if (endlinepos === -1) {
+        configtext = configtext.substring(0, dslashpos)
+        break
+      }
+      configtext = configtext.substring(0, dslashpos) + configtext.substring(endlinepos)
+    }
+    // console.log(configtext)
+    try {
+      config = JSON.parse(configtext)
+    } catch (e) {
+      console.error('config file not in JSON format')
+      return 0
+    }
+    //console.log(config)
+
+    console.log('PROCESSING:', config.name)
+    if (config.pub) {
+      const newpub = { siteId: 1, startdate: new Date(2021, 1, 1, 0, 0, 0, 0), ...config.pub }
+      config.pub.db = await models.pubs.create(newpub)
+      if (!config.pub.db) return 'Could not create pub'
+      console.log('pub created', config.pub.db.id)
+
+      for (const role of config.pub.role) {
+        const newrole = { pubId: config.pub.db.id, ...roleDefaults, ...role }
+        role.db = await models.pubroles.create(newrole)
+        if (!role.db) return 'Could not create role'+role.name
+        console.log('role.db created', role.name, role.db.id)
+      }
+      for (const publookup of config.pub.publookup) {
+        const newpublookup = { pubId: config.pub.db.id, ...publookup }
+        publookup.db = await models.publookups.create(newpublookup)
+        if (!publookup.db) return 'Could not create publookup' + publookup.name
+        console.log('publookup.db created', publookup.name, publookup.db.id)
+      }
+
+      
+
+    }
+  } catch (e) {
+    return e.message
+  }
+  return
+
+
+  //////////////////////
   console.log('ADD SIMPLE FLOW')
 
   try {
@@ -118,7 +178,7 @@ async function runscript (models, rv) {
 
     const newroleAccessRequested = {
       pubId: rv.pub.id,
-      name: 'Access Requested',
+      name: 'Access requested',
       isowner: false,
       canviewall: false,
       defaultrole: false,
@@ -133,7 +193,7 @@ async function runscript (models, rv) {
 
     const newroleAccessDenied = {
       pubId: rv.pub.id,
-      name: 'Lead',
+      name: 'Access denied',
       isowner: false,
       canviewall: false,
       defaultrole: false,
@@ -284,7 +344,7 @@ async function runscript (models, rv) {
     console.log('status.paperAccepted created', rv.status.paperAccepted.id)
 
     // Flow grades and flow grade scores
-    rv.flowgrade = {}
+    rv.grade = {}
     const newflowgradeProposal = {
       flowId: rv.flow.id,
       name: 'Proposal score',
@@ -299,37 +359,37 @@ async function runscript (models, rv) {
       helplinktext: '',
       helplink: ''
     }
-    rv.flowgrade.proposal = await models.flowgrades.create(newflowgradeProposal)
-    if (!rv.flowgrade.proposal) return 'Could not create flowgrade.proposal'
-    console.log('flowgrade.proposal created', rv.flowgrade.proposal.id)
+    rv.grade.proposal = await models.flowgrades.create(newflowgradeProposal)
+    if (!rv.grade.proposal) return 'Could not create flowgrade.proposal'
+    console.log('flowgrade.proposal created', rv.grade.proposal.id)
 
-    rv.flowgrade.score = {}
+    rv.grade.score = {}
     const newflowgradeProposalAccept = {
-      flowgradeId: rv.flowgrade.proposal.id,
+      flowgradeId: rv.grade.proposal.id,
       weight: 10,
       name: 'Accept'
     }
-    rv.flowgrade.score.proposalAccept = await models.flowgradescores.create(newflowgradeProposalAccept)
-    if (!rv.flowgrade.score.proposalAccept) return 'Could not create flowgrade.score.proposalAccept'
-    console.log('flowgrade.score.proposalAccept created', rv.flowgrade.score.proposalAccept.id)
+    rv.grade.score.proposalAccept = await models.flowgradescores.create(newflowgradeProposalAccept)
+    if (!rv.grade.score.proposalAccept) return 'Could not create flowgrade.score.proposalAccept'
+    console.log('flowgrade.score.proposalAccept created', rv.grade.score.proposalAccept.id)
 
     const newflowgradeProposalReject = {
-      flowgradeId: rv.flowgrade.proposal.id,
+      flowgradeId: rv.grade.proposal.id,
       weight: 20,
       name: 'Reject'
     }
-    rv.flowgrade.score.proposalReject = await models.flowgradescores.create(newflowgradeProposalReject)
-    if (!rv.flowgrade.score.proposalReject) return 'Could not create flowgrade.score.proposalReject'
-    console.log('flowgrade.score.proposalReject created', rv.flowgrade.score.proposalReject.id)
+    rv.grade.score.proposalReject = await models.flowgradescores.create(newflowgradeProposalReject)
+    if (!rv.grade.score.proposalReject) return 'Could not create flowgrade.score.proposalReject'
+    console.log('flowgrade.score.proposalReject created', rv.grade.score.proposalReject.id)
 
     const newflowgradeProposalConflict = {
-      flowgradeId: rv.flowgrade.proposal.id,
+      flowgradeId: rv.grade.proposal.id,
       weight: 30,
       name: 'Conflict of Interest'
     }
-    rv.flowgrade.score.proposalConflict = await models.flowgradescores.create(newflowgradeProposalConflict)
-    if (!rv.flowgrade.score.proposalConflict) return 'Could not create flowgrade.score.proposalConflict'
-    console.log('flowgrade.score.proposalConflict created', rv.flowgrade.score.proposalConflict.id)
+    rv.grade.score.proposalConflict = await models.flowgradescores.create(newflowgradeProposalConflict)
+    if (!rv.grade.score.proposalConflict) return 'Could not create flowgrade.score.proposalConflict'
+    console.log('flowgrade.score.proposalConflict created', rv.grade.score.proposalConflict.id)
 
     const stati = [rv.status.paperAccepted, rv.status.paperRejected]
     const newflowgradePaper = {
@@ -346,27 +406,27 @@ async function runscript (models, rv) {
       helplinktext: 'Need help?',
       helplink: 'https://example.org/'
     }
-    rv.flowgrade.paper = await models.flowgrades.create(newflowgradePaper)
-    if (!rv.flowgrade.paper) return 'Could not create flowgrade.paper'
-    console.log('flowgrade.paper created', rv.flowgrade.paper.id)
+    rv.grade.paper = await models.flowgrades.create(newflowgradePaper)
+    if (!rv.grade.paper) return 'Could not create flowgrade.paper'
+    console.log('flowgrade.paper created', rv.grade.paper.id)
 
     const newflowgradePaperAccept = {
-      flowgradeId: rv.flowgrade.paper.id,
+      flowgradeId: rv.grade.paper.id,
       weight: 10,
       name: 'Accept'
     }
-    rv.flowgrade.score.paperAccept = await models.flowgradescores.create(newflowgradePaperAccept)
-    if (!rv.flowgrade.score.paperAccept) return 'Could not create flowgrade.score.paperAccept'
-    console.log('flowgrade.score.paperAccept created', rv.flowgrade.score.paperAccept.id)
+    rv.grade.score.paperAccept = await models.flowgradescores.create(newflowgradePaperAccept)
+    if (!rv.grade.score.paperAccept) return 'Could not create flowgrade.score.paperAccept'
+    console.log('flowgrade.score.paperAccept created', rv.grade.score.paperAccept.id)
 
     const newflowgradePaperReject = {
-      flowgradeId: rv.flowgrade.paper.id,
+      flowgradeId: rv.grade.paper.id,
       weight: 20,
       name: 'Reject'
     }
-    rv.flowgrade.score.paperReject = await models.flowgradescores.create(newflowgradePaperReject)
-    if (!rv.flowgrade.score.paperReject) return 'Could not create flowgrade.score.paperReject'
-    console.log('flowgrade.score.paperReject created', rv.flowgrade.score.paperReject.id)
+    rv.grade.score.paperReject = await models.flowgradescores.create(newflowgradePaperReject)
+    if (!rv.grade.score.paperReject) return 'Could not create flowgrade.score.paperReject'
+    console.log('flowgrade.score.paperReject created', rv.grade.score.paperReject.id)
 
     // Publication lookups
     rv.publookup = {}

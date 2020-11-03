@@ -1,0 +1,53 @@
+{
+  "name": "Add simple flow",
+  "pub": {
+    "name": "TestPubName",
+    "alias": "TestPubAlias",
+    "title": "Test Pub Title",
+    "description": "Test Pub Description",
+    "email": "noreply@example.org",
+    "tz": "Europe/London",
+    "role": [
+      { "name": "Owner", "isowner": true },
+      { "name": "Author", "defaultrole": true},
+      { "name": "Editor", "canviewall": true },
+      { "name": "Reviewer", "isreviewer": true },
+      { "name": "Lead", "isreviewer": true },
+      { "name": "Access requested", "userRequested": true },
+      { "name": "Access denied", "userDeniedAccess": true }
+    ],
+    "publookup": [
+      {
+        "name": "Topic",
+        "value": [ "Climate Change", "Biodiversity" ]
+      }
+    ],
+    "flow": {
+      "name": "Paper",
+      "stage": [
+        { "name": "Proposal" },
+        { "name": "Paper" }
+      ]
+    },
+    "status": [
+      { "name": "Proposal submitted" },
+      { "name": "Proposal with team" },
+      { "name": "Proposal rejected" },
+      { "name": "Proposal accepted" },
+      { "name": "Paper submitted" },
+      { "name": "Proposal submitted" },
+      { "name": "Paper with reviewers" },
+      { "name": "Paper rejected" },
+      { "name": "Paper accepted" }
+    ],
+    "grade": [
+      {
+        "name": "Proposal score",
+        "score": [ "Accept", "Reject", "Conflict of Interest" ]
+      }
+    ],
+    "formfield": [
+      { "name": "Name" }
+    ]
+  }
+}
