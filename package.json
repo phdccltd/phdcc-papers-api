@@ -9,7 +9,7 @@
     "start": "cross-env NODE_ENV=production node ./server.js",
     "test": "jest",
     "testrel": "jest && coveralls < coverage/lcov.info",
-    "standard": "standard app.js logger.js server.js task.js utils.js models/*.js routes/*.js tests/*.js"
+    "standard": "standard app.js logger.js server.js task.js utils.js models/*.js routes/*.js tests/*.js scripts/*.js"
   },
   "license": "MIT",
   "dependencies": {

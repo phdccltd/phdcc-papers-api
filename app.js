@@ -48,6 +48,7 @@ app.checkDatabases = async function (setupdb) {
     logger.setModels(models) // Let logger log to db logs, if enabled
 
     if (setupdb) {
+      app.models = models
       await setupdb(models)
     }
 

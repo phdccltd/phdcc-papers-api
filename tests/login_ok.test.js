@@ -5,6 +5,7 @@
 const request = require('supertest')
 const testhelper = require('./testhelper')
 const testsetup = require('./testsetup')
+const addsimpleflow = require('../scripts/addsimpleflow')
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
@@ -21,18 +22,26 @@ describe('LOGIN', () => {
     if (initresult !== 1) {
       expect(initresult).toBe(1)
     } else {
-      const res = await request(app)
-        .post('/user/login')
-        .send({
-          username: 'jo',
-          password: 'asecret',
-          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS
-        })
-      console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
 
-      expect(res.statusCode).toEqual(200)
-      const rv = res.body.ret === 0 && typeof res.body.token === 'string'
-      expect(rv).toBe(true)
+      const error = await addsimpleflow.runscript(app.models)
+      if (error) {
+        console.log(error)
+        expect(error).toBe(false)
+      } else {
+
+        const res = await request(app)
+          .post('/user/login')
+          .send({
+            username: 'jo',
+            password: 'asecret',
+            'g-recaptcha-response': process.env.RECAPTCHA_BYPASS
+          })
+        console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
+
+        expect(res.statusCode).toEqual(200)
+        const rv = res.body.ret === 0 && typeof res.body.token === 'string'
+        expect(rv).toBe(true)
+      }
     }
     spyclog.mockRestore()
     spycerror.mockRestore()
