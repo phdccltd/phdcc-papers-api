@@ -10,6 +10,7 @@
     "role": [
       { "name": "Owner", "isowner": true },
       { "name": "Author", "defaultrole": true},
+      { "name": "Team", "canviewall": true },
       { "name": "Editor", "canviewall": true },
       { "name": "Reviewer", "isreviewer": true },
       { "name": "Lead", "isreviewer": true },
@@ -19,31 +20,39 @@
     "publookup": [
       {
         "name": "Topic",
-        "value": [ "Climate Change", "Biodiversity" ]
+        "value": [
+          { "text": "Climate Change", "weight": 10 },
+          { "text": "Biodiversity", "weight": 20 }
+        ]
       }
     ],
-    "flow": {
-      "name": "Paper",
-      "stage": [
-        { "name": "Proposal" },
-        { "name": "Paper" }
-      ]
-    },
-    "status": [
-      { "name": "Proposal submitted" },
-      { "name": "Proposal with team" },
-      { "name": "Proposal rejected" },
-      { "name": "Proposal accepted" },
-      { "name": "Paper submitted" },
-      { "name": "Proposal submitted" },
-      { "name": "Paper with reviewers" },
-      { "name": "Paper rejected" },
-      { "name": "Paper accepted" }
-    ],
-    "grade": [
+    "flow": [
       {
-        "name": "Proposal score",
-        "score": [ "Accept", "Reject", "Conflict of Interest" ]
+        "name": "Paper",
+        "description": "Proposal followed by Paper",
+        "stage": [
+          { "name": "Proposal", "weight": 10, "role": "Author", "rolecanadd": 0 },
+          { "name": "Paper", "weight": 20, "role": "Author", "rolecanadd": 0 }
+        ],
+        "status": [
+          { "name": "Proposal submitted", "visibletoauthor": true, "submittedflowstage": "Proposal", "owneradvice": "Awaiting send to team" },
+          { "name": "Proposal with team" },
+          { "name": "Proposal rejected", "visibletoauthor": true, "ended": true },
+          { "name": "Proposal accepted", "visibletoauthor": true, "cansubmitflowstage": "Paper" },
+          { "name": "Paper submitted", "visibletoauthor": true, "submittedflowstage": "Paper", "owneradvice": "Awaiting: send to reviewers" },
+          { "name": "Paper with reviewers" },
+          { "name": "Paper rejected", "visibletoauthor": true, "ended": true },
+          { "name": "Paper accepted", "visibletoauthor": true, "ended": true }
+        ],
+        "grade": [
+          {
+            "name": "Proposal score",
+            "flowstatus": "Proposal submitted",
+            "displayflowstage": "Proposal",
+            "visibletorole": "Team",
+            "score": [ "Accept", "Reject", "Conflict of Interest" ]
+          }
+        ]
       }
     ],
     "formfield": [
