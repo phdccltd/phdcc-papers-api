@@ -152,6 +152,7 @@ async function runscript (models, configfilename, rv) {
         // Flow acceptings
         for (const accepting of flow.accepting) {
           accepting.flowstageId = lookup(accepting.flowstage, flow.stage)
+          accepting.flowstatusId = lookup(accepting.flowstatus, flow.status)
           const newaccepting = { flowId: flow.db.id, ...acceptingDefaults, ...accepting }
           accepting.db = await models.flowacceptings.create(newaccepting)
           if (!accepting.db) return 'Could not create accepting' + accepting.flowstage

@@ -112,6 +112,11 @@
           {
             "flowstage": "Proposal",
             "open": true
+          },
+          {
+            "flowstage": "Paper",
+            "flowstatus": "Proposal accepted",
+            "open": true
           }
         ]
       }
