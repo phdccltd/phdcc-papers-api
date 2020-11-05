@@ -1,6 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 const _ = require('lodash/core')
+const bcrypt = require('bcrypt')
+const saltRounds = 10
 
 const name = 'Add simple flow'
 
@@ -14,6 +16,8 @@ const acceptingDefaults = { open: true }
 
 const defaultFormfield = { formtype: 2, formtypeid: 1, help: '', helplink: '', required: true, requiredif: '', maxwords: 0, maxchars: 0, hideatgrading: 0, includeindownload: 1 }
 
+const defaultUser = { super: false, password: 'pwd' }
+
 function lookup (lookfor, lookin) {
   if (lookfor) {
     const thing = _.find(lookin, thing => { return thing.name === lookfor })
@@ -24,7 +28,7 @@ function lookup (lookfor, lookin) {
   return null
 }
 
-async function run(models, configfilename, config) {
+async function run (models, configfilename, config) {
   if (!config) config = {}
 
   try {
@@ -176,6 +180,18 @@ async function run(models, configfilename, config) {
         formfield.db = await models.formfields.create(newformfield)
         if (!formfield.db) return 'Could not create formfield'
         console.log('formfield.db created', formfield.db.id)
+      }
+    }
+    // Add users
+    if (config.users) {
+      const pub = config.pub
+      if (pub.name !== config.users.pub) return 'Users publication not found ' + config.users.pub
+      for (const user of config.users.list) {
+        const newuser = { ...defaultUser, ...user }
+        newuser.password = await bcrypt.hash(newuser.password, saltRounds)
+        user.db = await models.users.create(newuser)
+        if (!user.db) return 'Could not create user ' + user.name
+        console.log('user.db created', user.db.id)
       }
     }
   } catch (e) {

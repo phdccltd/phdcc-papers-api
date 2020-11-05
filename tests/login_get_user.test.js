@@ -6,6 +6,7 @@ const _ = require('lodash')
 const request = require('supertest')
 const testhelper = require('./testhelper')
 const maketestsite = require('./maketestsite')
+const runscript = require('./runscript')
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
@@ -14,14 +15,19 @@ process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
 describe('USER', () => {
   it('Check login and then get user', async () => {
-    const app = require('../app')
+    try {
+      const app = require('../app')
 
-    const initresult = await app.checkDatabases(maketestsite)
-    console.log('initresult', initresult)
+      const initresult = await app.checkDatabases(maketestsite)
+      if (initresult !== 1) throw new Error('initresult:' + initresult)
 
-    if (initresult !== 1) {
-      expect(initresult).toBe(1)
-    } else {
+      const simple = {}
+      let error = await runscript.run(app.models, 'addsimpleflow.json', simple)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'addusers.json', simple)
+      if (error) throw new Error(error)
+
       const res1 = await request(app)
         .post('/user/login')
         .send({
@@ -39,14 +45,16 @@ describe('USER', () => {
       console.log(res2.body) //
       const rv2 = _.isEqual(res2.body, { ret: 0, status: 'OK', user: { id: 1, name: 'Jo', username: 'jo', super: true, publicsettings: {} } })
 
-      spyclog.mockRestore()
-      spycerror.mockRestore()
-      console.log('All console output\n', testhelper.accumulogged())
-
       expect(res1.statusCode).toEqual(200)
       expect(rv1).toBe(true)
       expect(res2.statusCode).toEqual(200)
       expect(rv2).toBe(true)
+    } catch (e) {
+      console.log(e.message)
+      expect(e.message).toBe(false)
     }
+    spyclog.mockRestore()
+    spycerror.mockRestore()
+    console.log('All console output\n', testhelper.accumulogged())
   })
 })

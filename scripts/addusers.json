@@ -1,0 +1,37 @@
+{
+  "name": "Add some users",
+  "users": {
+    "pub": "TestPubName",
+    "list": [
+      {
+        "name": "Jo",
+        "username": "jo",
+        "email": "jo@example.com",
+        "password": "asecret",
+        "super": true,
+        "roles": "Owner"
+      },
+      {
+        "name": "Author1",
+        "username": "author1",
+        "email": "author1@example.com",
+        "password": "author1pwd",
+        "roles": "Author"
+      },
+      {
+        "name": "Author2",
+        "username": "author2",
+        "email": "author2@example.com",
+        "password": "author2pwd",
+        "roles": "Author"
+      },
+      {
+        "name": "Staff",
+        "username": "staff",
+        "email": "staff@example.com",
+        "password": "staffpwd",
+        "roles": "Team"
+      }
+    ]
+  }
+  }

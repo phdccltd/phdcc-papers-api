@@ -18,31 +18,30 @@ describe('LOGIN', () => {
       const app = require('../app')
 
       const initresult = await app.checkDatabases(maketestsite)
-      console.log('initresult', initresult)
+      if (initresult !== 1) throw new Error('initresult:' + initresult)
 
-      if (initresult !== 1) { expect(initresult).toBe(1); throw new Exception('initresult') }
       const simple = {}
-      const error = await runscript.run(app.models, 'addsimpleflow.json', simple)
-      if (error) {
-        console.log(error)
-        expect(error).toBe(false)
-      } else {
-        const res = await request(app)
-          .post('/user/login')
-          .send({
-            username: 'jo',
-            password: 'asecret',
-            'g-recaptcha-response': process.env.RECAPTCHA_BYPASS
-          })
-        console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
+      let error = await runscript.run(app.models, 'addsimpleflow.json', simple)
+      if (error) throw new Error(error)
 
-        expect(res.statusCode).toEqual(200)
-        const rv = res.body.ret === 0 && typeof res.body.token === 'string'
-        expect(rv).toBe(true)
-      }
+      error = await runscript.run(app.models, 'addusers.json', simple)
+      if (error) throw new Error(error)
+
+      const res = await request(app)
+        .post('/user/login')
+        .send({
+          username: 'jo',
+          password: 'asecret',
+          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS
+        })
+      console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
+
+      expect(res.statusCode).toEqual(200)
+      const rv = res.body.ret === 0 && typeof res.body.token === 'string'
+      expect(rv).toBe(true)
     } catch (e) {
       console.log(e.message)
-      expect(false).toBe(true)
+      expect(e.message).toBe(false)
     }
     spyclog.mockRestore()
     spycerror.mockRestore()
