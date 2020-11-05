@@ -4,8 +4,8 @@
 
 const request = require('supertest')
 const testhelper = require('./testhelper')
-const testsetup = require('./testsetup')
-const addsimpleflow = require('../scripts/addsimpleflow')
+const maketestsite = require('./maketestsite')
+const runscript = require('./runscript')
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
@@ -14,16 +14,15 @@ process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
 describe('LOGIN', () => {
   it('Check correct login succeeds', async () => {
-    const app = require('../app')
+    try {
+      const app = require('../app')
 
-    const initresult = await app.checkDatabases(testsetup)
-    console.log('initresult', initresult)
+      const initresult = await app.checkDatabases(maketestsite)
+      console.log('initresult', initresult)
 
-    if (initresult !== 1) {
-      expect(initresult).toBe(1)
-    } else {
+      if (initresult !== 1) { expect(initresult).toBe(1); throw new Exception('initresult') }
       const simple = {}
-      const error = await addsimpleflow.runscript(app.models, 'addsimpleflow.json', simple)
+      const error = await runscript.run(app.models, 'addsimpleflow.json', simple)
       if (error) {
         console.log(error)
         expect(error).toBe(false)
@@ -41,6 +40,9 @@ describe('LOGIN', () => {
         const rv = res.body.ret === 0 && typeof res.body.token === 'string'
         expect(rv).toBe(true)
       }
+    } catch (e) {
+      console.log(e.message)
+      expect(false).toBe(true)
     }
     spyclog.mockRestore()
     spycerror.mockRestore()

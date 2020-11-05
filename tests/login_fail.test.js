@@ -5,7 +5,7 @@
 const _ = require('lodash')
 const request = require('supertest')
 const testhelper = require('./testhelper')
-const testsetup = require('./testsetup')
+const maketestsite = require('./maketestsite')
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
@@ -16,7 +16,7 @@ describe('LOGIN', () => {
   it('Check incorrect login fails', async () => {
     const app = require('../app')
 
-    const initresult = await app.checkDatabases(testsetup)
+    const initresult = await app.checkDatabases(maketestsite)
     console.log('initresult', initresult)
 
     if (initresult !== 1) {

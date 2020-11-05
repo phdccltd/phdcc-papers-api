@@ -24,11 +24,12 @@ function lookup (lookfor, lookin) {
   return null
 }
 
-async function runscript (models, configfilename, rv) {
-  if (!rv) rv = {}
+async function run(models, configfilename, config) {
+  if (!config) config = {}
 
   try {
-    let configtext = fs.readFileSync(path.resolve(__dirname, configfilename), { encoding: 'utf8' })
+    const configfile = path.resolve(__dirname, '../scripts', configfilename)
+    let configtext = fs.readFileSync(configfile, { encoding: 'utf8' })
     if (configtext.charCodeAt(0) === 65279) { // Remove UTF-8 start character
       configtext = configtext.slice(1)
     }
@@ -43,9 +44,8 @@ async function runscript (models, configfilename, rv) {
       configtext = configtext.substring(0, dslashpos) + configtext.substring(endlinepos)
     }
     // console.log(configtext)
-    let config
     try {
-      config = JSON.parse(configtext)
+      Object.assign(config, JSON.parse(configtext)) // Copy into config
     } catch (e) {
       console.error('config file not in JSON format')
       return 0
@@ -185,5 +185,5 @@ async function runscript (models, configfilename, rv) {
 
 module.exports = {
   name,
-  runscript
+  run
 }
