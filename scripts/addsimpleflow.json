@@ -47,10 +47,31 @@
         "grade": [
           {
             "name": "Proposal score",
-            "flowstatus": "Proposal submitted",
+            "flowstatus": "Proposal with team",
             "displayflowstage": "Proposal",
             "visibletorole": "Team",
-            "score": [ "Accept", "Reject", "Conflict of Interest" ]
+            "cancomment": true,
+            "canopttoreview": true,
+            "score": [
+              { "name": "Accept" },
+              { "name": "Reject" },
+              { "name": "Conflict of Interest" }
+            ]
+          },
+          {
+            "name": "Review",
+            "flowstatus": "Paper with reviewers",
+            "displayflowstage": "Paper",
+            "visibletoreviewers": true,
+            "cancomment": true,
+            "authorcanseeatthesestatuses": "Paper rejected,Paper accepted",
+            "helptext": "Please review within 7 days",
+            "helplinktext": "Please email us if you need advice",
+            "helplink": "mailto:noreply@example.org",
+            "score": [
+              { "name": "Accept" },
+              { "name": "Reject" }
+            ]
           }
         ]
       }

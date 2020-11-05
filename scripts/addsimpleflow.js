@@ -95,7 +95,7 @@ async function runscript (models, configfilename, rv) {
           status.cansubmitflowstageId = lookup(status.cansubmitflowstage, flow.stage)
           const newstatus = { flowId: flow.db.id, ...statusDefaults, ...status, status: status.name, weight: weight++ }
           status.db = await models.flowstatuses.create(newstatus)
-          if (!status.db) return 'Could not create status' + status.name
+          if (!status.db) return 'Could not create status ' + status.name
           console.log('status.db created', status.name, status.db.id)
         }
 
@@ -104,24 +104,38 @@ async function runscript (models, configfilename, rv) {
           grade.displayflowstageId = lookup(grade.displayflowstage, flow.stage)
           grade.visibletorole = lookup(grade.visibletorole, config.pub.role)
           if (grade.visibletorole === null) grade.visibletorole = 0
+
+          if (grade.authorcanseeatthesestatuses) {
+            const stati = grade.authorcanseeatthesestatuses.split(',')
+            grade.authorcanseeatthesestatuses = ''
+            for (const statustext of stati) {
+              const matchstatus = _.find(flow.status, status => { return status.name == statustext })
+              if (matchstatus) {
+                if (grade.authorcanseeatthesestatuses.length > 0) grade.authorcanseeatthesestatuses += ','
+                grade.authorcanseeatthesestatuses += matchstatus.db.id
+              }
+            }
+          }
+
           const newgrade = { flowId: flow.db.id, ...gradeDefaults, ...grade }
           grade.db = await models.flowgrades.create(newgrade)
           if (!grade.db) return 'Could not create grade' + grade.name
           console.log('grade.db created', grade.name, grade.db.id)
 
-          // NOW ADD GRADE SCORES
+          weight = 1
           for (const score of grade.score) {
-            /* const newflowgradeProposalReject = {
-              flowgradeId: rv.grade.proposal.id,
-              weight: 20,
-              name: 'Reject'
+            const newscore = {
+              flowgradeId: grade.db.id,
+              weight: weight,
+              name: score.name
             }
-            rv.grade.score.proposalReject = await models.flowgradescores.create(newflowgradeProposalReject)
-            if (!rv.grade.score.proposalReject) return 'Could not create flowgrade.score.proposalReject'
-            console.log('flowgrade.score.proposalReject created', rv.grade.score.proposalReject.id) */
+            score.db = await models.flowgradescores.create(newscore)
+            if (!score.db) return 'Could not create score ' + score.name
+            console.log('score.db created', score.db.id)
           }
         }
       }
+
       // Form fields
       for (const formfield of config.pub.formfield) {
         /* const newformfieldName = {
