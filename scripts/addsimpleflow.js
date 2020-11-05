@@ -53,18 +53,23 @@ async function runscript (models, configfilename, rv) {
     // console.log(config)
 
     console.log('PROCESSING:', config.name)
+    let weight
+    // Publication: just one per config
     if (config.pub) {
       const newpub = { siteId: 1, startdate: new Date(2021, 1, 1, 0, 0, 0, 0), ...config.pub }
       config.pub.db = await models.pubs.create(newpub)
       if (!config.pub.db) return 'Could not create pub'
       console.log('pub created', config.pub.db.id)
 
+      // Publication roles
       for (const role of config.pub.role) {
         const newrole = { pubId: config.pub.db.id, ...roleDefaults, ...role }
         role.db = await models.pubroles.create(newrole)
         if (!role.db) return 'Could not create role' + role.name
         console.log('role.db created', role.name, role.db.id)
       }
+
+      // Publication lookups
       for (const publookup of config.pub.publookup) {
         const newpublookup = { pubId: config.pub.db.id, ...publookup }
         publookup.db = await models.publookups.create(newpublookup)
@@ -79,13 +84,15 @@ async function runscript (models, configfilename, rv) {
         }
       }
 
+      // Flow and its components
       for (const flow of config.pub.flow) {
         const newflow = { pubId: config.pub.db.id, ...flow }
         flow.db = await models.flows.create(newflow)
         if (!flow.db) return 'Could not create flow'
         console.log('flow created', flow.db.id)
 
-        let weight = 1
+        // Flow stages
+        weight = 1
         for (const stage of flow.stage) {
           stage.pubroleId = lookup(stage.role, config.pub.role)
           const newstage = { flowId: flow.db.id, ...stage, weight: weight++ }
@@ -94,6 +101,7 @@ async function runscript (models, configfilename, rv) {
           console.log('stage.db created', stage.name, stage.db.id)
         }
 
+        // Flow statuses
         weight = 1
         for (const status of flow.status) {
           status.submittedflowstageId = lookup(status.submittedflowstage, flow.stage)
@@ -104,6 +112,7 @@ async function runscript (models, configfilename, rv) {
           console.log('status.db created', status.name, status.db.id)
         }
 
+        // Flow grades
         for (const grade of flow.grade) {
           grade.flowstatusId = lookup(grade.flowstatus, flow.status)
           grade.displayflowstageId = lookup(grade.displayflowstage, flow.stage)
@@ -114,7 +123,7 @@ async function runscript (models, configfilename, rv) {
             const stati = grade.authorcanseeatthesestatuses.split(',')
             grade.authorcanseeatthesestatuses = ''
             for (const statustext of stati) {
-              const matchstatus = _.find(flow.status, status => { return status.name == statustext })
+              const matchstatus = _.find(flow.status, status => { return status.name === statustext })
               if (matchstatus) {
                 if (grade.authorcanseeatthesestatuses.length > 0) grade.authorcanseeatthesestatuses += ','
                 grade.authorcanseeatthesestatuses += matchstatus.db.id
@@ -140,15 +149,15 @@ async function runscript (models, configfilename, rv) {
           }
         }
 
+        // Flow acceptings
         for (const accepting of flow.accepting) {
           accepting.flowstageId = lookup(accepting.flowstage, flow.stage)
           const newaccepting = { flowId: flow.db.id, ...acceptingDefaults, ...accepting }
           accepting.db = await models.flowacceptings.create(newaccepting)
           if (!accepting.db) return 'Could not create accepting' + accepting.flowstage
           console.log('accepting.db created', accepting.flowstage, accepting.db.id)
-          
         }
-      }
+      } // End of flow
 
       // Form fields
       weight = 1
