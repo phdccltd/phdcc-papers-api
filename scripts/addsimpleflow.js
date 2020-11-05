@@ -10,6 +10,10 @@ const statusDefaults = { visibletoauthor: false, ended: false, submittedflowstag
 
 const gradeDefaults = { visibletorole: false, visibletoreviewers: false, cancomment: false, canopttoreview: false, authorcanseeatthesestatuses: '', helptext: '', helplinktext: '', helplink: '' }
 
+const acceptingDefaults = { open: true }
+
+const defaultFormfield = { formtype: 2, formtypeid: 1, help: '', helplink: '', required: true, requiredif: '', maxwords: 0, maxchars: 0, hideatgrading: 0, includeindownload: 1 }
+
 function lookup (lookfor, lookin) {
   if (lookfor) {
     const thing = _.find(lookin, thing => { return thing.name === lookfor })
@@ -81,15 +85,16 @@ async function runscript (models, configfilename, rv) {
         if (!flow.db) return 'Could not create flow'
         console.log('flow created', flow.db.id)
 
+        let weight = 1
         for (const stage of flow.stage) {
           stage.pubroleId = lookup(stage.role, config.pub.role)
-          const newstage = { flowId: flow.db.id, ...stage }
+          const newstage = { flowId: flow.db.id, ...stage, weight: weight++ }
           stage.db = await models.flowstages.create(newstage)
           if (!stage.db) return 'Could not create stage' + stage.name
           console.log('stage.db created', stage.name, stage.db.id)
         }
 
-        let weight = 1
+        weight = 1
         for (const status of flow.status) {
           status.submittedflowstageId = lookup(status.submittedflowstage, flow.stage)
           status.cansubmitflowstageId = lookup(status.cansubmitflowstage, flow.stage)
@@ -134,32 +139,33 @@ async function runscript (models, configfilename, rv) {
             console.log('score.db created', score.db.id)
           }
         }
+
+        for (const accepting of flow.accepting) {
+          accepting.flowstageId = lookup(accepting.flowstage, flow.stage)
+          const newaccepting = { flowId: flow.db.id, ...acceptingDefaults, ...accepting }
+          accepting.db = await models.flowacceptings.create(newaccepting)
+          if (!accepting.db) return 'Could not create accepting' + accepting.flowstage
+          console.log('accepting.db created', accepting.flowstage, accepting.db.id)
+          
+        }
       }
 
       // Form fields
+      weight = 1
       for (const formfield of config.pub.formfield) {
-        /* const newformfieldName = {
-          pubId: rv.pub.id,
-          formtype: 2,
-          formtypeid: rv.stage.proposal.id,
-          label: 'Name',
-          help: 'Please enter your name',
-          helplink: '',
-          weight: 10,
-          type: 'string',
-          publookupid: null,
-          pubroleId: null,
-          required: true,
-          requiredif: '',
-          allowedfiletypes: '',
-          maxwords: null,
-          maxchars: null,
-          hideatgrading: 1,
-          includeindownload: 1
+        for (const flow of config.pub.flow) {
+          const foundid = lookup(formfield.flowstage, flow.stage)
+          if (foundid) formfield.formtypeid = foundid
+          if (formfield.hideatgradingname) {
+            const foundhideatgrading = lookup(formfield.hideatgradingname, flow.grade)
+            if (foundhideatgrading) formfield.hideatgrading = foundhideatgrading
+          }
         }
-        rv.formfield.name = await models.formfields.create(newformfieldName)
-        if (!rv.formfield.name) return 'Could not create formfield.name'
-        console.log('formfield.name created', rv.formfield.name.id) */
+        formfield.publookupId = lookup(formfield.publookup, config.pub.publookup)
+        const newformfield = { formtype: 2, ...defaultFormfield, ...formfield, weight: weight++ }
+        formfield.db = await models.formfields.create(newformfield)
+        if (!formfield.db) return 'Could not create formfield'
+        console.log('formfield.db created', formfield.db.id)
       }
     }
   } catch (e) {

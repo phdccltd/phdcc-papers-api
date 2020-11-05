@@ -19,7 +19,7 @@
     ],
     "publookup": [
       {
-        "name": "Topic",
+        "name": "Topics",
         "value": [
           { "text": "Climate Change", "weight": 10 },
           { "text": "Biodiversity", "weight": 20 }
@@ -31,18 +31,52 @@
         "name": "Paper",
         "description": "Proposal followed by Paper",
         "stage": [
-          { "name": "Proposal", "weight": 10, "role": "Author", "rolecanadd": 0 },
-          { "name": "Paper", "weight": 20, "role": "Author", "rolecanadd": 0 }
+          {
+            "name": "Proposal",
+            "role": "Author",
+            "rolecanadd": 0
+          },
+          {
+            "name": "Paper",
+            "role": "Author",
+            "rolecanadd": 0
+          }
         ],
         "status": [
-          { "name": "Proposal submitted", "visibletoauthor": true, "submittedflowstage": "Proposal", "owneradvice": "Awaiting send to team" },
+          {
+            "name": "Proposal submitted",
+            "visibletoauthor": true,
+            "submittedflowstage": "Proposal",
+            "owneradvice": "Awaiting send to team"
+          },
           { "name": "Proposal with team" },
-          { "name": "Proposal rejected", "visibletoauthor": true, "ended": true },
-          { "name": "Proposal accepted", "visibletoauthor": true, "cansubmitflowstage": "Paper" },
-          { "name": "Paper submitted", "visibletoauthor": true, "submittedflowstage": "Paper", "owneradvice": "Awaiting: send to reviewers" },
+          {
+            "name": "Proposal rejected",
+            "visibletoauthor": true,
+            "ended": true
+          },
+          {
+            "name": "Proposal accepted",
+            "visibletoauthor": true,
+            "cansubmitflowstage": "Paper"
+          },
+          {
+            "name": "Paper submitted",
+            "visibletoauthor": true,
+            "submittedflowstage": "Paper",
+            "owneradvice": "Awaiting: send to reviewers"
+          },
           { "name": "Paper with reviewers" },
-          { "name": "Paper rejected", "visibletoauthor": true, "ended": true },
-          { "name": "Paper accepted", "visibletoauthor": true, "ended": true }
+          {
+            "name": "Paper rejected",
+            "visibletoauthor": true,
+            "ended": true
+          },
+          {
+            "name": "Paper accepted",
+            "visibletoauthor": true,
+            "ended": true
+          }
         ],
         "grade": [
           {
@@ -73,11 +107,50 @@
               { "name": "Reject" }
             ]
           }
+        ],
+        "accepting": [
+          {
+            "flowstage": "Proposal",
+            "open": true
+          }
         ]
       }
     ],
     "formfield": [
-      { "name": "Name" }
+      {
+        "label": "Your name",
+        "flowstage": "Proposal",
+        "type": "string",
+        "maxwords": 10,
+        "maxchars": 100,
+        "hideatgradingname": "Proposal score"
+      },
+      {
+        "label": "Topic",
+        "help": "Please choose one or more topics",
+        "flowstage": "Proposal",
+        "type": "lookups",
+        "publookup": "Topics"
+      },
+      {
+        "label": "Description",
+        "flowstage": "Proposal",
+        "type": "text",
+        "maxwords": 50
+      },
+      {
+        "label": "Approval",
+        "help": "I have approval to publish",
+        "flowstage": "Paper",
+        "type": "yes"
+      },
+      {
+        "label": "Paper",
+        "help": "Allowed file types: txt pdf doc docx",
+        "flowstage": "Paper",
+        "type": "file",
+        "allowedfiletypes": ".txt, .pdf, .doc, .docx"
+      }
     ]
   }
 }

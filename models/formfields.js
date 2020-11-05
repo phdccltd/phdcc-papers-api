@@ -5,8 +5,8 @@ const Sequelize = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
-    formtype: { type: Sequelize.INTEGER, allowNull: false },
-    formtypeid: { type: Sequelize.INTEGER, allowNull: false },
+    formtype: { type: Sequelize.INTEGER, allowNull: false },  // NOT USED, but formtype==2 for form for stage
+    formtypeid: { type: Sequelize.INTEGER, allowNull: false },  // flowstageId
     label: { type: Sequelize.STRING, allowNull: false },
     help: { type: Sequelize.STRING, allowNull: false },
     helplink: { type: Sequelize.STRING, allowNull: false },
