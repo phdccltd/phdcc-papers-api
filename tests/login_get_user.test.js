@@ -47,7 +47,7 @@ describe('USER', () => {
         .get('/user')
         .set('authorization', 'bearer ' + token)
       if (res2.statusCode !== 200) throw new Error('res2: Bad HTTP status ' + res2.statusCode)
-      console.log(res2.body) 
+      console.log(res2.body)
       const rv2 = _.isEqual(res2.body, { ret: 0, status: 'OK', user: { id: 1, name: 'Jo', username: 'jo', super: true, publicsettings: {} } })
       if (!rv2) throw new Error('rv2: Bad response')
       testSucceeded = true

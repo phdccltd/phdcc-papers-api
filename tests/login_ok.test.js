@@ -2,7 +2,6 @@
 // https://dev.to/nedsoft/testing-nodejs-express-api-with-jest-and-supertest-1km6
 // https://www.npmjs.com/package/supertest
 
-const request = require('supertest')
 const testhelper = require('./testhelper')
 const maketestsite = require('./maketestsite')
 const runscript = require('./runscript')
@@ -21,24 +20,17 @@ describe('LOGIN', () => {
       const initresult = await app.checkDatabases(maketestsite)
       if (initresult !== 1) throw new Error('initresult:' + initresult)
 
-      const simple = {}
-      let error = await runscript.run(app.models, 'addsimpleflow.json', simple)
+      const config = {}
+      let error = await runscript.run(app.models, 'addsimpleflow.json', config)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'addusers.json', simple)
+      error = await runscript.run(app.models, 'addusers.json', config)
       if (error) throw new Error(error)
 
-      const res = await request(app)
-        .post('/user/login')
-        .send({
-          username: 'jo',
-          password: 'asecret',
-          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS
-        })
-      console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
+      error = await runscript.run(app.models, 'api-login-super.json', false, app)
+      if (error) throw new Error(error)
 
-      expect(res.statusCode).toEqual(200)
-      testSucceeded = res.body.ret === 0 && typeof res.body.token === 'string'
+      testSucceeded = true
     } catch (e) {
       console.log('TEST EXCEPTION', e.message)
       testSucceeded = false

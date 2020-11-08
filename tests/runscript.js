@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const _ = require('lodash/core')
+const request = require('supertest')
 const bcrypt = require('bcrypt')
 const saltRounds = 10
 
@@ -28,10 +29,11 @@ function lookup (lookfor, lookin) {
   return null
 }
 
-async function run (models, configfilename, existingconfig) {
+async function run (models, configfilename, existingconfig, app) {
   if (!existingconfig) existingconfig = {}
 
   try {
+    /////////////////////////
     const configfile = path.resolve(__dirname, '../scripts', configfilename)
     let configtext = fs.readFileSync(configfile, { encoding: 'utf8' })
     if (configtext.charCodeAt(0) === 65279) { // Remove UTF-8 start character
@@ -51,7 +53,7 @@ async function run (models, configfilename, existingconfig) {
     let config
     try {
       config = JSON.parse(configtext)
-      //console.log(config)
+      // console.log(config)
     } catch (e) {
       return 'config file not in JSON format'
     }
@@ -60,6 +62,7 @@ async function run (models, configfilename, existingconfig) {
     console.log('PROCESSING:', config.name)
     let weight
     // Publication: just one per config
+    /////////////////////////
     if (config.pub) {
       console.log('----')
       const newpub = { siteId: 1, startdate: new Date(2021, 1, 1, 0, 0, 0, 0), ...config.pub }
@@ -133,8 +136,7 @@ async function run (models, configfilename, existingconfig) {
               if (matchstatus) {
                 if (grade.authorcanseeatthesestatuses.length > 0) grade.authorcanseeatthesestatuses += ','
                 grade.authorcanseeatthesestatuses += matchstatus.db.id
-              }
-              else {
+              } else {
                 return 'Not found status ' + statustext + ' for grade ' + grade.name
               }
             }
@@ -187,14 +189,15 @@ async function run (models, configfilename, existingconfig) {
         console.log('formfield.db created', formfield.db.id)
       }
     }
+    /////////////////////////
     // Add users
     if (config.users) {
       console.log('----')
       const pub = existingconfig.pub ? existingconfig.pub : config.pub
-      if( !pub) return 'No publication found to attach users to'
-      if (pub.name !== config.users.pub) return 'Users publication not found ' + config.users.pub
-      console.log('Adding users and with roles in publication ' + pub.name)
-      for (const user of config.users.list) {
+      if (!pub) return 'No publication found to attach users to'
+      if (pub.name !== config.pubname) return 'Users publication not found ' + config.pubname
+      console.log('Adding users and with roles in publication ' + pub.pubname)
+      for (const user of config.users) {
         const newuser = { ...defaultUser, ...user }
         newuser.password = await bcrypt.hash(newuser.password, saltRounds)
         user.db = await models.users.create(newuser)
@@ -213,7 +216,44 @@ async function run (models, configfilename, existingconfig) {
         }
       }
     }
+    /////////////////////////
+    if (config.api) {
+      for (const call of config.api) {
+        const data = call.data
+        if ('g-recaptcha-response' in data) {
+          data['g-recaptcha-response'] = process.env.RECAPTCHA_BYPASS
+        }
+        console.log('Running ' + call.name + ': ' + call.method)
+        let res = false
+        switch (call.method) {
+          case 'post':
+            res = await request(app)
+              .post(call.uri)
+              .send(data)
+            break
+        }
+        if (!res) return 'No response for ' + call.name
+        console.log(res.body)
 
+        if (res.statusCode!==200) return 'Response statusCode ' + res.statusCode + ' returned for ' + call.name
+
+        if (call.return) {
+          if ('ret' in call.return) {
+            if (res.body.ret !== call.return.ret) return 'Response ret ' + res.body.ret + ' does not match ' + call.return.ret + ' for ' + call.name
+          } else {
+            if (res.body.ret !== 0) return 'Response ret ' + res.body.ret + ' not zero  for ' + call.name
+          }
+          if ('prop' in call.return) {
+            if ('typeof' in call.return) {
+              const prop = res.body[call.return.prop]
+              if (typeof prop !== call.return.typeof) return 'Prop ' + call.return.prop + ' with value ' + prop + ' not type ' + call.return.typeof + ' for ' + call.name
+            }
+          }
+        }
+      }
+    }
+
+    /////////////////////////
     // Copy new config into existing
     Object.assign(existingconfig, config)
   } catch (e) {
