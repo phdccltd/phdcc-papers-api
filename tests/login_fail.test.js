@@ -15,6 +15,7 @@ process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
 describe('LOGIN', () => {
   it('Check incorrect login fails', async () => {
+    let testSucceeded = false
     try {
       const app = require('../app')
 
@@ -36,15 +37,16 @@ describe('LOGIN', () => {
         })
       console.log(res.body)
 
-      expect(res.statusCode).toEqual(200)
-      const rv = _.isEqual(res.body, { ret: 1, status: 'Incorrect password' })
-      expect(rv).toBe(true)
+      if (res.statusCode !== 200) throw new Error('Bad HTTP status ' + res.statusCode)
+
+      testSucceeded = _.isEqual(res.body, { ret: 1, status: 'Incorrect password' })
     } catch (e) {
-      console.log(e.message)
-      expect(e.message).toBe(false)
+      console.log('TEST EXCEPTION', e.message)
+      testSucceeded = false
     }
     spyclog.mockRestore()
     spycerror.mockRestore()
     console.log('All console output\n', testhelper.accumulogged())
+    expect(testSucceeded).toBe(true)
   })
 })
