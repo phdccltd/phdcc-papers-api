@@ -14,6 +14,7 @@ process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
 describe('LOGIN', () => {
   it('Check correct login succeeds', async () => {
+    let testSucceeded = false
     try {
       const app = require('../app')
 
@@ -37,14 +38,14 @@ describe('LOGIN', () => {
       console.log(res.body) // {"ret":0,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..."}
 
       expect(res.statusCode).toEqual(200)
-      const rv = res.body.ret === 0 && typeof res.body.token === 'string'
-      expect(rv).toBe(true)
+      testSucceeded = res.body.ret === 0 && typeof res.body.token === 'string'
     } catch (e) {
-      console.log(e.message)
-      expect(e.message).toBe(false)
+      console.log('TEST EXCEPTION', e.message)
+      testSucceeded = false
     }
     spyclog.mockRestore()
     spycerror.mockRestore()
     console.log('All console output\n', testhelper.accumulogged())
+    expect(testSucceeded).toBe(true)
   })
 })

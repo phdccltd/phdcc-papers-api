@@ -28,8 +28,8 @@ function lookup (lookfor, lookin) {
   return null
 }
 
-async function run (models, configfilename, config) {
-  if (!config) config = {}
+async function run (models, configfilename, existingconfig) {
+  if (!existingconfig) existingconfig = {}
 
   try {
     const configfile = path.resolve(__dirname, '../scripts', configfilename)
@@ -48,18 +48,20 @@ async function run (models, configfilename, config) {
       configtext = configtext.substring(0, dslashpos) + configtext.substring(endlinepos)
     }
     // console.log(configtext)
+    let config
     try {
-      Object.assign(config, JSON.parse(configtext)) // Copy into config
+      config = JSON.parse(configtext)
+      //console.log(config)
     } catch (e) {
-      console.error('config file not in JSON format')
-      return 0
+      return 'config file not in JSON format'
     }
-    // console.log(config)
 
+    console.log('----')
     console.log('PROCESSING:', config.name)
     let weight
     // Publication: just one per config
     if (config.pub) {
+      console.log('----')
       const newpub = { siteId: 1, startdate: new Date(2021, 1, 1, 0, 0, 0, 0), ...config.pub }
       config.pub.db = await models.pubs.create(newpub)
       if (!config.pub.db) return 'Could not create pub'
@@ -132,6 +134,9 @@ async function run (models, configfilename, config) {
                 if (grade.authorcanseeatthesestatuses.length > 0) grade.authorcanseeatthesestatuses += ','
                 grade.authorcanseeatthesestatuses += matchstatus.db.id
               }
+              else {
+                return 'Not found status ' + statustext + ' for grade ' + grade.name
+              }
             }
           }
 
@@ -184,16 +189,33 @@ async function run (models, configfilename, config) {
     }
     // Add users
     if (config.users) {
-      const pub = config.pub
+      console.log('----')
+      const pub = existingconfig.pub ? existingconfig.pub : config.pub
+      if( !pub) return 'No publication found to attach users to'
       if (pub.name !== config.users.pub) return 'Users publication not found ' + config.users.pub
+      console.log('Adding users and with roles in publication ' + pub.name)
       for (const user of config.users.list) {
         const newuser = { ...defaultUser, ...user }
         newuser.password = await bcrypt.hash(newuser.password, saltRounds)
         user.db = await models.users.create(newuser)
         if (!user.db) return 'Could not create user ' + user.name
         console.log('user.db created', user.db.id)
+
+        const roles = user.roles.split(',')
+        for (const findrole of roles) {
+          const matchrole = _.find(pub.role, role => { return role.name === findrole })
+          if (matchrole) {
+            await matchrole.db.addUser(user.db)
+            console.log('Added role', findrole)
+          } else {
+            return 'Not found role ' + findrole + ' to user ' + user.name
+          }
+        }
       }
     }
+
+    // Copy new config into existing
+    Object.assign(existingconfig, config)
   } catch (e) {
     return e.message
   }
