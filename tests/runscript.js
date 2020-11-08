@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const _ = require('lodash/core')
+const _ = require('lodash')
 const request = require('supertest')
 const bcrypt = require('bcrypt')
 const saltRounds = 10
@@ -218,14 +218,34 @@ async function run (models, configfilename, existingconfig, app) {
     }
     /////////////////////////
     if (config.api) {
+      const persisted = {}
       for (const call of config.api) {
         const data = call.data
         if ('g-recaptcha-response' in data) {
           data['g-recaptcha-response'] = process.env.RECAPTCHA_BYPASS
         }
+        if ('preset' in call) {
+          for (const preset of call.preset) {
+            if (preset.name in data) {
+              const before = data[preset.name]
+              const usepos = before.indexOf(preset.use)
+              if (usepos !== -1) {
+                const usename = preset.use.substring(1)
+                const replaceby = usename in persisted ? persisted[usename] : ''
+                const after = before.substring(0, usepos) + replaceby + before.substring(usepos + preset.use.length)
+                data[preset.name] = after
+              }
+            }
+          }
+        }
         console.log('Running ' + call.name + ': ' + call.method)
         let res = false
         switch (call.method) {
+          case 'get':
+            res = await request(app)
+              .get(call.uri)
+              .set(data)
+            break
           case 'post':
             res = await request(app)
               .post(call.uri)
@@ -244,11 +264,26 @@ async function run (models, configfilename, existingconfig, app) {
             if (res.body.ret !== 0) return 'Response ret ' + res.body.ret + ' not zero  for ' + call.name
           }
           if ('prop' in call.return) {
-            if ('typeof' in call.return) {
+            if (Array.isArray(call.return.prop)) {
+              for (const test of call.return.prop) {
+                const prop = res.body[test.name]
+                if (!(_.isEqual(prop, test.value))) return 'Prop ' + test.name + ' does not match: ' + test.value
+              }
+            }
+            else {
               const prop = res.body[call.return.prop]
-              if (typeof prop !== call.return.typeof) return 'Prop ' + call.return.prop + ' with value ' + prop + ' not type ' + call.return.typeof + ' for ' + call.name
+              if ('typeof' in call.return) {
+                if (typeof prop !== call.return.typeof) return 'Prop ' + call.return.prop + ' with value ' + prop + ' not type ' + call.return.typeof + ' for ' + call.name
+              }
+              if ('value' in call.return) {
+                if (prop !== call.return.value) return 'Prop ' + call.return.prop + ' with value ' + prop + ' not ' + call.return.value + ' for ' + call.name
+              }
             }
           }
+        }
+        if ('set' in call) {
+          persisted[call.set.name] = res.body[call.set.value]
+          console.log('Persisted ' + call.set.name + ' set to ' + persisted[call.set.name])
         }
       }
     }

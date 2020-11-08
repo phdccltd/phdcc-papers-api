@@ -28,18 +28,11 @@ describe('LOGIN', () => {
 
       error = await runscript.run(app.models, 'addusers.json', simple)
       if (error) throw new Error(error)
-      const res = await request(app)
-        .post('/user/login')
-        .send({
-          username: 'jo',
-          password: 'wrongsecret',
-          'g-recaptcha-response': process.env.RECAPTCHA_BYPASS
-        })
-      console.log(res.body)
 
-      if (res.statusCode !== 200) throw new Error('Bad HTTP status ' + res.statusCode)
+      error = await runscript.run(app.models, 'api-login-fail.json', false, app)
+      if (error) throw new Error(error)
 
-      testSucceeded = _.isEqual(res.body, { ret: 1, status: 'Incorrect password' })
+      testSucceeded = true
     } catch (e) {
       console.log('TEST EXCEPTION', e.message)
       testSucceeded = false

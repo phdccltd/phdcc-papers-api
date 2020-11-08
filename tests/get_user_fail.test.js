@@ -27,12 +27,10 @@ describe('USER', () => {
       error = await runscript.run(app.models, 'addusers.json', simple)
       if (error) throw new Error(error)
 
-      const res = await request(app)
-        .get('/user')
-      console.log(res.body) //
+      error = await runscript.run(app.models, 'api-get-user-fail.json', false, app)
+      if (error) throw new Error(error)
 
-      if (res.statusCode !== 200) throw new Error('Bad HTTP status ' + res.statusCode)
-      testSucceeded = _.isEqual(res.body, { ret: 1, status: 'Not logged in' })
+      testSucceeded = true
     } catch (e) {
       console.log('TEST EXCEPTION', e.message)
       testSucceeded = false

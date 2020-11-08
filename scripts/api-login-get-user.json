@@ -1,0 +1,52 @@
+{
+  "name": "Login and get user test",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "Log in as superuser Jo",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "jo",
+        "password": "asecret",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "token",
+        "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value":  "token"
+      }
+    },
+    {
+      "name": "Get user info for Jo",
+      "method": "get",
+      "uri": "/user",
+      "data": {
+        "authorization": "bearer @token"
+      },
+      "preset": [
+        { "name":"authorization", "use":  "@token" }
+      ],
+      "return": {
+        "ret": 0,
+        "prop": [
+          { "name": "status", "value":  "OK" },
+          {
+            "name":  "user",
+            "value": {
+              "id": 1,
+              "name": "Jo",
+              "username": "jo",
+              "super": true,
+              "publicsettings": {}
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
