@@ -27,7 +27,9 @@
       "uri": "/submits/submit/1", // Proposal
       "fields": [
         {"stageid": 1 },
-        { "title": "New proposal #1" }
+        { "title": "New proposal #1" },
+        { "values": { "formfieldid": 1, "string": "Author name", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 3, "string": "An exciting new proposal description", "integer": null, "text": null, "existingfile": null, "file": null } }
       ],
       "return": {
         "ret": 0

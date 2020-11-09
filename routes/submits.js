@@ -124,7 +124,7 @@ async function addEntry (req, res, next) {
     const values = (typeof req.body.values === 'string') ? [req.body.values] : req.body.values // Single value comes in as string; otherwise array
     for (const sv of values) {
       const v = JSON.parse(sv)
-      console.log('addEntry v',v)
+      console.log('addEntry v', v)
       if (v.string && v.string.length > 255) v.string = v.string.substring(0, 255)
       if (v.file) {
         let found = false

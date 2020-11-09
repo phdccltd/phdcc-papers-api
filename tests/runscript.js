@@ -263,28 +263,19 @@ async function run (models, configfilename, existingconfig, app) {
               .set('authorization', authheader)
               .send(data)
             break
-          case 'postform':
+          case 'postform': {
             let req = request(app)
               .post(call.uri)
               .set('authorization', authheader)
+
             for (const field of call.fields) {
-              console.log('FIELD', field)
-              req = req
-                .field(field)
+              const fieldkeys = Object.keys(field)
+              const fieldvalue = fieldkeys[0]
+              req = req.field(fieldvalue, JSON.stringify(field[fieldvalue]))
             }
-            const ff1 = {
-              "formfieldid": 1,
-              "string": "Author name",
-              "integer": null,
-              "text": null,
-              "existingfile": null,
-              "file": null
-            }
-            req = req.field('values', JSON.stringify(ff1))
-            const ff2 = { "formfieldid": 3, "string": "An exciting new proposal description", "integer": null, "text": null, "existingfile": null, "file": null }
-            req = req.field('values', JSON.stringify(ff2))
             res = await req
             break
+          }
         }
         if (!res) return 'No response for ' + call.name
         console.log(res.body)
