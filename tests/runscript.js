@@ -1,7 +1,12 @@
+// https://dev.to/nedsoft/testing-nodejs-express-api-with-jest-and-supertest-1km6
+// https://www.npmjs.com/package/supertest
+// https://visionmedia.github.io/superagent/
+
 const fs = require('fs')
 const path = require('path')
 const _ = require('lodash')
 const request = require('supertest')
+const FormData = require('form-data')
 const bcrypt = require('bcrypt')
 const saltRounds = 10
 
@@ -204,6 +209,8 @@ async function run (models, configfilename, existingconfig, app) {
         if (!user.db) return 'Could not create user ' + user.name
         console.log('user.db created', user.db.id)
 
+        await pub.db.addUser(user.db)
+
         const roles = user.roles.split(',')
         for (const findrole of roles) {
           const matchrole = _.find(pub.role, role => { return role.name === findrole })
@@ -238,19 +245,31 @@ async function run (models, configfilename, existingconfig, app) {
             }
           }
         }
+        const authheader = 'token' in persisted ? 'bearer ' + persisted.token : ''
+        
         console.log('Running ' + call.name + ': ' + call.method)
         let res = false
         switch (call.method) {
           case 'get':
             res = await request(app)
               .get(call.uri)
+              .set('authorization', authheader)
               .set(data)
             break
           case 'post':
             res = await request(app)
               .post(call.uri)
+              .set('authorization', authheader)
               .send(data)
             break
+          case 'postform':
+            res = await request(app)
+              .post(call.uri)
+              .set('authorization', authheader)
+              //.field()
+              //.send(new FormData(data))
+            break
+            
         }
         if (!res) return 'No response for ' + call.name
         console.log(res.body)

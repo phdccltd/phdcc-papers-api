@@ -26,11 +26,7 @@
       "method": "get",
       "uri": "/user",
       "data": {
-        "authorization": "bearer @token"
       },
-      "preset": [
-        { "name":"authorization", "use":  "@token" }
-      ],
       "return": {
         "ret": 0,
         "prop": [

@@ -311,7 +311,8 @@ async function register (req, res, next) {
 // Must be logged in from now on
 // req.ppuser is passport user
 function loaduser (req, res, next) {
-  // console.log('CHECK LOGGED IN')
+  //console.log('CHECK LOGGED IN', req.headers['authorization'])
+  
   passport.authenticate('jwt', { session: false },
     async (err, ppuser, info) => {
       if (ppuser) {
