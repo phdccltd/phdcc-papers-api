@@ -12,7 +12,7 @@ const dbutils = require('./dbutils')
 
 const router = Router()
 
-const TMPDIR = '/tmp/papers/'
+const TMPDIR = process.env.TESTTMPDIR ? process.env.TESTTMPDIR : '/tmp/papers/'
 
 /* ************************ */
 /* GET: Get anonymised stage entries */

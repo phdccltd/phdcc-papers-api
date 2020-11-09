@@ -31,8 +31,8 @@ const logger = require('../logger')
 const dbutils = require('./dbutils')
 const mailutils = require('./mailutils')
 
-const TMPDIR = '/tmp/papers/'
-const TMPDIRARCHIVE = '/tmp/papers/archive' // Without final slash.  Deleted files go here (to be deleted on server reboot)
+const TMPDIR = process.env.TESTTMPDIR ? process.env.TESTTMPDIR : '/tmp/papers/'
+const TMPDIRARCHIVE = TMPDIR + 'archive' // Without final slash.  Deleted files go here (to be deleted on server reboot)
 
 const upload = multer({ dest: TMPDIR })
 
@@ -80,7 +80,9 @@ router.post('/submits/entry/:entryid', upload.array('files'), handleEntryPost)
 
 async function addEntry (req, res, next) {
   try {
-    const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+    let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+    if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
+    if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
 
     if (!req.dbsubmit) {
       req.dbsubmit = await models.submits.findByPk(req.submitId)
@@ -103,7 +105,6 @@ async function addEntry (req, res, next) {
     if (!dbentry) return utils.giveup(req, res, 'Could not create entry')
     logger.log4req(req, 'CREATED entry', dbentry.id)
 
-    if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
     for (const file of req.files) {
       // console.log("FILE", file)
       const hyphenpos = file.originalname.indexOf('-')
@@ -297,7 +298,8 @@ router.post('/submits/submit/:flowid', upload.array('files'), addNewSubmit)
 async function editEntry (req, res, next) {
   try {
     console.log('editEntry', req.params.entryid)
-    const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+    let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+    if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
     if (!filesdir) return utils.giveup(req, res, 'Files storage directory not defined')
 
     const entryid = parseInt(req.params.entryid)
@@ -409,7 +411,8 @@ async function deleteEntry (req, res, next) {
   try {
     console.log('deleteEntry', req.entryid)
 
-    const filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+    let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+    if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
 
     const entryid = parseInt(req.entryid)
     const dbentry = await models.entries.findByPk(entryid)
@@ -505,7 +508,8 @@ async function getEntryFile (req, res, next) {
     if (error) return utils.giveup(req, res, error)
 
     const ContentType = mime.lookup(dbentryvalue.file)
-    const filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
+    let filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
+    if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
     const options = {
       root: filesdir,
       dotfiles: 'deny',

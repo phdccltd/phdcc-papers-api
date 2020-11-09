@@ -6,7 +6,7 @@ const fs = require('fs')
 const path = require('path')
 const _ = require('lodash')
 const request = require('supertest')
-const FormData = require('form-data')
+// const FormData = require('form-data')
 const bcrypt = require('bcrypt')
 const saltRounds = 10
 
@@ -228,7 +228,7 @@ async function run (models, configfilename, existingconfig, app) {
       const persisted = {}
       for (const call of config.api) {
         const data = call.data
-        if ('g-recaptcha-response' in data) {
+        if (data && 'g-recaptcha-response' in data) {
           data['g-recaptcha-response'] = process.env.RECAPTCHA_BYPASS
         }
         if ('preset' in call) {
@@ -246,8 +246,8 @@ async function run (models, configfilename, existingconfig, app) {
           }
         }
         const authheader = 'token' in persisted ? 'bearer ' + persisted.token : ''
-        
-        console.log('Running ' + call.name + ': ' + call.method)
+
+        console.log('Running ' + call.name + ': ' + call.method + ' ' + call.uri)
         let res = false
         switch (call.method) {
           case 'get':
@@ -266,10 +266,10 @@ async function run (models, configfilename, existingconfig, app) {
             res = await request(app)
               .post(call.uri)
               .set('authorization', authheader)
-              //.field()
-              //.send(new FormData(data))
+              .field('stageid', 1)
+              .field('title', 'New proposal #1')
+              // .send(new FormData(data))
             break
-            
         }
         if (!res) return 'No response for ' + call.name
         console.log(res.body)

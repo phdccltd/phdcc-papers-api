@@ -25,7 +25,7 @@
       "name": "addNewSubmit",
       "method": "postform",
       "uri": "/submits/submit/1", // Proposal
-      "data": {
+      "fields": {
       },
       "return": {
         "ret": 0
