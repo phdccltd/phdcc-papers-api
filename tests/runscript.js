@@ -33,7 +33,7 @@ async function run (models, configfilename, existingconfig, app) {
   if (!existingconfig) existingconfig = {}
 
   try {
-    /////////////////////////
+    /// //////////////////////
     const configfile = path.resolve(__dirname, '../scripts', configfilename)
     let configtext = fs.readFileSync(configfile, { encoding: 'utf8' })
     if (configtext.charCodeAt(0) === 65279) { // Remove UTF-8 start character
@@ -62,7 +62,7 @@ async function run (models, configfilename, existingconfig, app) {
     console.log('PROCESSING:', config.name)
     let weight
     // Publication: just one per config
-    /////////////////////////
+    /// //////////////////////
     if (config.pub) {
       console.log('----')
       const newpub = { siteId: 1, startdate: new Date(2021, 1, 1, 0, 0, 0, 0), ...config.pub }
@@ -189,7 +189,7 @@ async function run (models, configfilename, existingconfig, app) {
         console.log('formfield.db created', formfield.db.id)
       }
     }
-    /////////////////////////
+    /// //////////////////////
     // Add users
     if (config.users) {
       console.log('----')
@@ -216,7 +216,7 @@ async function run (models, configfilename, existingconfig, app) {
         }
       }
     }
-    /////////////////////////
+    /// //////////////////////
     if (config.api) {
       const persisted = {}
       for (const call of config.api) {
@@ -255,7 +255,7 @@ async function run (models, configfilename, existingconfig, app) {
         if (!res) return 'No response for ' + call.name
         console.log(res.body)
 
-        if (res.statusCode!==200) return 'Response statusCode ' + res.statusCode + ' returned for ' + call.name
+        if (res.statusCode !== 200) return 'Response statusCode ' + res.statusCode + ' returned for ' + call.name
 
         if (call.return) {
           if ('ret' in call.return) {
@@ -269,11 +269,10 @@ async function run (models, configfilename, existingconfig, app) {
                 const prop = res.body[test.name]
                 if (!(_.isEqual(prop, test.value))) return 'Prop ' + test.name + ' does not match: ' + test.value
               }
-            }
-            else {
+            } else {
               const prop = res.body[call.return.prop]
               if ('typeof' in call.return) {
-                if (typeof prop !== call.return.typeof) return 'Prop ' + call.return.prop + ' with value ' + prop + ' not type ' + call.return.typeof + ' for ' + call.name
+                if (typeof prop !== call.return.typeof) return 'Prop ' + call.return.prop + ' with value ' + prop + ' not type ' + call.return.typeof + ' for ' + call.name // eslint-disable-line valid-typeof
               }
               if ('value' in call.return) {
                 if (prop !== call.return.value) return 'Prop ' + call.return.prop + ' with value ' + prop + ' not ' + call.return.value + ' for ' + call.name
@@ -288,7 +287,7 @@ async function run (models, configfilename, existingconfig, app) {
       }
     }
 
-    /////////////////////////
+    /// //////////////////////
     // Copy new config into existing
     Object.assign(existingconfig, config)
   } catch (e) {
