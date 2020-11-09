@@ -1,6 +1,7 @@
 // https://dev.to/nedsoft/testing-nodejs-express-api-with-jest-and-supertest-1km6
 // https://www.npmjs.com/package/supertest
 // https://visionmedia.github.io/superagent/
+// https://stackoverflow.com/questions/31892295/trying-to-post-multipart-form-data-with-node-js-supertest
 
 const fs = require('fs')
 const path = require('path')
@@ -263,12 +264,26 @@ async function run (models, configfilename, existingconfig, app) {
               .send(data)
             break
           case 'postform':
-            res = await request(app)
+            let req = request(app)
               .post(call.uri)
               .set('authorization', authheader)
-              .field('stageid', 1)
-              .field('title', 'New proposal #1')
-              // .send(new FormData(data))
+            for (const field of call.fields) {
+              console.log('FIELD', field)
+              req = req
+                .field(field)
+            }
+            const ff1 = {
+              "formfieldid": 1,
+              "string": "Author name",
+              "integer": null,
+              "text": null,
+              "existingfile": null,
+              "file": null
+            }
+            req = req.field('values', JSON.stringify(ff1))
+            const ff2 = { "formfieldid": 3, "string": "An exciting new proposal description", "integer": null, "text": null, "existingfile": null, "file": null }
+            req = req.field('values', JSON.stringify(ff2))
+            res = await req
             break
         }
         if (!res) return 'No response for ' + call.name

@@ -25,8 +25,10 @@
       "name": "addNewSubmit",
       "method": "postform",
       "uri": "/submits/submit/1", // Proposal
-      "fields": {
-      },
+      "fields": [
+        {"stageid": 1 },
+        { "title": "New proposal #1" }
+      ],
       "return": {
         "ret": 0
       }
