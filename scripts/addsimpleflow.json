@@ -146,6 +146,19 @@
         "maxwords": 50
       },
       {
+        "label": "Is there a conflict of interest",
+        "flowstage": "Proposal",
+        "type": "yesno",
+        "ref":  "HasConflictOfInterest"
+      },
+      {
+        "label": "Conflict of interest",
+        "flowstage": "Proposal",
+        "type": "string",
+        "required": false,
+        "requiredif": "@HasConflictOfInterest=1"
+      },
+      {
         "label": "Approval",
         "help": "I have approval to publish",
         "flowstage": "Paper",
