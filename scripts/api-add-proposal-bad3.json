@@ -1,5 +1,5 @@
 {
-  "name": "Submit: Add new proposal: bad formfieldid",
+  "name": "Submit: Add new proposal: bad flowid",
   "pubname": "TestPubName",
   "api": [
     {
@@ -22,18 +22,17 @@
       }
     },
     {
-      "name": "addNewSubmit proposal with duff formfieldid",
+      "name": "addNewSubmit proposal with duff flowid",
       "method": "postform",
-      "uri": "/submits/submit/1", // Proposal
+      "uri": "/submits/submit/10",
       "fields": [
         { "stageid": 1 },
-        { "title": "New proposal #1" },
-        { "values": { "formfieldid": 30, "string": "An exciting new proposal description", "integer": null, "text": null, "existingfile": null, "file": null } }
+        { "title": "New proposal #1" }
       ],
       "return": {
         "ret": 1,
         "prop": "status",
-        "value": "Invalid formfieldid: 30"
+        "value": "Could not find flow"
       }
     }
   ]
