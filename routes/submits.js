@@ -200,7 +200,7 @@ async function addEntry (req, res, next) {
           }
         }
         if (field.maxwords && tocheckmax) {
-          const matches = tocheckmax.match(/\S+/g);
+          const matches = tocheckmax.match(/\S+/g)
           if (matches && (matches.length > field.maxwords)) {
             return utils.giveup(req, res, 'Too many words ' + matches.length + ' for field: ' + v.formfieldid)
           }
