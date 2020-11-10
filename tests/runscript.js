@@ -196,9 +196,10 @@ async function run (models, configfilename, existingconfig, app) {
           if (atPos !== -1) {
             const endPos = requiredif.indexOf('=', atPos)
             const lookfor = requiredif.substring(atPos + 1, endPos)
-            console.log('lookfor', lookfor)
             for (const ref of refs) {
-
+              if (ref.name === lookfor) {
+                formfield.requiredif = requiredif.substring(0, atPos) + ref.id + requiredif.substring(endPos)
+              }
             }
           }
         }

@@ -206,27 +206,20 @@ async function addEntry (req, res, next) {
           }
         }
       }
-      /*if (field.requiredif && !got) { // Only copes with: required if <fieldid>=<integer>
+      if (field.requiredif && !got) { // Only copes with: required if <fieldid>=<integer>
         const reffield = parseInt(field.requiredif)
         const eqpos = field.requiredif.indexOf('=')
         const mustequal = parseInt(field.requiredif.substring(eqpos + 1))
         if (reffield && eqpos !== -1) {
-          let checkok = false
-          for (const checkfield of this.entry.fields) {
-            if (checkfield.id === reffield) {
-              const cfi = checkfield.val.integer
-              if (cfi !== mustequal) {
-                checkok = true
-                break
+          for (const v2 of values) {
+            if (v2.formfieldid === reffield) {
+              if (v2.integer !== null && v2.integer === mustequal) {
+                return utils.giveup(req, res, 'Required entry value not found for field: ' + v.formfieldid)
               }
             }
           }
-          if (!checkok) {
-            anyerror = true
-            field.message = 'This field is required. '
-          }
         }
-      }*/
+      }
 
       // Add entry value
       const entryvalue = {
