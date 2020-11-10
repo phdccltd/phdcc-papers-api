@@ -121,9 +121,28 @@ async function addEntry (req, res, next) {
       logger.log4req(req, 'Uploaded file', filesdir + filepath)
     }
 
-    const values = (typeof req.body.values === 'string') ? [req.body.values] : req.body.values // Single value comes in as string; otherwise array
-    for (const sv of values) {
+    const svalues = (typeof req.body.values === 'string') ? [req.body.values] : req.body.values // Single value comes in as string; otherwise array
+
+    // Check given formfields are valid
+    const dbformfields = await models.formfields.findAll({ where: { formtypeid: req.body.stageid } })
+    const values = []
+    for (const sv of svalues) {
       const v = JSON.parse(sv)
+      const formfieldfound = _.find(dbformfields, ff => { return ff.id === v.formfieldid })
+      if (!formfieldfound) return utils.giveup(req, res, 'Invalid formfieldid: ' + v.formfieldid)
+      values.push(v)
+    }
+    // Add any missing formfields
+    for (const ff of dbformfields) {
+      const formfieldfound = _.find(values, v => { return ff.id === v.formfieldid })
+      if (!formfieldfound) {
+        const emptyformfield = { formfieldid: ff.id, string: null, integer: null, text: null, existingfile: null, file: null }
+        values.push(emptyformfield)
+        console.log('adding empty formfield', ff.id)
+      }
+    }
+
+    for (const v of values) {
       console.log('addEntry v', v)
       if (v.string && v.string.length > 255) v.string = v.string.substring(0, 255)
       if (v.file) {

@@ -278,7 +278,7 @@ async function run (models, configfilename, existingconfig, app) {
           }
         }
         if (!res) return 'No response for ' + call.name
-        console.log(res.body)
+        console.log('res.body', res.body)
 
         if (res.statusCode !== 200) return 'Response statusCode ' + res.statusCode + ' returned for ' + call.name
 
