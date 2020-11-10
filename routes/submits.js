@@ -275,6 +275,8 @@ async function addNewSubmit (req, res, next) {
     req.dbpub = await req.dbflow.getPub()
     if (!req.dbpub) return utils.giveup(req, res, 'Could not find pub for flow', flowid)
 
+    if (!('stageid' in req.body)) return utils.giveup(req, res, 'stageid not given')
+
     const notallowed = await oktoadd(req, res)
     if (!notallowed) return
 

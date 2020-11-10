@@ -1,5 +1,5 @@
 {
-  "name": "Submit: Add new proposal by author1",
+  "name": "Submit: Add new proposal: missing stageid",
   "pubname": "TestPubName",
   "api": [
     {
@@ -22,17 +22,15 @@
       }
     },
     {
-      "name": "addNewSubmit proposal",
+      "name": "addNewSubmit proposal with missing stageid",
       "method": "postform",
       "uri": "/submits/submit/1", // Proposal
       "fields": [
-        //{"stageid": 1 },
-        { "title": "New proposal #1" },
-        { "values": { "formfieldid": 1, "string": "Author name", "integer": null, "text": null, "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 30, "string": "An exciting new proposal description", "integer": null, "text": null, "existingfile": null, "file": null } }
       ],
       "return": {
-        "ret": 0
+        "ret": 1,
+        "prop": "status",
+        "value": "stageid not given"
       }
     }
   ]
