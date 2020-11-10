@@ -1,5 +1,5 @@
 {
-  "name": "Submit: Add new proposal by author1",
+  "name": "Submit: Add new proposal with requiredif fail",
   "pubname": "TestPubName",
   "api": [
     {
@@ -22,7 +22,7 @@
       }
     },
     {
-      "name": "addNewSubmit proposal",
+      "name": "addNewSubmit proposal with requiredif fail",
       "method": "postform",
       "uri": "/submits/submit/1", // Proposal
       "fields": [
@@ -32,10 +32,12 @@
         { "values": { "formfieldid": 2, "string": "2,3", "integer": null, "text": null, "existingfile": null, "file": null } },
         { "values": { "formfieldid": 3, "string": null, "integer": null, "text": "An exciting new proposal description", "existingfile": null, "file": null } },
         { "values": { "formfieldid": 4, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 5, "string": "Know the boss", "integer": null, "text": null, "existingfile": null, "file": null } }
+        { "values": { "formfieldid": 5, "string": "", "integer": null, "text": null, "existingfile": null, "file": null } }
       ],
       "return": {
-        "ret": 0
+        "ret": 1,
+        "prop": "status",
+        "value": "String too long 299 for field: 2"
       }
     }
   ]

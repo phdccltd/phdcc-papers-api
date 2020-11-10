@@ -179,6 +179,7 @@ async function run (models, configfilename, existingconfig, app) {
 
       // Form fields
       weight = 1
+      const refs = []
       for (const formfield of config.pub.formfield) {
         for (const flow of config.pub.flow) {
           const foundid = lookup(formfield.flowstage, flow.stage)
@@ -189,10 +190,27 @@ async function run (models, configfilename, existingconfig, app) {
           }
         }
         formfield.publookupId = lookup(formfield.publookup, config.pub.publookup)
+        if (refs.length > 0 && 'requiredif' in formfield) { // eg @HasConflictOfInterest=1
+          const requiredif = formfield.requiredif
+          const atPos = requiredif.indexOf('@')
+          if (atPos !== -1) {
+            const endPos = requiredif.indexOf('=', atPos)
+            const lookfor = requiredif.substring(atPos + 1, endPos)
+            console.log('lookfor', lookfor)
+            for (const ref of refs) {
+
+            }
+          }
+        }
         const newformfield = { formtype: 2, ...defaultFormfield, ...formfield, weight: weight++ }
         formfield.db = await models.formfields.create(newformfield)
         if (!formfield.db) return 'Could not create formfield'
         console.log('formfield.db created', formfield.db.id)
+        if ('ref' in formfield) {
+          const ref = { name: formfield.ref, id: formfield.db.id }
+          refs.push(ref)
+          console.log('ref', ref)
+        }
       }
     }
     /// //////////////////////
