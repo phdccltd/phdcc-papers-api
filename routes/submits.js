@@ -134,12 +134,13 @@ async function addEntry (req, res, next) {
     }
     // Add any missing formfields
     for (const ff of dbformfields) {
-      const formfieldfound = _.find(values, v => { return ff.id === v.formfieldid })
-      if (!formfieldfound) {
-        const emptyformfield = { formfieldid: ff.id, string: null, integer: null, text: null, existingfile: null, file: null }
-        values.push(emptyformfield)
-        console.log('adding empty formfield', ff.id)
+      let v = _.find(values, v => { return ff.id === v.formfieldid })
+      if (!v) {
+        v = { formfieldid: ff.id, string: null, integer: null, text: null, existingfile: null, file: null }
+        values.push(v)
+        console.log('ADDING EMPTY FORMFIELD', ff.id)
       }
+      v.field = ff
     }
 
     for (const v of values) {
@@ -155,6 +156,56 @@ async function addEntry (req, res, next) {
         }
         if (!found) return utils.giveup(req, res, 'entry value file not found: ' + v.formfieldid)
       }
+
+      // Check if required
+      const field = v.field
+      let got = true
+      switch (field.type) {
+        case 'text':
+          got = v.text !== null && v.text.length > 0
+          break
+        case 'string':
+        case 'phone':
+        case 'email':
+        case 'rolelookups':
+        case 'lookups':
+          got = v.string !== null && v.string.length > 0; break
+        case 'yes':
+        case 'yesno':
+          got = v.integer !== null
+          break
+        case 'lookup':
+          got = v.integer !== null
+          break
+        case 'file':
+          got = v.existingfile != null || v.file !== null
+          break
+      }
+      if (field.required) {
+        if (!got) return utils.giveup(req, res, 'Required entry value not found for field: ' + v.formfieldid)
+      }
+      if (field.maxchars || field.maxwords) {
+        let tocheckmax = false
+        if (field.type === 'string') {
+          if (v.string !== null) tocheckmax = v.string
+        }
+        if (field.type === 'text') {
+          if (v.text !== null) tocheckmax = v.text
+        }
+        if (field.maxchars && tocheckmax) {
+          if (tocheckmax.length > field.maxchars) {
+            return utils.giveup(req, res, 'Too many characters ' + field.maxchars+' for field: ' + v.formfieldid)
+          }
+        }
+        if (field.maxwords && tocheckmax) {
+          const matches = tocheckmax.match(/\S+/g);
+          if (matches && (matches.length > field.maxwords)) {
+            return utils.giveup(req, res, 'Too many words ' + matches.length + ' for field: ' + v.formfieldid)
+          }
+        }
+      }
+
+      // Add entry value
       const entryvalue = {
         entryId: dbentry.id,
         formfieldId: v.formfieldid,

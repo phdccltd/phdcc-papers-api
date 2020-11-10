@@ -22,7 +22,9 @@
         "name": "Topics",
         "value": [
           { "text": "Climate Change", "weight": 10 },
-          { "text": "Biodiversity", "weight": 20 }
+          { "text": "Biodiversity", "weight": 20 },
+          { "text": "Air pollution", "weight": 30 },
+          { "text": "Nuclear emissions", "weight": 40 }
         ]
       }
     ],
@@ -126,8 +128,8 @@
         "label": "Your name",
         "flowstage": "Proposal",
         "type": "string",
-        "maxwords": 10,
-        "maxchars": 100,
+        "maxwords": 5,
+        "maxchars": 50,
         "hideatgradingname": "Proposal score"
       },
       {
