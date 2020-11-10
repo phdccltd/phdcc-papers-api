@@ -144,8 +144,10 @@ async function addEntry (req, res, next) {
     }
 
     for (const v of values) {
-      console.log('addEntry v', v)
-      if (v.string && v.string.length > 255) v.string = v.string.substring(0, 255)
+      // console.log('addEntry v', v)
+      if (v.string && v.string.length > 255) {
+        return utils.giveup(req, res, 'String too long ' + v.string.length + ' for field: ' + v.formfieldid)
+      }
       if (v.file) {
         let found = false
         for (const file of req.files) {
@@ -194,7 +196,7 @@ async function addEntry (req, res, next) {
         }
         if (field.maxchars && tocheckmax) {
           if (tocheckmax.length > field.maxchars) {
-            return utils.giveup(req, res, 'Too many characters ' + field.maxchars+' for field: ' + v.formfieldid)
+            return utils.giveup(req, res, 'Too many characters ' + tocheckmax.length + ' for field: ' + v.formfieldid)
           }
         }
         if (field.maxwords && tocheckmax) {
