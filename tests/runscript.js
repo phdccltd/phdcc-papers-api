@@ -55,11 +55,10 @@ async function run (models, configfilename, existingconfig, app) {
       }
       configtext = configtext.substring(0, dslashpos) + configtext.substring(endlinepos)
     }
-    // console.log(configtext)
+
     let config
     try {
       config = JSON.parse(configtext)
-      // console.log(config)
     } catch (e) {
       return 'config file not in JSON format'
     }
@@ -143,7 +142,7 @@ async function run (models, configfilename, existingconfig, app) {
                 if (grade.authorcanseeatthesestatuses.length > 0) grade.authorcanseeatthesestatuses += ','
                 grade.authorcanseeatthesestatuses += matchstatus.db.id
               } else {
-                return 'Not found status ' + statustext + ' for grade ' + grade.name
+                return 'Not found status ' + statustext + ' for grade: ' + grade.name
               }
             }
           }
@@ -210,7 +209,6 @@ async function run (models, configfilename, existingconfig, app) {
         if ('ref' in formfield) {
           const ref = { name: formfield.ref, id: formfield.db.id }
           refs.push(ref)
-          console.log('ref', ref)
         }
       }
     }
@@ -296,30 +294,30 @@ async function run (models, configfilename, existingconfig, app) {
             break
           }
         }
-        if (!res) return 'No response for ' + call.name
+        if (!res) return 'No response for: ' + call.name
         console.log('res.body', res.body)
 
-        if (res.statusCode !== 200) return 'Response statusCode ' + res.statusCode + ' returned for ' + call.name
+        if (res.statusCode !== 200) return 'Response statusCode ' + res.statusCode + ' returned for: ' + call.name
 
         if (call.return) {
           if ('ret' in call.return) {
-            if (res.body.ret !== call.return.ret) return 'Response ret ' + res.body.ret + ' does not match ' + call.return.ret + ' for ' + call.name
+            if (res.body.ret !== call.return.ret) return 'Response ret ' + res.body.ret + ' does not match ' + call.return.ret + ' for: ' + call.name
           } else {
-            if (res.body.ret !== 0) return 'Response ret ' + res.body.ret + ' not zero  for ' + call.name
+            if (res.body.ret !== 0) return 'Response ret ' + res.body.ret + ' not zero  for: ' + call.name
           }
           if ('prop' in call.return) {
             if (Array.isArray(call.return.prop)) {
               for (const test of call.return.prop) {
                 const prop = res.body[test.name]
-                if (!(_.isEqual(prop, test.value))) return 'Prop ' + test.name + ' does not match: ' + test.value
+                if (!(_.isEqual(prop, test.value))) return 'Prop \'' + test.name + '\' does not match: \'' + test.value + '\''
               }
             } else {
               const prop = res.body[call.return.prop]
               if ('typeof' in call.return) {
-                if (typeof prop !== call.return.typeof) return 'Prop ' + call.return.prop + ' with value ' + prop + ' not type ' + call.return.typeof + ' for ' + call.name // eslint-disable-line valid-typeof
+                if (typeof prop !== call.return.typeof) return 'Prop \'' + call.return.prop + '\' with value \'' + prop + '\' not type \'' + call.return.typeof + '\' for: ' + call.name // eslint-disable-line valid-typeof
               }
               if ('value' in call.return) {
-                if (prop !== call.return.value) return 'Prop ' + call.return.prop + ' with value ' + prop + ' not ' + call.return.value + ' for ' + call.name
+                if (prop !== call.return.value) return 'Prop \'' + call.return.prop + '\' with value \'' + prop + '\' not \'' + call.return.value + '\' for: ' + call.name
               }
             }
           }

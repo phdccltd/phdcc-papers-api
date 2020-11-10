@@ -1,0 +1,44 @@
+{
+  "name": "Submit: Add new proposal with invalid duplicate formfieldid",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "Log in as author1",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "author1",
+        "password": "author1pwd",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "token",
+        "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "token"
+      }
+    },
+    {
+      "name": "addNewSubmit proposal with invalid duplicate formfieldid",
+      "method": "postform",
+      "uri": "/submits/submit/1", // Proposal
+      "fields": [
+        { "stageid": 1 },
+        { "title": "New proposal #1" },
+        { "values": { "formfieldid": 1, "string": "Author name", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 2, "string": "2,3", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 3, "string": null, "integer": null, "text": "An exciting new proposal description", "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 4, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 4, "string": "", "integer": null, "text": null, "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "formfieldid already used: 4"
+      }
+    }
+  ]
+}

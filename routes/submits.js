@@ -130,6 +130,8 @@ async function addEntry (req, res, next) {
       const v = JSON.parse(sv)
       const formfieldfound = _.find(dbformfields, ff => { return ff.id === v.formfieldid })
       if (!formfieldfound) return utils.giveup(req, res, 'Invalid formfieldid: ' + v.formfieldid)
+      const alreadypresent = _.find(values, v2 => { return v2.formfieldid === v.formfieldid })
+      if (alreadypresent) return utils.giveup(req, res, 'formfieldid already used: ' + v.formfieldid)
       values.push(v)
     }
     // Add any missing formfields
