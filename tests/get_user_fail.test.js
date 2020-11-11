@@ -13,6 +13,8 @@ describe('USER', () => {
   it('Fail when not logged in', async () => {
     let testSucceeded = false
     try {
+      testhelper.initThisTest()
+
       const app = require('../app')
 
       const initresult = await app.checkDatabases(maketestsite)

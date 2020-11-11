@@ -264,6 +264,8 @@ async function run (models, configfilename, existingconfig, app) {
             }
           }
         }
+        call.attachs = call.attachs || []
+        call.fields = call.fields || []
         const authheader = 'token' in persisted ? 'bearer ' + persisted.token : ''
 
         console.log('Running ' + call.name + ': ' + call.method + ' ' + call.uri)
@@ -292,6 +294,10 @@ async function run (models, configfilename, existingconfig, app) {
             let req = request(app)
               .post(call.uri)
               .set('authorization', authheader)
+
+            for (const attach of call.attachs) {
+              req = req.attach('files', attach.path, attach.name)
+            }
 
             for (const field of call.fields) {
               const fieldkeys = Object.keys(field)

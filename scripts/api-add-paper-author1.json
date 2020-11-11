@@ -6,11 +6,16 @@
       "name": "addEntry paper",
       "method": "postform",
       "uri": "/submits/entry",
+      "attachs": [
+        { "name": "7-lorem-ipsum1.txt", "path": "./tests/files/lorem-ipsum1.txt" }
+      ],
       "fields": [
+        { "pubid": 1 },
+        { "flowid": 1 },
         { "submitid": 1 },
         { "stageid": 2 },
         { "values": { "formfieldid": 6, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 7, "string": "Know the boss", "integer": null, "text": null, "existingfile": null, "file": null } }
+        { "values": { "formfieldid": 7, "string": null, "integer": null, "text": null, "existingfile": null, "file": "lorem-ipsum1.txt" } }
       ],
       "return": {
         "ret": 0

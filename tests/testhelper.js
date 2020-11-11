@@ -1,3 +1,16 @@
+const fs = require('fs')
+
+function initThisTest () {
+  if (process.env.TESTFILESDIR) {
+    fs.rmdirSync(process.env.TESTFILESDIR, { recursive: true })
+    fs.mkdirSync(process.env.TESTFILESDIR, { recursive: true })
+  }
+  if (process.env.TESTTMPDIR) {
+    fs.rmdirSync(process.env.TESTTMPDIR, { recursive: true })
+    fs.mkdirSync(process.env.TESTTMPDIR, { recursive: true })
+  }
+}
+
 const output = []
 function accumulog (...err) {
   let line = ''
@@ -26,4 +39,4 @@ function waitUntilInited (app) {
   })
 }
 
-module.exports = { accumulog, accumulogged, waitUntilInited }
+module.exports = { initThisTest, accumulog, accumulogged, waitUntilInited }

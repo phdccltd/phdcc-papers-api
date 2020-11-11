@@ -13,6 +13,8 @@ describe('SUBMIT', () => {
   it('Add new proposal bad6', async () => {
     let testSucceeded = false
     try {
+      testhelper.initThisTest()
+
       const app = require('../app')
 
       const initresult = await app.checkDatabases(maketestsite)

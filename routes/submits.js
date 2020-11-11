@@ -106,7 +106,6 @@ async function addEntry (req, res, next) {
     logger.log4req(req, 'CREATED entry', dbentry.id)
 
     for (const file of req.files) {
-      // console.log("FILE", file)
       const hyphenpos = file.originalname.indexOf('-')
       if (hyphenpos === -1) return utils.giveup(req, res, 'Bad file originalname format')
       file.formfieldid = parseInt(file.originalname.substring(0, hyphenpos))
@@ -280,7 +279,7 @@ router.post('/submits/entry', upload.array('files'), async function (req, res, n
 /*
 * Am I allowed to submit this stage type?
  */
-async function oktoadd(req, res) {
+async function oktoadd (req, res) {
   if ('checkedoktoadd' in req) return true
 
   // Set req.isowner, req.onlyanauthor and req.myroles for this publication
@@ -307,14 +306,11 @@ async function oktoadd(req, res) {
   const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
   req.currentstatus = false
   if (req.dbsubmit) await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
-  console.log('ZZZZ', req.currentstatus)
   const cansubmitatstatuses = await req.dbflow.getFlowStatuses({ where: { cansubmitflowstageId: flowstageid } })
-  console.log('AAAAA', flowstageid, cansubmitatstatuses.length)
   if (cansubmitatstatuses.length > 0) {
-    if( req.currentstatus === null) return utils.giveup(req, res, 'Not at a status, when you need to be')
+    if (req.currentstatus === null) return utils.giveup(req, res, 'Not at a status, when you need to be')
     let cansubmitok = false
     for (const cansubmitatstatus of cansubmitatstatuses) {
-      console.log('YYYY', cansubmitatstatus)
       if (cansubmitatstatus.id === req.currentstatus.flowstatusId) cansubmitok = true
     }
     if (!cansubmitok) return utils.giveup(req, res, 'Not at a status, when you need to be')

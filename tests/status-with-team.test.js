@@ -13,6 +13,8 @@ describe('STATUS', () => {
   it('Set status to with team', async () => {
     let testSucceeded = false
     try {
+      testhelper.initThisTest()
+
       const app = require('../app')
 
       const initresult = await app.checkDatabases(maketestsite)
