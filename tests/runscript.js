@@ -246,7 +246,7 @@ async function run (models, configfilename, existingconfig, app) {
     /// //////////////////////
     if (config.api) {
       for (const call of config.api) {
-        const data = call.data
+        const data = call.data || {}
         if (data && 'g-recaptcha-response' in data) {
           data['g-recaptcha-response'] = process.env.RECAPTCHA_BYPASS
         }
@@ -278,6 +278,13 @@ async function run (models, configfilename, existingconfig, app) {
           case 'post':
             res = await request(app)
               .post(call.uri)
+              .set('authorization', authheader)
+              .send(data)
+            break
+          case 'postpost':
+            res = await request(app)
+              .post(call.uri)
+              .set('x-http-method-override', 'POST')
               .set('authorization', authheader)
               .send(data)
             break

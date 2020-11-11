@@ -1165,7 +1165,8 @@ async function addSubmitStatus (req, res, next) {
   try {
     const submitid = parseInt(req.params.id)
     const newstatusid = parseInt(req.body.newstatusid)
-    // console.log('addSubmitStatus', submitid, newstatusid)
+    if (isNaN(newstatusid)) return utils.giveup(req, res, 'Duff newstatusid')
+    console.log('addSubmitStatus', submitid, newstatusid)
 
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
