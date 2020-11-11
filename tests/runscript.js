@@ -294,6 +294,13 @@ async function run (models, configfilename, existingconfig, app) {
             res = await req
             break
           }
+          case 'delete':
+            res = await request(app)
+              .delete(call.uri)
+              .set('authorization', authheader)
+            break
+          default:
+            return 'Bad call method: ' + call.method
         }
         if (!res) return 'No response for: ' + call.name
         console.log('res.body', res.body)

@@ -1,0 +1,14 @@
+{
+  "name": "Logout",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name":  "Log out current user",
+      "method": "delete",
+      "uri": "/user/logout",
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

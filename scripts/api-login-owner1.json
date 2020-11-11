@@ -1,14 +1,14 @@
 {
-  "name": "Submit: Log in as author1",
+  "name": "Submit: Log in as owner1",
   "pubname": "TestPubName",
   "api": [
     {
-      "name": "Log in as author1",
+      "name": "Log in as owner1",
       "method": "post",
       "uri": "/user/login",
       "data": {
-        "username": "author1",
-        "password": "author1pwd",
+        "username": "owner1",
+        "password": "owner1pwd",
         "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
       },
       "return": {

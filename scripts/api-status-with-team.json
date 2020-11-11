@@ -1,38 +1,13 @@
 {
-  "name": "Submit: Add new proposal by author1",
+  "name": "Status: set proposal status to with team",
   "pubname": "TestPubName",
   "api": [
     {
-      "name": "Log in as author1",
+      "name": "addSubmitStatus with team",
       "method": "post",
-      "uri": "/user/login",
-      "data": {
-        "username": "author1",
-        "password": "author1pwd",
-        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
-      },
-      "return": {
-        "ret": 0,
-        "prop": "token",
-        "typeof": "string"
-      },
-      "set": {
-        "name": "token",
-        "value": "token"
-      }
-    },
-    {
-      "name": "addNewSubmit proposal",
-      "method": "postform",
-      "uri": "/submits/submit/1", // Proposal
-      "fields": [
-        { "stageid": 1 },
-        { "title": "New proposal #1" },
-        { "values": { "formfieldid": 1, "string": "Author name", "integer": null, "text": null, "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 2, "string": "2,3", "integer": null, "text": null, "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 3, "string": null, "integer": null, "text": "An exciting new proposal description", "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 4, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 5, "string": "Know the boss", "integer": null, "text": null, "existingfile": null, "file": null } }
+      "uri": "/submits/status/1", // Submit 1
+      "data": [
+        { "newstatusid": 2 }
       ],
       "return": {
         "ret": 0

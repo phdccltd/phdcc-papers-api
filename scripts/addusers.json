@@ -11,6 +11,13 @@
       "roles": "Owner"
     },
     {
+      "name": "Owner1",
+      "username": "owner1",
+      "email": "owner1@example.com",
+      "password": "owner1pwd",
+      "roles": "Owner"
+    },
+    {
       "name": "Author1",
       "username": "author1",
       "email": "author1@example.com",
@@ -22,7 +29,7 @@
       "username": "author2",
       "email": "author2@example.com",
       "password": "author2pwd",
-      "roles": "Author"
+      "roles": "Author,Reviewer"
     },
     {
       "name": "Staff",
