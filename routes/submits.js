@@ -253,7 +253,7 @@ async function addEntry (req, res, next) {
         submitId: rv.submitid,
         flowstatusId: dbflowstatus.id
       }
-      // console.log('addSubmitEntry submitstatus', submitstatus)
+      // console.log('addNewSubmit submitstatus', submitstatus)
       const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
@@ -280,7 +280,7 @@ router.post('/submits/entry', upload.array('files'), async function (req, res, n
 /*
 * Am I allowed to submit this stage type?
  */
-async function oktoadd (req, res) {
+async function oktoadd(req, res) {
   if ('checkedoktoadd' in req) return true
 
   // Set req.isowner, req.onlyanauthor and req.myroles for this publication
@@ -302,16 +302,31 @@ async function oktoadd (req, res) {
   }
   if (!oktoadd) return utils.giveup(req, res, 'You are not allowed to add this entry')
 
-  // Check if this stage is open
+  // To submit this stage, we might need to be at specified statuses
+  const submit = {}
   const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
+  req.currentstatus = false
+  if (req.dbsubmit) await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
+  console.log('ZZZZ', req.currentstatus)
+  const cansubmitatstatuses = await req.dbflow.getFlowStatuses({ where: { cansubmitflowstageId: flowstageid } })
+  console.log('AAAAA', flowstageid, cansubmitatstatuses.length)
+  if (cansubmitatstatuses.length > 0) {
+    if( req.currentstatus === null) return utils.giveup(req, res, 'Not at a status, when you need to be')
+    let cansubmitok = false
+    for (const cansubmitatstatus of cansubmitatstatuses) {
+      console.log('YYYY', cansubmitatstatus)
+      if (cansubmitatstatus.id === req.currentstatus.flowstatusId) cansubmitok = true
+    }
+    if (!cansubmitok) return utils.giveup(req, res, 'Not at a status, when you need to be')
+  }
+
+  // Check if this stage is open
   flow.acceptings = models.sanitiselist(await req.dbflow.getFlowAcceptings(), models.flowacceptings)
   const accepting = _.find(flow.acceptings, accepting => { return accepting.flowstageId === flowstageid })
   if (accepting) {
     if (accepting.flowstatusId === null) {
       if (!accepting.open) return utils.giveup(req, res, 'Sorry, entries are closed at the moment')
     } else {
-      const submit = {}
-      await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
       if (req.currentstatus && (req.currentstatus.flowstatusId === accepting.flowstatusId)) {
         if (!accepting.open) return utils.giveup(req, res, 'Sorry, entries are closed at the moment')
       }
@@ -334,7 +349,7 @@ async function oktoadd (req, res) {
  */
 async function addNewSubmit (req, res, next) {
   try {
-    console.log('addSubmitEntry', req.params.flowid)
+    console.log('addNewSubmit', req.params.flowid)
 
     const flowid = parseInt(req.params.flowid)
 
@@ -357,7 +372,7 @@ async function addNewSubmit (req, res, next) {
       name: req.body.title,
       startdt: now
     }
-    console.log('addSubmitEntry submit', submit)
+    console.log('addNewSubmit submit', submit)
     const dbsubmit = await models.submits.create(submit)
     if (!dbsubmit) return utils.giveup(req, res, 'Could not create submit')
     logger.log4req(req, 'CREATED submit', dbsubmit.id)

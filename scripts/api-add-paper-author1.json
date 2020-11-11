@@ -1,0 +1,20 @@
+{
+  "name": "Submit: Add paper by author1",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addEntry paper",
+      "method": "postform",
+      "uri": "/submits/entry",
+      "fields": [
+        { "submitid": 1 },
+        { "stageid": 2 },
+        { "values": { "formfieldid": 6, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 7, "string": "Know the boss", "integer": null, "text": null, "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

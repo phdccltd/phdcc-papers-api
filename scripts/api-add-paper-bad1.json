@@ -1,0 +1,21 @@
+{
+  "name": "Submit: Add paper at wrong status",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addEntry paper",
+      "method": "postform",
+      "uri": "/submits/entry",
+      "fields": [
+        { "submitid": 1 },
+        { "stageid": 2 },
+        { "values": { "formfieldid": 6, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not at a status, when you need to be"
+      }
+    }
+  ]
+}
