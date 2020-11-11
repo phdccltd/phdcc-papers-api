@@ -25,6 +25,9 @@ describe('SUBMIT', () => {
       error = await runscript.run(app.models, 'addusers.json', config)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'api-login-author1.json', false, app)
+      if (error) throw new Error(error)
+
       error = await runscript.run(app.models, 'api-add-proposal-bad4.json', false, app)
       if (error) throw new Error(error)
 

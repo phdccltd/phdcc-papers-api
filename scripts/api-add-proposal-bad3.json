@@ -3,25 +3,6 @@
   "pubname": "TestPubName",
   "api": [
     {
-      "name": "Log in as author1",
-      "method": "post",
-      "uri": "/user/login",
-      "data": {
-        "username": "author1",
-        "password": "author1pwd",
-        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
-      },
-      "return": {
-        "ret": 0,
-        "prop": "token",
-        "typeof": "string"
-      },
-      "set": {
-        "name": "token",
-        "value": "token"
-      }
-    },
-    {
       "name": "addNewSubmit proposal with duff flowid",
       "method": "postform",
       "uri": "/submits/submit/10",

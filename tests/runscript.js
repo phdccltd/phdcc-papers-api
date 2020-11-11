@@ -25,6 +25,8 @@ const defaultFormfield = { formtype: 2, formtypeid: 1, help: '', helplink: '', r
 
 const defaultUser = { super: false, password: 'pwd' }
 
+const persisted = {}
+
 function lookup (lookfor, lookin) {
   if (lookfor) {
     const thing = _.find(lookin, thing => { return thing.name === lookfor })
@@ -243,7 +245,6 @@ async function run (models, configfilename, existingconfig, app) {
     }
     /// //////////////////////
     if (config.api) {
-      const persisted = {}
       for (const call of config.api) {
         const data = call.data
         if (data && 'g-recaptcha-response' in data) {
