@@ -10,8 +10,6 @@
         { "name": "7-lorem-ipsum1.txt", "path": "./tests/files/lorem-ipsum1.txt" }
       ],
       "fields": [
-        { "pubid": 1 },
-        { "flowid": 1 },
         { "submitid": 1 },
         { "stageid": 2 },
         { "values": { "formfieldid": 6, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } },
