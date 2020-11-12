@@ -1,11 +1,23 @@
 {
-  "name": "Get full submits list with rejected proposal",
+  "name": "Try various calls to publication which I do not have access to",
   "pubname": "TestPubName",
   "api": [
     {
-      "name": "getPubSubmits with one rejected proposal",
+      "name": "try getPubSubmits",
       "method": "get",
       "uri": "/submits/pub/1", // Submit 1
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No access to this publication"
+      }
+    },
+    {
+      "name": "try getFlowFormFields",
+      "method": "get",
+      "uri": "/submits/formfields/1",
       "data": {
       },
       "return": {

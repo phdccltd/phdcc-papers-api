@@ -12,8 +12,8 @@
   YYYYNNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
   YYY_NNN_  GET     /submits/entry/:entryid/:entryvalueid   getEntryFile      download a file ie one field of an entry
   YYY_NNN_  GET     /submits/entry/:entryid                 getEntry          get an entry
-  Y___N___  GET     /submits/formfields/:flowstageId        getFlowFormFields get the list of fields used in a stage
-  YYYYNNNN  GET     /submits/pub/:pubid                     getPubSubmits     get submits for a publication
+  Y___Y___  GET     /submits/formfields/:flowstageId        getFlowFormFields get the list of fields used in a stage
+  YYYYYNNN  GET     /submits/pub/:pubid                     getPubSubmits     get submits for a publication
   YYY_NNN_  PATCH   /submits/:submitid                      editSubmit        edit submit title and author
   YYY_NNN_  DELETE  /submits/:submitid                      deleteSubmit      delete submit and all entries, etc
   YYY_NNN_  DELETE  /submits/status/:id                     deleteSubmitStatus
@@ -731,12 +731,12 @@ async function getFlowFormFields (req, res, next) {
     if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + flowstageid)
 
     req.dbflow = await dbflowstage.getFlow()
-    if (!req.dbflow) return 'No flow found for flowstageid ' + flowstageid
+    if (!req.dbflow) return utils.giveup(req, res, 'No flow found for flowstageid ' + flowstageid)
 
     req.dbpub = await req.dbflow.getPub()
-    if (!req.dbpub) return 'No pub found for flowstageid ' + flowstageid
+    if (!req.dbpub) return utils.giveup(req, res, 'No pub found for flowstageid ' + flowstageid)
 
-    if (!await dbutils.getMyRoles(req)) return 'No access to this publication'
+    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
     const entry = {}
     await dbutils.getEntryFormFields(entry, flowstageid)
