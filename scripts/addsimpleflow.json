@@ -19,9 +19,9 @@
     ],
     "publookup": [
       {
-        "name": "Topics",
+        "name": "Topics", // 1
         "value": [
-          { "text": "Climate Change", "weight": 10 },
+          { "text": "Climate Change", "weight": 10 }, // 1
           { "text": "Biodiversity", "weight": 20 },
           { "text": "Air pollution", "weight": 30 },
           { "text": "Nuclear emissions", "weight": 40 }
@@ -30,59 +30,59 @@
     ],
     "flow": [
       {
-        "name": "Paper",
+        "name": "Paper", // 1
         "description": "Proposal followed by Paper",
         "stage": [
           {
-            "name": "Proposal",
+            "name": "Proposal", // 1
             "role": "Author",
             "rolecanadd": 0
           },
           {
-            "name": "Paper",
+            "name": "Paper", // 2
             "role": "Author",
             "rolecanadd": 0
           }
         ],
         "status": [
           {
-            "name": "Proposal submitted",
+            "name": "Proposal submitted", // 1
             "visibletoauthor": true,
             "submittedflowstage": "Proposal",
             "owneradvice": "Awaiting send to team"
           },
-          { "name": "Proposal with team" },
+          { "name": "Proposal with team" }, // 2
           {
-            "name": "Proposal rejected",
+            "name": "Proposal rejected", // 3
             "visibletoauthor": true,
             "ended": true
           },
           {
-            "name": "Proposal accepted",
+            "name": "Proposal accepted", // 4
             "visibletoauthor": true,
             "cansubmitflowstage": "Paper"
           },
           {
-            "name": "Paper submitted",
+            "name": "Paper submitted", // 5
             "visibletoauthor": true,
             "submittedflowstage": "Paper",
             "owneradvice": "Awaiting: send to reviewers"
           },
-          { "name": "Paper with reviewers" },
+          { "name": "Paper with reviewers" }, // 6
           {
-            "name": "Paper rejected",
+            "name": "Paper rejected", // 7
             "visibletoauthor": true,
             "ended": true
           },
           {
-            "name": "Paper accepted",
+            "name": "Paper accepted", // 8
             "visibletoauthor": true,
             "ended": true
           }
         ],
         "grade": [
           {
-            "name": "Proposal score",
+            "name": "Proposal score", // 1
             "flowstatus": "Proposal with team",
             "displayflowstage": "Proposal",
             "visibletorole": "Team",
@@ -95,7 +95,7 @@
             ]
           },
           {
-            "name": "Review",
+            "name": "Review", // 2
             "flowstatus": "Paper with reviewers",
             "displayflowstage": "Paper",
             "visibletoreviewers": true,
@@ -112,11 +112,11 @@
         ],
         "accepting": [
           {
-            "flowstage": "Proposal",
+            "flowstage": "Proposal", // 1
             "open": true
           },
           {
-            "flowstage": "Paper",
+            "flowstage": "Paper", // 2
             "flowstatus": "Proposal accepted",
             "open": true
           }
@@ -125,7 +125,7 @@
     ],
     "formfield": [
       {
-        "label": "Your name",
+        "label": "Your name", // 1
         "flowstage": "Proposal",
         "type": "string",
         "maxwords": 5,
@@ -133,39 +133,39 @@
         "hideatgradingname": "Proposal score"
       },
       {
-        "label": "Topic",
+        "label": "Topic", // 2
         "help": "Please choose one or more topics",
         "flowstage": "Proposal",
         "type": "lookups",
         "publookup": "Topics"
       },
       {
-        "label": "Description",
+        "label": "Description", // 3
         "flowstage": "Proposal",
         "type": "text",
         "maxwords": 50
       },
       {
-        "label": "Is there a conflict of interest",
+        "label": "Is there a conflict of interest", // 4
         "flowstage": "Proposal",
         "type": "yesno",
-        "ref":  "HasConflictOfInterest"
+        "ref": "HasConflictOfInterest"
       },
       {
-        "label": "Conflict of interest",
+        "label": "Conflict of interest", // 5
         "flowstage": "Proposal",
         "type": "string",
         "required": false,
         "requiredif": "@HasConflictOfInterest=1"
       },
       {
-        "label": "Approval",
+        "label": "Approval", // 6
         "help": "I have approval to publish",
         "flowstage": "Paper",
         "type": "yes"
       },
       {
-        "label": "Paper",
+        "label": "Paper", // 7
         "help": "Allowed file types: txt pdf doc docx",
         "flowstage": "Paper",
         "type": "file",

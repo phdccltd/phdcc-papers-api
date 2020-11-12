@@ -1,0 +1,16 @@
+{
+  "name": "Get full submits list with rejected proposal",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "getPubSubmits with one rejected proposal",
+      "method": "get",
+      "uri": "/submits/pub/1", // Submit 1
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}
