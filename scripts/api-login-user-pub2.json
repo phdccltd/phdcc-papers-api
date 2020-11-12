@@ -1,0 +1,25 @@
+{
+  "name": "Submit: Log in as bry",
+  "pubname": "TestPub2",
+  "api": [
+    {
+      "name": "Log in as bry",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "bry",
+        "password": "asecret",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "token",
+        "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "token"
+      }
+    }
+  ]
+}

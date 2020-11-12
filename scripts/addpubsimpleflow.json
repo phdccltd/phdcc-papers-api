@@ -8,23 +8,59 @@
     "email": "noreply@example.org",
     "tz": "Europe/London",
     "role": [
-      { "name": "Owner", "isowner": true },
-      { "name": "Author", "defaultrole": true},
-      { "name": "Team", "canviewall": true },
-      { "name": "Editor", "canviewall": true },
-      { "name": "Reviewer", "isreviewer": true },
-      { "name": "Lead", "isreviewer": true },
-      { "name": "Access requested", "userRequested": true },
-      { "name": "Access denied", "userDeniedAccess": true }
+      {
+        "name": "Owner",
+        "isowner": true
+      },
+      {
+        "name": "Author",
+        "defaultrole": true
+      },
+      {
+        "name": "Team",
+        "canviewall": true
+      },
+      {
+        "name": "Editor",
+        "canviewall": true
+      },
+      {
+        "name": "Reviewer",
+        "isreviewer": true
+      },
+      {
+        "name": "Lead",
+        "isreviewer": true
+      },
+      {
+        "name": "Access requested",
+        "userRequested": true
+      },
+      {
+        "name": "Access denied",
+        "userDeniedAccess": true
+      }
     ],
     "publookup": [
       {
         "name": "Topics", // 1
         "value": [
-          { "text": "Climate Change", "weight": 10 }, // 1
-          { "text": "Biodiversity", "weight": 20 },
-          { "text": "Air pollution", "weight": 30 },
-          { "text": "Nuclear emissions", "weight": 40 }
+          {
+            "text": "Climate Change",
+            "weight": 10
+          }, // 1
+          {
+            "text": "Biodiversity",
+            "weight": 20
+          },
+          {
+            "text": "Air pollution",
+            "weight": 30
+          },
+          {
+            "text": "Nuclear emissions",
+            "weight": 40
+          }
         ]
       }
     ],

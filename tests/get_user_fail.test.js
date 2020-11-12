@@ -21,7 +21,7 @@ describe('USER', () => {
       if (initresult !== 1) throw new Error('initresult:' + initresult)
 
       const simple = {}
-      let error = await runscript.run(app.models, 'addsimpleflow.json', simple)
+      let error = await runscript.run(app.models, 'addpubsimpleflow.json', simple)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'addusers.json', simple)

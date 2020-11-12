@@ -21,7 +21,7 @@ describe('STATUS', () => {
       if (initresult !== 1) throw new Error('initresult:' + initresult)
 
       const config = {}
-      let error = await runscript.run(app.models, 'addsimpleflow.json', config)
+      let error = await runscript.run(app.models, 'addpubsimpleflow.json', config)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'addusers.json', config)

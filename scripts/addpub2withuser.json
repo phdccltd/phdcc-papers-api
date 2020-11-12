@@ -1,0 +1,30 @@
+{
+  "name": "Add second publication with another user",
+  "pub": {
+    "name": "TestPub2",
+    "alias": "TestPub2",
+    "title": "Test Pub2 Title",
+    "description": "Test Pub2 Description",
+    "email": "noreply2@example.org",
+    "tz": "Europe/London",
+    "role": [
+      {
+        "name": "Owner",
+        "isowner": true
+      }
+    ],
+    "publookup": [],
+    "flow": [],
+    "formfield": []
+  },
+  "pubname": "TestPub2",
+  "users": [
+    {
+      "name": "Bry",
+      "username": "bry",
+      "email": "bry@example.com",
+      "password": "asecret",
+      "roles": "Owner"
+    }
+  ]
+}

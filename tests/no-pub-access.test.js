@@ -1,4 +1,6 @@
 /* eslint-env jest */
+// https://dev.to/nedsoft/testing-nodejs-express-api-with-jest-and-supertest-1km6
+// https://www.npmjs.com/package/supertest
 
 const testhelper = require('./testhelper')
 const maketestsite = require('./maketestsite')
@@ -7,10 +9,8 @@ const runscript = require('./runscript')
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
 
-process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
-
-describe('SUBMIT', () => {
-  it('Add new proposal bad9', async () => {
+describe('USER', () => {
+  it('no access to publication', async () => {
     let testSucceeded = false
     try {
       testhelper.initThisTest()
@@ -20,17 +20,20 @@ describe('SUBMIT', () => {
       const initresult = await app.checkDatabases(maketestsite)
       if (initresult !== 1) throw new Error('initresult:' + initresult)
 
-      const config = {}
-      let error = await runscript.run(app.models, 'addpubsimpleflow.json', config)
+      const simple = {}
+      let error = await runscript.run(app.models, 'addpubsimpleflow.json', simple)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'addusers.json', config)
+      error = await runscript.run(app.models, 'addusers.json', simple)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-login-author1.json', false, app)
+      error = await runscript.run(app.models, 'addpub2withuser.json', simple)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-add-proposal-bad9.json', false, app)
+      error = await runscript.run(app.models, 'api-login-user-pub2.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-get-no-pub-access.json', false, app)
       if (error) throw new Error(error)
 
       testSucceeded = true

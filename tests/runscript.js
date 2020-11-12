@@ -218,7 +218,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
     // Add users
     if (config.users) {
       console.log('----')
-      const pub = existingconfig.pub ? existingconfig.pub : config.pub
+      const pub = config.pub ? config.pub : existingconfig.pub
       if (!pub) return 'No publication found to attach users to'
       if (pub.name !== config.pubname) return 'Users publication not found ' + config.pubname
       console.log('Adding users and with roles in publication ' + pub.pubname)
