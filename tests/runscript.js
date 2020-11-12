@@ -290,6 +290,13 @@ async function run (models, configfilename, existingconfig, app, resBody) {
               .set('authorization', authheader)
               .send(data)
             break
+          case 'postdelete':
+            res = await request(app)
+              .post(call.uri)
+              .set('x-http-method-override', 'DELETE')
+              .set('authorization', authheader)
+              .send(data)
+            break
           case 'postform': {
             let req = request(app)
               .post(call.uri)

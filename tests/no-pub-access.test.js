@@ -27,6 +27,33 @@ describe('USER', () => {
       error = await runscript.run(app.models, 'addusers.json', simple)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'api-login-author1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-add-proposal-author1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-login-owner1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-status-proposal-accepted.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-login-author1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-add-paper-author1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      if (error) throw new Error(error)
+
       error = await runscript.run(app.models, 'addpub2withuser.json', simple)
       if (error) throw new Error(error)
 

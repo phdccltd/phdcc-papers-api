@@ -8,8 +8,8 @@
   ||||||||
   YYY_NNN_  PUT     /submits/entry/:entryid                 editEntry         change entry
   YYY_NNN_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
-  YYYYNNNN  POST    /submits/entry                          addEntry          add entry to (existing) submit
-  YYYYNNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
+  YYYYYNNN  POST    /submits/entry                          addEntry          add entry to (existing) submit
+  YYYYYNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
   YYY_NNN_  GET     /submits/entry/:entryid/:entryvalueid   getEntryFile      download a file ie one field of an entry
   YYY_NNN_  GET     /submits/entry/:entryid                 getEntry          get an entry
   Y___Y___  GET     /submits/formfields/:flowstageId        getFlowFormFields get the list of fields used in a stage
@@ -57,8 +57,7 @@ async function handleEntryPost (req, res, next) {
   }
   if (req.headers['x-http-method-override'] === 'DELETE') {
     req.entryid = req.params.entryid
-    const ok = await deleteEntry(req, res, next)
-    utils.returnOK(req, res, ok, 'ok')
+    await deleteEntry(req, res, next)
     return
   }
   utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
@@ -252,7 +251,7 @@ async function addEntry (req, res, next) {
         submitId: rv.submitid,
         flowstatusId: dbflowstatus.id
       }
-      // console.log('addNewSubmit submitstatus', submitstatus)
+      // console.log('addEntry submitstatus', submitstatus)
       const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
@@ -512,12 +511,12 @@ async function editEntry (req, res, next) {
 */
 async function deleteEntry (req, res, next) {
   try {
-    console.log('deleteEntry', req.entryid)
+    console.log('deleteEntry', req.params.entryid)
 
     let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
     if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
 
-    const entryid = parseInt(req.entryid)
+    const entryid = parseInt(req.params.entryid)
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
@@ -526,6 +525,7 @@ async function deleteEntry (req, res, next) {
 
     // Got dbsubmit, but get flow, pub, roles, etc
     const error = await dbutils.getSubmitFlowPub(req, 0)
+    console.log('DDD', error)
     if (error) return utils.giveup(req, res, error)
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
@@ -569,7 +569,7 @@ async function deleteEntry (req, res, next) {
     logger.log4req(req, 'Deleted entry', entryid, affectedRows)
 
     const ok = affectedRows === 1
-    return ok
+    utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
