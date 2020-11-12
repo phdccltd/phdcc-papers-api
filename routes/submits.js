@@ -7,7 +7,7 @@
   ||||....Jest tests for 1 2 3 4
   ||||||||
   YYY_NNN_  PUT     /submits/entry/:entryid                 editEntry         change entry
-  YYY_NNN_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
+  YYY_YNN_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
   YYYYYNNN  POST    /submits/entry                          addEntry          add entry to (existing) submit
   YYYYYNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
   YYY_NNN_  GET     /submits/entry/:entryid/:entryvalueid   getEntryFile      download a file ie one field of an entry
@@ -525,7 +525,6 @@ async function deleteEntry (req, res, next) {
 
     // Got dbsubmit, but get flow, pub, roles, etc
     const error = await dbutils.getSubmitFlowPub(req, 0)
-    console.log('DDD', error)
     if (error) return utils.giveup(req, res, error)
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')

@@ -38,7 +38,6 @@
     "sequelize": "5.21.13"
   },
   "devDependencies": {
-    "form-data": "3.0.0",
     "sqlite3": "4.2.0",
     "supertest": "4.0.2"
   }

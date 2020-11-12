@@ -48,10 +48,9 @@ describe('GET', () => {
       error = await runscript.run(app.models, 'api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      let resBody = {}
+      const resBody = {}
       error = await runscript.run(app.models, 'api-get-proposal-rejected.json', false, app, resBody)
       if (error) throw new Error(error)
-      //console.log('resBody', resBody)
       try {
         const currentstatus = resBody.body.flows[0].submits[0].statuses[0]
         if (currentstatus.flowstatusId !== 3) throw new Error('currentstatus.flowstatusId!==3')
