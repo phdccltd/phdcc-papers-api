@@ -15,8 +15,8 @@
   Y___Y___  GET     /submits/formfields/:flowstageId        getFlowFormFields get the list of fields used in a stage
   YYYYYNNN  GET     /submits/pub/:pubid                     getPubSubmits     get submits for a publication
   YYY_YYY_  PATCH   /submits/:submitid                      editSubmit        edit submit title and author
-  YYY_YNN_  DELETE  /submits/:submitid                      deleteSubmit      delete submit and all entries, etc
-  YYY_YNN_  DELETE  /submits/status/:id                     deleteSubmitStatus
+  YYY_YYN_  DELETE  /submits/:submitid                      deleteSubmit      delete submit and all entries, etc
+  YYY_YYN_  DELETE  /submits/status/:id                     deleteSubmitStatus
   YYY_YNN_  POST    /submits/status/:id                     addSubmitStatus
 */
 const { Router } = require('express')
@@ -511,12 +511,14 @@ async function editEntry (req, res, next) {
 */
 async function deleteEntry (req, res, next) {
   try {
-    console.log('deleteEntry', req.params.entryid)
+    // Note: do not use req.params.entryid
+    console.log('deleteEntry', req.entryid)
 
     let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
     if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
 
-    const entryid = parseInt(req.params.entryid)
+    const entryid = parseInt(req.entryid)
+    if (isNaN(entryid)) return utils.giveup(req, res, 'Duff entryid')
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
@@ -1032,6 +1034,7 @@ router.post('/submits/:submitid', async function (req, res, next) {
  */
 async function deleteSubmit (req, res, next) {
   const submitid = parseInt(req.params.submitid)
+  if (isNaN(submitid)) return utils.giveup(req, res, 'Duff submitid')
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)

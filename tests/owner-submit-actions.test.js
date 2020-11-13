@@ -10,7 +10,7 @@ const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.acc
 process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
 describe('OWNER', () => {
-  it('Edit submit', async () => {
+  it('submit actions', async () => {
     let testSucceeded = false
     try {
       testhelper.initThisTest()
@@ -39,7 +39,7 @@ describe('OWNER', () => {
       error = await runscript.run(app.models, 'api-login-owner1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-owner-edit-submit.json', false, app)
+      error = await runscript.run(app.models, 'api-owner-submit-actions.json', false, app)
       if (error) throw new Error(error)
 
       testSucceeded = true
