@@ -6,7 +6,7 @@
   |||.----4=only-if-open-to-author
   ||||....Jest tests for 1 2 3 4
   ||||||||
-  YYY_NNN_  PUT     /submits/entry/:entryid                 editEntry         change entry
+  YYY_YNN_  PUT     /submits/entry/:entryid                 editEntry         change entry
   YYY_YNN_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
   YYYYYNNN  POST    /submits/entry                          addEntry          add entry to (existing) submit
   YYYYYNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
