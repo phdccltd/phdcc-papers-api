@@ -30,7 +30,7 @@ describe('USER', () => {
       error = await runscript.run(app.models, 'api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-add-proposal-author1.json', false, app)
+      error = await runscript.run(app.models, 'api-add-proposal-author.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'api-logout.json', false, app)
@@ -48,7 +48,7 @@ describe('USER', () => {
       error = await runscript.run(app.models, 'api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-add-paper-author1.json', false, app)
+      error = await runscript.run(app.models, 'api-add-paper-author.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'api-logout.json', false, app)
