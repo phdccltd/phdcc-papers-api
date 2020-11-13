@@ -1,0 +1,29 @@
+{
+  "name": "Submit: Edit submit by owner1",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "editSubmit owner1 change title",
+      "method": "postpatch",
+      "uri": "/submits/1", // Proposal
+      "data": {
+        "newtitle": "Changed title"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "editSubmit owner1 change title and author",
+      "method": "postpatch",
+      "uri": "/submits/1", // Proposal
+      "data": {
+        "newtitle": "Changed title",
+        "newauthor":  3
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

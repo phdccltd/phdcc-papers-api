@@ -1,0 +1,19 @@
+{
+  "name": "Author: check author1 cannot do owner actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "editSubmit change title",
+      "method": "postpatch",
+      "uri": "/submits/1", // Proposal
+      "data": {
+        "newtitle": "Changed title"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    }
+  ]
+}

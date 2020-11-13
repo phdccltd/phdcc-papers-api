@@ -14,7 +14,7 @@
   YYY_YNN_  GET     /submits/entry/:entryid                 getEntry          get an entry
   Y___Y___  GET     /submits/formfields/:flowstageId        getFlowFormFields get the list of fields used in a stage
   YYYYYNNN  GET     /submits/pub/:pubid                     getPubSubmits     get submits for a publication
-  YYY_YNN_  PATCH   /submits/:submitid                      editSubmit        edit submit title and author
+  YYY_YYY_  PATCH   /submits/:submitid                      editSubmit        edit submit title and author
   YYY_YNN_  DELETE  /submits/:submitid                      deleteSubmit      delete submit and all entries, etc
   YYY_YNN_  DELETE  /submits/status/:id                     deleteSubmitStatus
   YYY_YNN_  POST    /submits/status/:id                     addSubmitStatus
