@@ -1,0 +1,37 @@
+{
+  "name": "Submit: test author actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "getPubSubmits",
+      "method": "get",
+      "uri": "/submits/pub/1", // Submit 1
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "getEntry",
+      "method": "get",
+      "uri": "/submits/entry/1",
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "getEntryFile",
+      "method": "get",
+      "uri": "/submits/entry/2/7", // Paper file
+      "data": {
+      },
+      "return": {
+        "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "content-length": "12631"
+      }
+    }
+  ]
+}

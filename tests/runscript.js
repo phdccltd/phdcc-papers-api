@@ -311,7 +311,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
               .set('authorization', authheader)
               .send(data)
             break
-          case 'postputform':
+          case 'postputform': {
             let req = request(app)
               .post(call.uri)
               .set('x-http-method-override', 'PUT')
@@ -328,6 +328,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
             }
             res = await req
             break
+          }
           case 'postform': {
             let req = request(app)
               .post(call.uri)
@@ -355,15 +356,27 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         }
         if (!res) return 'No response for: ' + call.name
         console.log('res.body', res.body)
+        // console.log('res.headers', res.headers)
         if (resBody) resBody.body = res.body
 
         if (res.statusCode !== 200) return 'Response statusCode ' + res.statusCode + ' returned for: ' + call.name
 
         if (call.return) {
-          if ('ret' in call.return) {
+          if ('content-type' in call.return) {
+            const desiredContentType = call.return['content-type']
+            if (!('content-type' in res.headers)) return 'content-type header missing in response for: ' + call.name
+            const foundContentType = res.headers['content-type']
+            if (desiredContentType !== foundContentType) return 'content-type header incorrect \'' + foundContentType + '\' in response for: ' + call.name
+          } else if ('ret' in call.return) {
             if (res.body.ret !== call.return.ret) return 'Response ret ' + res.body.ret + ' does not match ' + call.return.ret + ' for: ' + call.name
           } else {
             if (res.body.ret !== 0) return 'Response ret ' + res.body.ret + ' not zero  for: ' + call.name
+          }
+          if ('content-length' in call.return) {
+            const desiredContentLength = call.return['content-length']
+            if (!('content-length' in res.headers)) return 'content-length header missing in response for: ' + call.name
+            const foundContentLength = res.headers['content-length']
+            if (desiredContentLength !== foundContentLength) return 'content-length header incorrect \'' + foundContentLength + '\' in response for: ' + call.name
           }
           if ('prop' in call.return) {
             if (Array.isArray(call.return.prop)) {

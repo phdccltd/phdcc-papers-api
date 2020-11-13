@@ -9,11 +9,11 @@
   YYY_YYY_  PUT     /submits/entry/:entryid                 editEntry         change entry
   YYY_YYY_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
   YYYYYYNN  POST    /submits/entry                          addEntry          add entry to (existing) submit
-  YYYYYNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
+  YYYYYYNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
   YYY_YNN_  GET     /submits/entry/:entryid/:entryvalueid   getEntryFile      download a file ie one field of an entry
-  YYY_YNN_  GET     /submits/entry/:entryid                 getEntry          get an entry
+  YYY_YYN_  GET     /submits/entry/:entryid                 getEntry          get an entry
   Y___Y___  GET     /submits/formfields/:flowstageId        getFlowFormFields get the list of fields used in a stage
-  YYYYYNNN  GET     /submits/pub/:pubid                     getPubSubmits     get submits for a publication
+  YYYYYYNN  GET     /submits/pub/:pubid                     getPubSubmits     get submits for a publication
   YYY_YYY_  PATCH   /submits/:submitid                      editSubmit        edit submit title and author
   YYY_YYY_  DELETE  /submits/:submitid                      deleteSubmit      delete submit and all entries, etc
   YYY_YYY_  DELETE  /submits/status/:id                     deleteSubmitStatus
@@ -623,6 +623,7 @@ async function getEntryFile (req, res, next) {
         'Content-Type': ContentType
       }
     }
+    console.log('Content-Type', ContentType)
     res.sendFile(dbentryvalue.file, options)
     logger.log4req(req, 'Sending file', dbentryvalue.file)
   } catch (e) {
