@@ -1,23 +1,23 @@
 /*
   Y=Done N=Todo _=n/a *=urgent
-  .-------1=pub-access
+  .-------1=pub-access or not
   |.------2=Author-access or not
-  ||.-----3=Other-roles=access
+  ||.-----3=Owner-only-or-other-roles access or not
   |||.----4=only-if-open-to-author
   ||||....Jest tests for 1 2 3 4
   ||||||||
-  YYY_YNN_  PUT     /submits/entry/:entryid                 editEntry         change entry
-  YYY_YNN_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
-  YYYYYNNN  POST    /submits/entry                          addEntry          add entry to (existing) submit
+  YYY_YYY_  PUT     /submits/entry/:entryid                 editEntry         change entry
+  YYY_YYY_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
+  YYYYYYNN  POST    /submits/entry                          addEntry          add entry to (existing) submit
   YYYYYNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
   YYY_YNN_  GET     /submits/entry/:entryid/:entryvalueid   getEntryFile      download a file ie one field of an entry
   YYY_YNN_  GET     /submits/entry/:entryid                 getEntry          get an entry
   Y___Y___  GET     /submits/formfields/:flowstageId        getFlowFormFields get the list of fields used in a stage
   YYYYYNNN  GET     /submits/pub/:pubid                     getPubSubmits     get submits for a publication
   YYY_YYY_  PATCH   /submits/:submitid                      editSubmit        edit submit title and author
-  YYY_YYN_  DELETE  /submits/:submitid                      deleteSubmit      delete submit and all entries, etc
-  YYY_YYN_  DELETE  /submits/status/:id                     deleteSubmitStatus
-  YYY_YNN_  POST    /submits/status/:id                     addSubmitStatus
+  YYY_YYY_  DELETE  /submits/:submitid                      deleteSubmit      delete submit and all entries, etc
+  YYY_YYY_  DELETE  /submits/status/:id                     deleteSubmitStatus
+  YYY_YYY_  POST    /submits/status/:id                     addSubmitStatus
 */
 const { Router } = require('express')
 const models = require('../models')
@@ -104,6 +104,7 @@ async function addEntry (req, res, next) {
     if (!dbentry) return utils.giveup(req, res, 'Could not create entry')
     logger.log4req(req, 'CREATED entry', dbentry.id)
 
+    req.files = req.files || []
     for (const file of req.files) {
       const hyphenpos = file.originalname.indexOf('-')
       if (hyphenpos === -1) return utils.giveup(req, res, 'Bad file originalname format')
@@ -420,6 +421,7 @@ async function editEntry (req, res, next) {
     // Don't need to change anything in entry ie leave creation dt alone
 
     // If replacement files given
+    req.files = req.files || []
     for (const file of req.files) {
       // console.log('editEntry',file)
       const hyphenpos = file.originalname.indexOf('-')

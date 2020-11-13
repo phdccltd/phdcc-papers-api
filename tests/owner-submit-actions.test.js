@@ -39,6 +39,24 @@ describe('OWNER', () => {
       error = await runscript.run(app.models, 'api-login-owner1.json', false, app)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'api-status-proposal-accepted.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-login-author1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-add-paper-author1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'api-login-owner1.json', false, app)
+      if (error) throw new Error(error)
+
       error = await runscript.run(app.models, 'api-owner-submit-actions.json', false, app)
       if (error) throw new Error(error)
 

@@ -311,6 +311,23 @@ async function run (models, configfilename, existingconfig, app, resBody) {
               .set('authorization', authheader)
               .send(data)
             break
+          case 'postputform':
+            let req = request(app)
+              .post(call.uri)
+              .set('x-http-method-override', 'PUT')
+              .set('authorization', authheader)
+
+            for (const attach of call.attachs) {
+              req = req.attach('files', attach.path, attach.name)
+            }
+
+            for (const field of call.fields) {
+              const fieldkeys = Object.keys(field)
+              const fieldvalue = fieldkeys[0]
+              req = req.field(fieldvalue, JSON.stringify(field[fieldvalue]))
+            }
+            res = await req
+            break
           case 'postform': {
             let req = request(app)
               .post(call.uri)
