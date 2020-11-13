@@ -1,0 +1,17 @@
+{
+  "name": "Status: set proposal status to paper with reviewers",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addSubmitStatus paper with reviewers",
+      "method": "postpost",
+      "uri": "/submits/status/1", // Submit 1
+      "data": {
+        "newstatusid": 6
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

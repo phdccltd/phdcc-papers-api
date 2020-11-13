@@ -1,0 +1,30 @@
+{
+  "name": "Owner: Add reviewers",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addReviewer",
+      "method": "post",
+      "uri": "/reviewers/1",
+      "data": {
+        "userid": 4, // Author2
+        "lead": false
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addReviewer",
+      "method": "post",
+      "uri": "/reviewers/1",
+      "data": {
+        "userid": 6, // Reviewer1
+        "lead": true
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

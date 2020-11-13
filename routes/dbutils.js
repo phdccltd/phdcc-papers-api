@@ -136,7 +136,7 @@ async function addRoleStageActions (req, flow, submit) {
  *  If showing, then set submit.actions or submit.actionsdone
 */
 
-async function isReviewableSubmit (req, flow, submit) {
+async function isReviewableSubmit(req, flow, submit) {
   let includethissubmit = false
 
   req.iamgrading = false

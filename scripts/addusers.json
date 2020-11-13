@@ -3,7 +3,7 @@
   "pubname": "TestPubName",
   "users": [
     {
-      "name": "Jo",
+      "name": "Jo", // 1
       "username": "jo",
       "email": "jo@example.com",
       "password": "asecret",
@@ -11,35 +11,35 @@
       "roles": "Owner"
     },
     {
-      "name": "Owner1",
+      "name": "Owner1", // 2
       "username": "owner1",
       "email": "owner1@example.com",
       "password": "owner1pwd",
       "roles": "Owner"
     },
     {
-      "name": "Author1",
+      "name": "Author1", // 3
       "username": "author1",
       "email": "author1@example.com",
       "password": "author1pwd",
       "roles": "Author"
     },
     {
-      "name": "Author2",
+      "name": "Author2", // 4
       "username": "author2",
       "email": "author2@example.com",
       "password": "author2pwd",
       "roles": "Author,Reviewer"
     },
     {
-      "name": "Teamster",
+      "name": "Teamster", // 5
       "username": "teamster",
       "email": "teamster@example.com",
       "password": "teamsterpwd",
       "roles": "Team"
     },
     {
-      "name": "Reviewer1",
+      "name": "Reviewer1", // 6
       "username": "reviewer1",
       "email": "reviewer1@example.com",
       "password": "reviewer1pwd",

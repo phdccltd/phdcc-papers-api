@@ -221,7 +221,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
       const pub = config.pub ? config.pub : existingconfig.pub
       if (!pub) return 'No publication found to attach users to'
       if (pub.name !== config.pubname) return 'Users publication not found ' + config.pubname
-      console.log('Adding users and with roles in publication ' + pub.pubname)
+      console.log('Adding users and with roles in publication ' + pub.name)
       for (const user of config.users) {
         const newuser = { ...defaultUser, ...user }
         newuser.password = await bcrypt.hash(newuser.password, saltRounds)

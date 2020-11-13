@@ -1,0 +1,25 @@
+{
+  "name": "Submit: Log in as reviewer1",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "Log in as reviewer",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "reviewer1",
+        "password": "reviewer1pwd",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "token",
+        "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "token"
+      }
+    }
+  ]
+}

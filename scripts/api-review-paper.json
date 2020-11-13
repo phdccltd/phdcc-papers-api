@@ -1,0 +1,21 @@
+{
+  "name": "Grading: review paper",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addGrading of paper",
+      "method": "post",
+      "uri": "/gradings/1",
+      "data": {
+        "acceptingid": 0,
+        "flowgradeid": 2, // Paper
+        "decision": 4, // Accept
+        "comment": "Nice paper",
+        "canreview": false
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

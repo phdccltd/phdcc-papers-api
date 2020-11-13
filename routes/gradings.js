@@ -74,6 +74,7 @@ async function addGrading (req, res, next) {
     const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
     if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found ' + flowgradeid)
     // console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
+    //console.log('dbflowgrade', dbflowgrade)
     if (dbflowgrade.flowId !== req.dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
 
     const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
@@ -88,6 +89,8 @@ async function addGrading (req, res, next) {
     if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
     if (!req.isowner) {
+      if (req.dbsubmit.userId === req.dbuser.id) return utils.giveup(req, res, 'Not allowed') // Can't grade my own submit
+
       const dbstatuses = await req.dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
       flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
 
@@ -95,6 +98,7 @@ async function addGrading (req, res, next) {
       await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
       req.dbsubmitgradings = await req.dbsubmit.getGradings()
 
+      // Check I am OK to grade
       const includethissubmit = await dbutils.isReviewableSubmit(req, flow, false)
 
       console.log('includethissubmit ihavegraded', includethissubmit, req.ihavegraded)
