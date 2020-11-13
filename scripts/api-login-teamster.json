@@ -1,0 +1,25 @@
+{
+  "name": "Submit: Log in as teamster",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "Log in as teamster",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "teamster",
+        "password": "teamsterpwd",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "token",
+        "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "token"
+      }
+    }
+  ]
+}

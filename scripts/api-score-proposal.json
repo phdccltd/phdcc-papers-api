@@ -1,0 +1,21 @@
+{
+  "name": "Grading: score proposal",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addGrading of proposal",
+      "method": "post",
+      "uri": "/gradings/1",
+      "data": {
+        "acceptingid": 0,
+        "flowgradeid": 1, // Proposal score
+        "decision": 1, // Accept
+        "comment":  "Nice proposal",
+        "canreview":  true
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

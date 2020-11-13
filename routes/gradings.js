@@ -56,7 +56,10 @@ async function deleteGrading (req, res, next) {
 
 /* ************************ */
 /* POST: Add grading */
-/* ACCESS: OWNER-ONLY EDIT TOTEST */
+/* ACCESS: OWNER-ONLY EDIT TOTEST
+ * TESTS: addGrading OK
+ *        addGrading repeat fail
+*/
 async function addGrading (req, res, next) {
   const submitid = parseInt(req.params.submitid)
   // console.log('Add /gradings', submitid)

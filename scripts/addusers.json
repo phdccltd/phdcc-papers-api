@@ -32,11 +32,18 @@
       "roles": "Author,Reviewer"
     },
     {
-      "name": "Staff",
-      "username": "staff",
-      "email": "staff@example.com",
-      "password": "staffpwd",
+      "name": "Teamster",
+      "username": "teamster",
+      "email": "teamster@example.com",
+      "password": "teamsterpwd",
       "roles": "Team"
+    },
+    {
+      "name": "Reviewer1",
+      "username": "reviewer1",
+      "email": "reviewer1@example.com",
+      "password": "reviewer1pwd",
+      "roles": "Reviewer"
     }
   ]
 }
