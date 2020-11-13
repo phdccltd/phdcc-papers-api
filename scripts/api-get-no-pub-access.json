@@ -189,6 +189,43 @@
         "prop": "status",
         "value": "No access to this publication"
       }
+    },
+    {
+      "name": "try deleteSubmit",
+      "method": "postdelete",
+      "uri": "/submits/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No access to this publication"
+      }
+    },
+    {
+      "name": "try deleteSubmitStatus",
+      "method": "postdelete",
+      "uri": "/submits/status/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No access to this publication"
+      }
+    },
+    {
+      "name": "try addSubmitStatus",
+      "method": "postpost",
+      "uri": "/submits/status/1",
+      "data": {
+        "newstatusid":  2
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No access to this publication"
+      }
     }
   ]
 }
