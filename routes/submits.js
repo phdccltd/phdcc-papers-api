@@ -10,8 +10,8 @@
   YYY_YNN_  DELETE  /submits/entry/:entryid                 deleteEntry       delete entry
   YYYYYNNN  POST    /submits/entry                          addEntry          add entry to (existing) submit
   YYYYYNNN  POST    /submits/submit/:flowid                 addNewSubmit      add new submit and entry
-  YYY_NNN_  GET     /submits/entry/:entryid/:entryvalueid   getEntryFile      download a file ie one field of an entry
-  YYY_NNN_  GET     /submits/entry/:entryid                 getEntry          get an entry
+  YYY_YNN_  GET     /submits/entry/:entryid/:entryvalueid   getEntryFile      download a file ie one field of an entry
+  YYY_YNN_  GET     /submits/entry/:entryid                 getEntry          get an entry
   Y___Y___  GET     /submits/formfields/:flowstageId        getFlowFormFields get the list of fields used in a stage
   YYYYYNNN  GET     /submits/pub/:pubid                     getPubSubmits     get submits for a publication
   YYY_NNN_  PATCH   /submits/:submitid                      editSubmit        edit submit title and author
@@ -594,6 +594,12 @@ async function getEntryFile (req, res, next) {
     const dbentry = await models.entries.findByPk(entryid)
     if (!dbentry) return utils.giveup(req, res, 'Invalid entryid')
 
+    req.dbsubmit = await dbentry.getSubmit()
+    if (!req.dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
+
+    const error = await dbutils.getSubmitFlowPub(req, 0)
+    if (error) return utils.giveup(req, res, error)
+
     const dbentryvalue = await models.entryvalues.findByPk(entryvalueid)
     if (!dbentryvalue) return utils.giveup(req, res, 'Invalid entryvalueid')
 
@@ -602,12 +608,6 @@ async function getEntryFile (req, res, next) {
     if (refEntry.id !== entryid) return utils.giveup(req, res, 'Invalid refEntry.')
 
     if (dbentryvalue.file === null) return utils.giveup(req, res, 'No file for that entry')
-
-    req.dbsubmit = await dbentry.getSubmit()
-    if (!req.dbsubmit) return utils.giveup(req, res, 'No submit for entryid')
-
-    const error = await dbutils.getSubmitFlowPub(req, 0)
-    if (error) return utils.giveup(req, res, error)
 
     const ContentType = mime.lookup(dbentryvalue.file)
     let filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH

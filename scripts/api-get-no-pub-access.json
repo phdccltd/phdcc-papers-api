@@ -153,6 +153,30 @@
         "prop": "status",
         "value": "No access to this publication"
       }
+    },
+    {
+      "name": "try getEntry",
+      "method": "get",
+      "uri": "/submits/entry/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No access to this publication"
+      }
+    },
+    {
+      "name": "try getEntryFile",
+      "method": "get",
+      "uri": "/submits/entry/1/1", // Not actually a file
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No access to this publication"
+      }
     }
   ]
 }
