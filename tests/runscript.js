@@ -283,6 +283,20 @@ async function run (models, configfilename, existingconfig, app, resBody) {
               .set('authorization', authheader)
               .send(data)
             break
+          case 'postdelete':
+            res = await request(app)
+              .post(call.uri)
+              .set('x-http-method-override', 'DELETE')
+              .set('authorization', authheader)
+              .send(data)
+            break
+          case 'postpatch':
+            res = await request(app)
+              .post(call.uri)
+              .set('x-http-method-override', 'PATCH')
+              .set('authorization', authheader)
+              .send(data)
+            break
           case 'postpost':
             res = await request(app)
               .post(call.uri)
@@ -294,13 +308,6 @@ async function run (models, configfilename, existingconfig, app, resBody) {
             res = await request(app)
               .post(call.uri)
               .set('x-http-method-override', 'PUT')
-              .set('authorization', authheader)
-              .send(data)
-            break
-          case 'postdelete':
-            res = await request(app)
-              .post(call.uri)
-              .set('x-http-method-override', 'DELETE')
               .set('authorization', authheader)
               .send(data)
             break

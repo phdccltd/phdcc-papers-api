@@ -177,6 +177,18 @@
         "prop": "status",
         "value": "No access to this publication"
       }
+    },
+    {
+      "name": "try editSubmit",
+      "method": "postpatch",
+      "uri": "/submits/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No access to this publication"
+      }
     }
   ]
 }
