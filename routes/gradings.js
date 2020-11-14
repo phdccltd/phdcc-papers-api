@@ -74,7 +74,7 @@ async function addGrading (req, res, next) {
     const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
     if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found ' + flowgradeid)
     // console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
-    //console.log('dbflowgrade', dbflowgrade)
+    // console.log('dbflowgrade', dbflowgrade)
     if (dbflowgrade.flowId !== req.dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
 
     const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)

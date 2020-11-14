@@ -226,15 +226,14 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         pubmail.flowstatusId = lookup(pubmail.flowstatusId, config.pub.flow[0].status)
         pubmail.flowgradeId = lookup(pubmail.flowgradeId, config.pub.flow[0].grade)
         const newpubmail = { ...defaultPubMail, ...pubmail, weight: weight++ }
-        //console.log('newpubmail', newpubmail)
+        // console.log('newpubmail', newpubmail)
         pubmail.db = await models.pubmailtemplates.create(newpubmail)
         if (!pubmail.db) return 'Could not create pubmail'
-        //console.log('pubmail.db', pubmail.db)
+        // console.log('pubmail.db', pubmail.db)
         console.log('pubmail.db created', pubmail.db.id)
 
-        //const gotagain = await models.pubmailtemplates.findByPk(pubmail.db.id)
-        //console.log('gotagain', gotagain)
-
+        // const gotagain = await models.pubmailtemplates.findByPk(pubmail.db.id)
+        // console.log('gotagain', gotagain)
       }
     }
     /// //////////////////////
