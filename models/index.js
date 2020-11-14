@@ -9,6 +9,7 @@ const basename = path.basename(__filename)
 const dbs = {}
 
 const sequelize = require('../db').sequelize
+const { DataTypes } = require('sequelize')
 
 fs.readdirSync(__dirname)
   .filter((file) => {
@@ -18,7 +19,8 @@ fs.readdirSync(__dirname)
   })
   .forEach((file) => {
     console.log('models', file)
-    const model = sequelize.import(path.join(__dirname, file))
+    //const model = sequelize.import(Path.join(__dirname, file))
+    const model = require('./' + file)(sequelize, DataTypes)
     dbs[model.name] = model
   })
 

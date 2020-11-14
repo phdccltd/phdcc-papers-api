@@ -251,6 +251,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         if (!user.db) return 'Could not create user ' + user.name
         console.log('user.db created', user.db.id)
 
+        console.log('DDD', pub.db, user.db)
         await pub.db.addUser(user.db)
 
         const roles = user.roles.split(',')
@@ -428,6 +429,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
     // Copy new config into existing
     Object.assign(existingconfig, config)
   } catch (e) {
+    console.log('RUNSCRIPT EXCEPTION',e)
     return e.message
   }
 }
