@@ -23,6 +23,8 @@ const acceptingDefaults = { open: true }
 
 const defaultFormfield = { formtype: 2, formtypeid: 1, help: '', helplink: '', required: true, requiredif: '', maxwords: 0, maxchars: 0, hideatgrading: 0, includeindownload: 1 }
 
+const defaultPubMail = { flowstatusId: null, flowgradeId: null, sendReviewReminderDays: 0, sendLeadReminderDays: 0, sendReviewChaseUpDays: 0, sendOnSiteAction: 0, sendOnRoleGiven: 0, sendToAuthor: false, bccToOwners: false, sendToUser: false, sendToReviewers: false, pubroleId: null }
+
 const defaultUser = { super: false, password: 'pwd' }
 
 const persisted = {}
@@ -32,7 +34,7 @@ function lookup (lookfor, lookin) {
     const thing = _.find(lookin, thing => { return thing.name === lookfor })
     if (thing) {
       return thing.db.id
-    }
+    } else throw new Error('Unrecognised lookup: ' + lookfor)
   }
   return null
 }
@@ -86,6 +88,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
       }
 
       // Publication lookups
+      weight = 1
       for (const publookup of config.pub.publookup) {
         const newpublookup = { pubId: config.pub.db.id, ...publookup }
         publookup.db = await models.publookups.create(newpublookup)
@@ -93,7 +96,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         console.log('publookup.db created', publookup.name, publookup.db.id)
 
         for (const value of publookup.value) {
-          const newvalue = { publookupId: publookup.db.id, ...value }
+          const newvalue = { publookupId: publookup.db.id, ...value, weight: weight++ }
           value.db = await models.publookupvalues.create(newvalue)
           if (!value.db) return 'Could not create publookupvalue' + value.text
           console.log('value.db created', value.text, value.db.id)
@@ -212,6 +215,24 @@ async function run (models, configfilename, existingconfig, app, resBody) {
           const ref = { name: formfield.ref, id: formfield.db.id }
           refs.push(ref)
         }
+      }
+      // Publication mail templates
+      weight = 1
+      for (const pubmail of config.pub.pubmailtemplates) {
+        pubmail.sendOnRoleGiven = lookup(pubmail.sendOnRoleGiven, config.pub.role)
+        if (pubmail.sendOnRoleGiven === null) pubmail.sendOnRoleGiven = 0
+        pubmail.flowstatusId = lookup(pubmail.flowstatusId, config.pub.flow[0].status)
+        pubmail.flowgradeId = lookup(pubmail.flowgradeId, config.pub.flow[0].grade)
+        const newpubmail = { ...defaultPubMail, ...pubmail, weight: weight++ }
+        //console.log('newpubmail', newpubmail)
+        pubmail.db = await models.pubmailtemplates.create(newpubmail)
+        if (!pubmail.db) return 'Could not create pubmail'
+        //console.log('pubmail.db', pubmail.db)
+        console.log('pubmail.db created', pubmail.db.id)
+
+        //const gotagain = await models.pubmailtemplates.findByPk(pubmail.db.id)
+        //console.log('gotagain', gotagain)
+
       }
     }
     /// //////////////////////

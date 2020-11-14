@@ -1,4 +1,4 @@
-{
+{ // For production use, check that there are no hard-coded values
   "name": "Add simple flow",
   "pub": {
     "name": "TestPubName",
@@ -45,22 +45,10 @@
       {
         "name": "Topics", // 1
         "value": [
-          {
-            "text": "Climate Change",
-            "weight": 10
-          }, // 1
-          {
-            "text": "Biodiversity",
-            "weight": 20
-          },
-          {
-            "text": "Air pollution",
-            "weight": 30
-          },
-          {
-            "text": "Nuclear emissions",
-            "weight": 40
-          }
+          { "text": "Climate Change" }, // 1
+          { "text": "Biodiversity"},
+          { "text": "Air pollution" },
+          { "text": "Nuclear emissions"}
         ]
       }
     ],
@@ -206,6 +194,55 @@
         "flowstage": "Paper",
         "type": "file",
         "allowedfiletypes": ".txt, .pdf, .doc, .docx"
+      }
+    ],
+    "pubmailtemplates": [
+      {
+        "name": "Access requested mail template",
+        "subject": "user requests access",
+        "body": "Dear owner: The following user has requested access to {{pub.name}}.  User: {{user.username}} Please give them an Author role at the site {{site.url}} Best regards",
+        "sendOnSiteAction": 1,
+        "bccToOwners": true
+      },
+      {
+        "name": "Welcome to publication template",
+        "subject": "Welcome to our submission system",
+        "body": "Hello  Thank you for registering at {{site.name}}.  Site: {{site.url}} Username: {{user.username}} You now have access to our submission system. If submissions are being accepted now, you will be able to add a Proposal. Thank you.",
+        "sendOnRoleGiven": "Author",
+        "bccToOwners": true,
+        "sendToUser": true
+      },
+      {
+        "name": "Proposal submission successful mail template",
+        "subject": "Proposal submission successful: paper id: {{submit.id}}",
+        "body": "Dear Author,  Thank you for submitting a proposal for a paper at our conference. Paper id: {{submit.id}} Entry id: {{entry.id}} Submitter: {{author.username}} {author.id}}) Date: {{now}} Title: {{submit.name}} Author: {{entry.field_1}}",
+        "flowstatusId": "Proposal submitted",
+        "sendToAuthor": true,
+        "bccToOwners": true
+      },
+      {
+        "name": "Proposal Score Added mail template",
+        "subject": "Proposal Score Added for paper id: {{submit.id}}",
+        "body": "Thank you for scoring the following proposal: Paper id: {{submit.id}} Submitter: {{author.username}} ({{author.id}}) Title: {{submit.name}} Score: {{grading.score}} Comments: {{grading.comment}} I can review: {{grading.canreview}}",
+        "flowgradeId": "Proposal score",
+        "bccToOwners": true,
+        "sendToUser": true
+      },
+      {
+        "name": "Proposal Accepted mail template",
+        "subject": "Proposal Accepted: Paper ID: {{submit.id}}",
+        "body": "Dear Author: Your proposal entitled '{{submit.name}}' has been accepted. Please now submit your paper.",
+        "flowstatusId": "Proposal accepted",
+        "sendToAuthor": true,
+        "bccToOwners": true
+      },
+      {
+        "name": "Proposal Rejected mail template",
+        "subject": "Proposal Rejected: Paper ID: {{submit.id}}",
+        "body": "Dear Author, Sorry but your proposal entitled '{{submit.name}}' has been rejected.",
+        "flowstatusId": "Proposal rejected",
+        "sendToAuthor": true,
+        "bccToOwners": true
       }
     ]
   }
