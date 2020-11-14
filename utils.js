@@ -42,7 +42,7 @@ function getSiteName () {
 
 function asyncMail (toEmail, subject, message, bccEmail) {
   if (!transport || !fromEmail) {
-    console.log('NO MAIL TRANSPORT/FROM TO SEND', subject)
+    console.log('NO MAIL TRANSPORT/FROM TO SEND', subject, message)
     console.log(transport)
     console.log(fromEmail)
     return
