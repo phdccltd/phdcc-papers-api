@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development LOGMODE=console node ./server.js",
     "start": "cross-env NODE_ENV=production node ./server.js",
-    "test": "jest",
+    "test": "jest 2>tests1.txt",
     "testrel": "jest && coveralls < coverage/lcov.info",
     "standard": "standard app.js logger.js server.js task.js utils.js models/*.js routes/*.js tests/*.js"
   },

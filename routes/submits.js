@@ -113,11 +113,11 @@ async function addEntry (req, res, next) {
 
       // Move file to filesdir/<siteid>/<pubid>/<flowid>/<submitid>/<entryid>/
       let filepath = '/' + req.site.id + '/' + req.dbpub.id + '/' + req.dbflow.id + '/' + req.body.submitid + '/' + dbentry.id
-      //console.log('filesdir + filepath', filesdir + filepath)
+console.log('filesdir + filepath', filesdir + filepath)
       fs.mkdirSync(filesdir + filepath, { recursive: true })
       filepath += '/' + file.originalname
-      //console.log('file.path', file.path)
-      //console.log('filepath',filepath)
+console.log('file.path', file.path)
+console.log('filepath',filepath)
       fs.renameSync(file.path, filesdir + filepath)
       file.filepath = filepath
       logger.log4req(req, 'Uploaded file', filesdir + filepath)

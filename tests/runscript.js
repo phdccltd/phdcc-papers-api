@@ -184,6 +184,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
       // Form fields
       weight = 1
       const refs = []
+      config.pub.formfield = config.pub.formfield || []
       for (const formfield of config.pub.formfield) {
         for (const flow of config.pub.flow) {
           const foundid = lookup(formfield.flowstage, flow.stage)
@@ -218,6 +219,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
       }
       // Publication mail templates
       weight = 1
+      config.pub.pubmailtemplates = config.pub.pubmailtemplates || []
       for (const pubmail of config.pub.pubmailtemplates) {
         pubmail.sendOnRoleGiven = lookup(pubmail.sendOnRoleGiven, config.pub.role)
         if (pubmail.sendOnRoleGiven === null) pubmail.sendOnRoleGiven = 0

@@ -1,4 +1,4 @@
-{ // For production use, check that there are no hard-coded values
+{ // For production use, double-check that there are no hard-coded values
   "name": "Add simple flow",
   "pub": {
     "name": "TestPubName",
