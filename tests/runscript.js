@@ -251,7 +251,6 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         if (!user.db) return 'Could not create user ' + user.name
         console.log('user.db created', user.db.id)
 
-        console.log('DDD', pub.db, user.db)
         await pub.db.addUser(user.db)
 
         const roles = user.roles.split(',')

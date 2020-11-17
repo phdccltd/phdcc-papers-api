@@ -1,0 +1,21 @@
+diff --git a/node_modules/sequelize/lib/dialects/sqlite/query-generator.js b/node_modules/sequelize/lib/dialects/sqlite/query-generator.js
+index 8997bb6..f1b4a62 100644
+--- a/node_modules/sequelize/lib/dialects/sqlite/query-generator.js
++++ b/node_modules/sequelize/lib/dialects/sqlite/query-generator.js
+@@ -62,6 +62,7 @@ class SQLiteQueryGenerator extends MySqlQueryGenerator {
+     if (options.uniqueKeys) {
+       _.each(options.uniqueKeys, columns => {
+         if (columns.customIndex) {
++        console.log('ADDING UNIQUE')
+           attrStr += `, UNIQUE (${columns.fields.map(field => this.quoteIdentifier(field)).join(', ')})`;
+         }
+       });
+@@ -265,7 +266,7 @@ class SQLiteQueryGenerator extends MySqlQueryGenerator {
+         }
+ 
+         if (dataType.unique === true) {
+-          sql += ' UNIQUE';
++          //sql += ' UNIQUE'; // PHDCC
+         }
+ 
+         if (dataType.primaryKey) {

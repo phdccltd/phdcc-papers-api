@@ -9,7 +9,7 @@ let sequelize = null
 
 if (process.env.TESTING) {
   sequelize = new Sequelize('sqlite::memory:', {
-    logging: logger.logdb1, // Only logs first parameter to avoid above error
+    logging: logger.logdb1, // Only logs first parameter to avoid error
     define: {
       timestamps: true, // true by default so as to add the timestamp attributes (updatedAt, createdAt)
       dateStrings: true
