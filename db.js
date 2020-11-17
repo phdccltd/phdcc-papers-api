@@ -11,7 +11,7 @@ if (process.env.TESTING) {
   sequelize = new Sequelize('sqlite::memory:', {
     logging: logger.logdb1, // Only logs first parameter to avoid error
     define: {
-      timestamps: true, // true by default so as to add the timestamp attributes (updatedAt, createdAt)
+      timestamps: false, // Having as true weirdly causes test errors in Seqelize 5.22+
       dateStrings: true
     }
   })

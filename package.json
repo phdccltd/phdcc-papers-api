@@ -12,6 +12,9 @@
     "standard": "standard app.js logger.js server.js task.js utils.js models/*.js routes/*.js tests/*.js",
     "postinstall": "patch-package"
   },
+  "comments": {
+    "create_patch": "npx patch-package sequelize"
+  },
   "license": "MIT",
   "dependencies": {
     "archiver": "^5.0.2",
