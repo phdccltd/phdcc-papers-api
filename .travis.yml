@@ -1,0 +1,24 @@
+dist: xenial
+language: node_js
+node_js:
+- 12
+
+#addons:
+#  apt:
+#    sources:
+#      - travis-ci/sqlite3
+#    packages:
+#      - sqlite3
+
+################
+before_install:
+- node --version
+- npm --version
+- npm install -g jest
+- npm install
+- npm install -g coveralls
+#- sudo apt-get install -qq sqlite3 libdbd-sqlite3
+
+################
+script:
+- npm run testrel
