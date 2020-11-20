@@ -9,6 +9,8 @@ const runscript = require('./runscript')
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
 
+process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
+
 describe('USER', () => {
   it('author not permitted', async () => {
     let testSucceeded = false
