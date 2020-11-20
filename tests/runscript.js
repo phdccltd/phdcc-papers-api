@@ -428,7 +428,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
     // Copy new config into existing
     Object.assign(existingconfig, config)
   } catch (e) {
-    console.log('RUNSCRIPT EXCEPTION',e)
+    console.log('RUNSCRIPT EXCEPTION', e)
     return e.message
   }
 }
