@@ -1,5 +1,7 @@
 # phdcc-papers-api
 
+[![Build Status](https://api.travis-ci.com/phdccltd/phdcc-papers-api.svg?branch=main)](https://travis-ci.com/github/phdccltd/phdcc-papers-api)
+[![Coverage Status](https://coveralls.io/repos/github/phdccltd/phdcc-papers-api/badge.svg?branch=main)](https://coveralls.io/github/phdccltd/phdcc-papers-api?branch=main)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 API for the **Papers** [PHDCC journal/conference abstract and paper submission and review system](https://www.phdcc.com/papers/).
