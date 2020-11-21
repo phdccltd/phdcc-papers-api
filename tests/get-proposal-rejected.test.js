@@ -24,32 +24,32 @@ describe('GET', () => {
       let error = await runscript.run(app.models, 'addpubsimpleflow.json', config)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'addusers.json', config)
+      error = await runscript.run(app.models, 'tests/addusers.json', config)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-login-author1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-add-proposal-author.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-add-proposal-author.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-login-owner1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-status-proposal-rejected.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-status-proposal-rejected.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-login-author1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
       const resBody = {}
-      error = await runscript.run(app.models, 'api-get-proposal-rejected.json', false, app, resBody)
+      error = await runscript.run(app.models, 'tests/api-get-proposal-rejected.json', false, app, resBody)
       if (error) throw new Error(error)
       try {
         const currentstatus = resBody.body.flows[0].submits[0].statuses[0]

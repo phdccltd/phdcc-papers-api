@@ -24,40 +24,40 @@ describe('OWNER', () => {
       let error = await runscript.run(app.models, 'addpubsimpleflow.json', config)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'addusers.json', config)
+      error = await runscript.run(app.models, 'tests/addusers.json', config)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-login-author1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-add-proposal-author.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-add-proposal-author.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-login-owner1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-status-proposal-accepted.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-status-proposal-accepted.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-login-author1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-add-paper-author.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-add-paper-author.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-logout.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-login-owner1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-owner-submit-actions.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-owner-submit-actions.json', false, app)
       if (error) throw new Error(error)
 
       testSucceeded = true

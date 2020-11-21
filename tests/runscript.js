@@ -68,7 +68,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
     }
 
     console.log('----')
-    console.log('PROCESSING:', config.name)
+    console.log('PROCESSING:', configfilename, config.name)
     let weight
     // Publication: just one per config
     /// //////////////////////

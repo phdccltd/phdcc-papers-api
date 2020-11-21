@@ -24,10 +24,10 @@ describe('USER', () => {
       let error = await runscript.run(app.models, 'addpubsimpleflow.json', simple)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'addusers.json', simple)
+      error = await runscript.run(app.models, 'tests/addusers.json', simple)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-get-user-fail.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-get-user-fail.json', false, app)
       if (error) throw new Error(error)
 
       testSucceeded = true

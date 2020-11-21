@@ -26,10 +26,10 @@ describe('LOGIN', () => {
       let error = await runscript.run(app.models, 'addpubsimpleflow.json', config)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'addusers.json', config)
+      error = await runscript.run(app.models, 'tests/addusers.json', config)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'api-login-super.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-super.json', false, app)
       if (error) throw new Error(error)
 
       testSucceeded = true
