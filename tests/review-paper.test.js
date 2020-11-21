@@ -69,6 +69,9 @@ describe('GRADING', () => {
       error = await runscript.run(app.models, 'tests/api-login-author2.json', false, app)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/api-get-entry-paper.json', false, app)
+      if (error) throw new Error(error)
+
       error = await runscript.run(app.models, 'tests/api-review-paper.json', false, app)
       if (error) throw new Error(error)
 

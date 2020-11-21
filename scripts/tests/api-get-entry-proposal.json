@@ -1,0 +1,16 @@
+{
+  "name": "Get proposal entry",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "getEntry",
+      "method": "get",
+      "uri": "/submits/entry/1",
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}
