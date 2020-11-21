@@ -1,0 +1,16 @@
+{
+  "name": "Get publication submits",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "getPubSubmits",
+      "method": "get",
+      "uri": "/submits/pub/1", // Publication 1
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}
