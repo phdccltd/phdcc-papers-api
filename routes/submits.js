@@ -57,7 +57,8 @@ async function handleEntryPost (req, res, next) {
   }
   if (req.headers['x-http-method-override'] === 'DELETE') {
     req.entryid = req.params.entryid
-    await deleteEntry(req, res, next)
+    const ok = await deleteEntry(req, res, next)
+    if( ok) utils.returnOK(req, res, ok, 'ok')
     return
   }
   utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
@@ -574,8 +575,9 @@ async function deleteEntry (req, res, next) {
     affectedRows = await models.entries.destroy({ where: { id: entryid } })
     logger.log4req(req, 'Deleted entry', entryid, affectedRows)
 
-    const ok = affectedRows === 1
-    utils.returnOK(req, res, ok, 'ok')
+    if (affectedRows !== 1) return utils.giveup(req, res, 'Entry not deleted')
+
+    return true
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
