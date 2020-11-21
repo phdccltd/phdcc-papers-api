@@ -32,12 +32,67 @@
       "fields": [
         { "submitid": 1 },
         { "title": "New proposal #1" },
-        { "values": { "formfieldid": 1, "string": "Changed name", "integer": null, "text": null, "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 2, "string": "1,3", "integer": null, "text": null, "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 3, "string": null, "integer": null, "text": "A changed proposal description", "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 4, "string": null, "integer": 0, "text": null, "existingfile": null, "file": null } },
-        { "values": { "formfieldid": 5, "string": "", "integer": null, "text": null, "existingfile": null, "file": null } }
+        {
+          "values": {
+            "formfieldid": 1,
+            "string": "Changed name",
+            "integer": null,
+            "text": null,
+            "existingfile": null,
+            "file": null
+          }
+        },
+        {
+          "values": {
+            "formfieldid": 2,
+            "string": "1,3",
+            "integer": null,
+            "text": null,
+            "existingfile": null,
+            "file": null
+          }
+        },
+        {
+          "values": {
+            "formfieldid": 3,
+            "string": null,
+            "integer": null,
+            "text": "A changed proposal description",
+            "existingfile": null,
+            "file": null
+          }
+        },
+        {
+          "values": {
+            "formfieldid": 4,
+            "string": null,
+            "integer": 0,
+            "text": null,
+            "existingfile": null,
+            "file": null
+          }
+        },
+        {
+          "values": {
+            "formfieldid": 5,
+            "string": "",
+            "integer": null,
+            "text": null,
+            "existingfile": null,
+            "file": null
+          }
+        }
       ],
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "getPubSubmits",
+      "method": "get",
+      "uri": "/submits/pub/1", // Publication 1
+      "data": {
+      },
       "return": {
         "ret": 0
       }
