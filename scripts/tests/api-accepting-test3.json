@@ -1,0 +1,20 @@
+{
+  "name": "Accepting: make paper open again",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addEditAccepting: edit paper closed",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 2, // Paper
+        "chosenopen": true,
+        "chosenstatus": 4, // Proposal accepted
+        "acceptingid": 2
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

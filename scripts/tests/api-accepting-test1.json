@@ -1,0 +1,87 @@
+{
+  "name": "Accepting: add/edit/delete proposal and paper open",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addEditAccepting: add proposal open",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 1, // Proposal
+        "chosenopen": true
+        // acceptingid
+        // chosenstatus
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addEditAccepting: add paper closed",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 2, // Paper
+        "chosenopen": false,
+        "chosenstatus": 4 // Proposal accepted
+        // acceptingid
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addEditAccepting: edit paper open",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 2, // Paper
+        "chosenopen": true,
+        "chosenstatus": 4, // Proposal accepted
+        "acceptingid": 2
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addEditAccepting: add another paper closed",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 2, // Paper
+        "chosenopen": false,
+        "chosenstatus": 4 // Proposal accepted
+        // acceptingid
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "deleteAccepting: delete extra paper closed",
+      "method": "postdelete",
+      "uri": "/acceptings/1",
+      "data": {
+        "acceptingid": 3
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addEditAccepting: edit proposal closed",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 1, // Proposal
+        "chosenopen": false,
+        //"chosenstatus": 4, // Proposal accepted
+        "acceptingid": 1
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}
