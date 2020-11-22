@@ -58,7 +58,7 @@ async function handleEntryPost (req, res, next) {
   if (req.headers['x-http-method-override'] === 'DELETE') {
     req.entryid = req.params.entryid
     const ok = await deleteEntry(req, res, next)
-    if( ok) utils.returnOK(req, res, ok, 'ok')
+    if (ok) utils.returnOK(req, res, ok, 'ok')
     return
   }
   utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
