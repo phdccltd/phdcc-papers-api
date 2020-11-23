@@ -1,0 +1,110 @@
+{
+  "name": "Owner user actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "removePubUser: no method",
+      "method": "post",
+      "uri": "/users/pub/1/2",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No x-http-method-override"
+      }
+    },
+    {
+      "name": "removePubUser: wrong method",
+      "method": "postpatch",
+      "uri": "/users/pub/1/2",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not delete"
+      }
+    },
+    {
+      "name": "removePubUser: duff pubid",
+      "method": "postdelete",
+      "uri": "/users/pub/x/6",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "removePubUser: duff userid",
+      "method": "postdelete",
+      "uri": "/users/pub/3/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff userid"
+      }
+    },
+    {
+      "name": "removePubUser: wrong pubid",
+      "method": "postdelete",
+      "uri": "/users/pub/3/6",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "removePubUser: wrong user",
+      "method": "postdelete",
+      "uri": "/users/pub/1/8",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find userid 8"
+      }
+    },
+    {
+      "name": "removePubUser: need to delete roles first",
+      "method": "postdelete",
+      "uri": "/users/pub/1/6",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Roles need to be deleted first"
+      }
+    },
+    {
+      "name": "deleteUserRole: OK",
+      "method": "postdelete",
+      "uri": "/users/pub/1/6/5", // Remove Reviewer role
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "removePubUser: now OK",
+      "method": "postdelete",
+      "uri": "/users/pub/1/6",
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

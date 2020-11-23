@@ -9,35 +9,35 @@
     "tz": "Europe/London",
     "role": [
       {
-        "name": "Owner",
+        "name": "Owner", // 1
         "isowner": true
       },
       {
-        "name": "Author",
+        "name": "Author", // 2
         "defaultrole": true
       },
       {
-        "name": "Team",
+        "name": "Team", // 3
         "canviewall": true
       },
       {
-        "name": "Editor",
+        "name": "Editor", // 4
         "canviewall": true
       },
       {
-        "name": "Reviewer",
+        "name": "Reviewer", // 5
         "isreviewer": true
       },
       {
-        "name": "Lead",
+        "name": "Lead", // 6
         "isreviewer": true
       },
       {
-        "name": "Access requested",
+        "name": "Access requested", // 7
         "userRequested": true
       },
       {
-        "name": "Access denied",
+        "name": "Access denied", // 8
         "userDeniedAccess": true
       }
     ],

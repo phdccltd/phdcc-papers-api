@@ -8,10 +8,13 @@ const mailutils = require('./mailutils')
 /* POST+DELETE: Delete pub user role  */
 async function removePubUser (req, res, next) {
   try {
-    if (req.headers['x-http-method-override'] !== 'DELETE') return utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
+    if (!('x-http-method-override' in req.headers)) return utils.giveup(req, res, 'No x-http-method-override')
+    if (req.headers['x-http-method-override'] !== 'DELETE') return utils.giveup(req, res, 'Not delete')
     const pubid = parseInt(req.params.pubid)
     const userid = parseInt(req.params.userid)
     console.log('removePubUser', pubid, userid)
+    if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+    if (isNaN(userid)) return utils.giveup(req, res, 'Duff userid')
 
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -116,6 +119,9 @@ async function deleteUserRole (req, res, next) {
     const userid = parseInt(req.params.userid)
     const roleid = parseInt(req.params.roleid)
     console.log('deleteUserRole', pubid, userid, roleid)
+    if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+    if (isNaN(userid)) return utils.giveup(req, res, 'Duff userid')
+    if (isNaN(roleid)) return utils.giveup(req, res, 'Duff roleid')
 
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)

@@ -73,6 +73,19 @@
       }
     },
     {
+      "name": "Valid email: change author1",
+      "method": "postpatch",
+      "uri": "/user",
+      "data": {
+        //"name": "Author1changed"
+        "email": "author1changed@example.com"
+        //"password": "a new password"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
       "name": "Valid name and email: change author1",
       "method": "postpatch",
       "uri": "/user",
