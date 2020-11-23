@@ -106,7 +106,8 @@ async function sendOneTemplate (dbpubmail, site, dbpub, dbformfields, dbuser, db
   let entryout = false
   if (dbentry) {
     entryout = models.sanitise(models.entries, dbentry)
-    for (const sv of reqbody.values) {
+    const svalues = (typeof reqbody.values === 'string') ? [reqbody.values] : reqbody.values // Single value comes in as string; otherwise array
+    for (const sv of svalues) {
       const v = JSON.parse(sv)
       const formfield = _.find(dbformfields, formfield => { return formfield.id === v.formfieldid })
       entryout['field_' + v.formfieldid] = await dbutils.getEntryStringValue(v, formfield)
