@@ -1,4 +1,9 @@
 {
+  // Not tested:
+  // - removePubUser: That user does not have access currently
+  // - deleteUserRole: pubrole pub mismatch
+  // - addUserRole: pubrole pub mismatch
+  // - handleMasquerade: as super
   "name": "Owner user actions",
   "pubname": "TestPubName",
   "api": [
@@ -15,7 +20,7 @@
       }
     },
     {
-      "name": "removePubUser: wrong method",
+      "name": "removePubUser: duff method",
       "method": "postpatch",
       "uri": "/users/pub/1/2",
       "data": {
@@ -104,6 +109,254 @@
       },
       "return": {
         "ret": 0
+      }
+    },
+    {
+      "name": "deleteUserRole/addUserRole: duff method",
+      "method": "postpatch",
+      "uri": "/users/pub/1/6/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Bad method: PATCH"
+      }
+    },
+    {
+      "name": "deleteUserRole: duff pubid",
+      "method": "postdelete",
+      "uri": "/users/pub/x/6/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "deleteUserRole: duff userid",
+      "method": "postdelete",
+      "uri": "/users/pub/1/x/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff userid"
+      }
+    },
+    {
+      "name": "deleteUserRole: duff roleid",
+      "method": "postdelete",
+      "uri": "/users/pub/1/6/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff roleid"
+      }
+    },
+    {
+      "name": "deleteUserRole: wrong pubid",
+      "method": "postdelete",
+      "uri": "/users/pub/3/6/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "deleteUserRole: wrong roleid",
+      "method": "postdelete",
+      "uri": "/users/pub/1/6/10",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find roleid 10"
+      }
+    },
+    {
+      "name": "deleteUserRole: wrong userid",
+      "method": "postdelete",
+      "uri": "/users/pub/1/10/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find userid 10"
+      }
+    },
+    {
+      "name": "deleteUserRole: user does not have role",
+      "method": "postdelete",
+      "uri": "/users/pub/1/6/4",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "That user does not have this role"
+      }
+    },
+    {
+      "name": "addUserRole: duff pubid",
+      "method": "post",
+      "uri": "/users/pub/x/6/4",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "addUserRole: duff userid",
+      "method": "post",
+      "uri": "/users/pub/1/x/4",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff userid"
+      }
+    },
+    {
+      "name": "addUserRole: duff roleid",
+      "method": "post",
+      "uri": "/users/pub/1/6/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff roleid"
+      }
+    },
+    {
+      "name": "addUserRole: wrong pubid",
+      "method": "post",
+      "uri": "/users/pub/3/6/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "addUserRole: wrong roleid",
+      "method": "post",
+      "uri": "/users/pub/1/6/15",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find roleid 15"
+      }
+    },
+    {
+      "name": "addUserRole: wrong userid",
+      "method": "post",
+      "uri": "/users/pub/1/15/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find userid 15"
+      }
+    },
+    {
+      "name": "addUserRole: already has role",
+      "method": "post",
+      "uri": "/users/pub/1/5/3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "That user already has this role"
+      }
+    },
+    {
+      "name": "addUserRole: OK",
+      "method": "post",
+      "uri": "/users/pub/1/5/5",
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "getPubUsers: duff pubid",
+      "method": "get",
+      "uri": "/users/pub/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "getPubUsers: wrong pubid",
+      "method": "get",
+      "uri": "/users/pub/3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "getPubUsers: OK",
+      "method": "get",
+      "uri": "/users/pub/1",
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "handleMasquerade: duff userid",
+      "method": "get",
+      "uri": "/users/masquerade/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff userid"
+      }
+    },
+    {
+      "name": "handleMasquerade: not super",
+      "method": "get",
+      "uri": "/users/masquerade/2",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No joy"
       }
     }
   ]

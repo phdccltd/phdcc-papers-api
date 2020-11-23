@@ -64,7 +64,10 @@ async function addUserRole (req, res, next) {
     const pubid = parseInt(req.params.pubid)
     const userid = parseInt(req.params.userid)
     const roleid = parseInt(req.params.roleid)
-    // console.log('addUserRole', pubid, userid, roleid)
+    console.log('addUserRole', pubid, userid, roleid)
+    if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+    if (isNaN(userid)) return utils.giveup(req, res, 'Duff userid')
+    if (isNaN(roleid)) return utils.giveup(req, res, 'Duff roleid')
 
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -133,7 +136,7 @@ async function deleteUserRole (req, res, next) {
 
     const dbpubrole = await models.pubroles.findByPk(roleid)
     if (!dbpubrole) return utils.giveup(req, res, 'Cannot find roleid ' + roleid)
-    if (dbpubrole.pubId !== dbpub.id) return utils.giveup(req, res, 'pubrole pub mismatch' + dbpubrole.pubId + ' ' + dbpub.id)
+    if (dbpubrole.pubId !== dbpub.id) return utils.giveup(req, res, 'pubrole pub mismatch ' + dbpubrole.pubId + ' ' + dbpub.id)
 
     const dbuser = await models.users.findByPk(userid)
     if (!dbuser) return utils.giveup(req, res, 'Cannot find userid ' + userid)
@@ -158,16 +161,17 @@ async function getPubUsers (req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
     console.log('GET /users/pub/', pubid, req.dbuser.id)
+    if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+
+    // Get publication
+    const dbpub = await models.pubs.findByPk(pubid)
+    if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
     // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
     const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
     // console.log('isowner', isowner.id, isowner.name)
-
-    // Get publication
-    const dbpub = await models.pubs.findByPk(pubid)
-    if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
     // Get all roles available for publication
     const pubroles = models.sanitiselist(await dbpub.getPubroles(), models.pubroles)
@@ -210,6 +214,7 @@ async function handleMasquerade (req, res, next) {
   try {
     const userid = parseInt(req.params.userid)
     console.log('GET /users/masquerade/', userid)
+    if (isNaN(userid)) return utils.giveup(req, res, 'Duff userid')
 
     if (!req.dbuser.super) return utils.giveup(req, res, 'No joy')
 

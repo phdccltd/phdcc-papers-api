@@ -13,6 +13,42 @@
         "prop": "status",
         "value": "Not an owner"
       }
+    },
+    {
+      "name": "deleteUserRole: not an owner",
+      "method": "postdelete",
+      "uri": "/users/pub/1/6/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    },
+    {
+      "name": "addUserRole: not an owner",
+      "method": "post",
+      "uri": "/users/pub/1/6/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    },
+    {
+      "name": "getPubUsers: not an owner",
+      "method": "get",
+      "uri": "/users/pub/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
     }
   ]
 }
