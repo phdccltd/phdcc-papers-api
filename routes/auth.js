@@ -390,13 +390,9 @@ function getuser (req, res) {
 }
 
 /* POST+PATCH: SAVEUSER */
-async function saveuser (req, res, next) {
-  if (req.headers['x-http-method-override'] !== 'PATCH') {
-    console.log('NOT saveuser')
-    next()
-    return
-  }
-  console.log('saveuser')
+async function saveuser(req, res, next) {
+  if (!('x-http-method-override' in req.headers)) return utils.giveup(req, res, 'No x-http-method-override')
+  if (req.headers['x-http-method-override'] !== 'PATCH') return utils.giveup(req, res, 'Not patch')
 
   try {
     if (!req.ppuser) return utils.giveup(req, res, 'Not logged in unexpectedly')

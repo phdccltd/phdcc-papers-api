@@ -1,0 +1,102 @@
+{
+  "name": "Update user account",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "Duff method: change author1",
+      "method": "post",
+      "uri": "/user",
+      "data": {
+        "name": "Author1changed",
+        "email": "invalid-email-address"
+        //"password": "a new password"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No x-http-method-override"
+      }
+    },
+    {
+      "name": "Duff method: change author1",
+      "method": "postdelete",
+      "uri": "/user",
+      "data": {
+        "name": "Author1changed",
+        "email": "invalid-email-address"
+        //"password": "a new password"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not patch"
+      }
+    },
+    {
+      "name": "No changes: change author1",
+      "method": "postpatch",
+      "uri": "/user",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No changed user params"
+      }
+    },
+    {
+      "name": "Duff email: change author1",
+      "method": "postpatch",
+      "uri": "/user",
+      "data": {
+        "name": "Author1changed",
+        "email": "invalid-email-address"
+        //"password": "a new password"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not a valid email address"
+      }
+    },
+    {
+      "name": "Valid name: change author1",
+      "method": "postpatch",
+      "uri": "/user",
+      "data": {
+        "name": "Author1changed"
+        //"email": "invalid-email-address"
+        //"password": "a new password"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "Valid name and email: change author1",
+      "method": "postpatch",
+      "uri": "/user",
+      "data": {
+        "name": "Author1changed",
+        "email": "author1changed@example.com"
+        //"password": "a new password"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "Valid name, email and password: change author1",
+      "method": "postpatch",
+      "uri": "/user",
+      "data": {
+        "name": "Author1changed",
+        "email": "author1changed@example.com",
+        "password": "a new password"
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}
