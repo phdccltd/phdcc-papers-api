@@ -471,7 +471,8 @@ async function editEntry (req, res, next) {
     logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
 
     // And then store the new ones
-    for (const sv of req.body.values) {
+    const svalues = (typeof req.body.values === 'string') ? [req.body.values] : req.body.values // Single value comes in as string; otherwise array
+    for (const sv of svalues) {
       const v = JSON.parse(sv)
       if (v.string && v.string.length > 255) v.string = v.string.substring(0, 255)
       if (v.file) {
