@@ -36,6 +36,7 @@
             "value": {
               "id": 1,
               "name": "Jo",
+              "email": "jo@example.com",
               "username": "jo",
               "super": true,
               "publicsettings": {}

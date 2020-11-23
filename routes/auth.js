@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt')
 const saltRounds = 10
 const needle = require('needle')
 const crypto = require('crypto')
+const { isEmail } = require('validator')
 
 const JWTstrategy = require('passport-jwt').Strategy
 const ExtractJWT = require('passport-jwt').ExtractJwt
@@ -206,9 +207,13 @@ async function register (req, res, next) {
   if (('name' in req.body) && (req.body.name.trim().length > 0)) {
     name = req.body.name.trim()
   }
+
   if (!('password' in req.body) || (req.body.password.trim().length === 0)) return utils.giveup(req, res, 'password not given')
   if (!('email' in req.body) || (req.body.email.trim().length === 0)) return utils.giveup(req, res, 'email not given')
   if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+
+  const email = req.body.email.trim()
+  if (!isEmail(email)) return utils.giveup(req, res, 'Not a valid email address')
 
   console.log('register', name)
 
@@ -217,7 +222,7 @@ async function register (req, res, next) {
       name: name,
       username: username,
       password: await bcrypt.hash(req.body.password.trim(), saltRounds),
-      email: req.body.email.trim()
+      email: email
     }
     try {
       // Although username must be unique, explicitly check first
@@ -376,6 +381,7 @@ function getuser (req, res) {
     id: req.dbuser.id,
     username: req.dbuser.username,
     name: req.dbuser.name,
+    email: req.dbuser.email,
     super: req.dbuser.super,
     publicsettings: req.site.publicsettings,
     sitepages: req.site.sitepages
@@ -397,14 +403,20 @@ async function saveuser (req, res, next) {
 
     let name = false
     if (('name' in req.body) && (req.body.name.trim().length > 0)) name = req.body.name.trim()
+    let email = false
+    if (('email' in req.body) && (req.body.email.trim().length > 0)) {
+      email = req.body.email.trim()
+      if (!isEmail(email)) return utils.giveup(req, res, 'Not a valid email address')
+    }
     let password = false
     if (('password' in req.body) && (req.body.password.trim().length > 0)) password = req.body.password.trim()
     if (password) {
       password = await bcrypt.hash(password, saltRounds)
     }
 
-    if (!name && !password) return utils.giveup(req, res, 'No changed user params')
+    if (!name && !email && !password) return utils.giveup(req, res, 'No changed user params')
     if (name) req.dbuser.name = name
+    if (email) req.dbuser.email = email
     if (password) req.dbuser.password = password
     await req.dbuser.save()
     logger.log4req(req, 'auth saveuser OK')
