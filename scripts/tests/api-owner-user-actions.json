@@ -292,9 +292,9 @@
       }
     },
     {
-      "name": "addUserRole: OK",
+      "name": "addUserRole: add author OK",
       "method": "post",
-      "uri": "/users/pub/1/5/5",
+      "uri": "/users/pub/1/5/2",
       "data": {
       },
       "return": {

@@ -3,7 +3,7 @@
   "pubname": "TestPubName",
   "api": [
     {
-      "name":  "Log in as superuser Jo",
+      "name": "Log in as superuser Jo",
       "method": "post",
       "uri": "/user/login",
       "data": {
@@ -15,6 +15,10 @@
         "ret": 0,
         "prop": "token",
         "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "token"
       }
     }
   ]

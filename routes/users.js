@@ -116,8 +116,6 @@ async function addUserRole (req, res, next) {
 /* POST+DELETE: Delete pub user role  */
 async function deleteUserRole (req, res, next) {
   try {
-    if (req.headers['x-http-method-override'] !== 'DELETE') return utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
-
     const pubid = parseInt(req.params.pubid)
     const userid = parseInt(req.params.userid)
     const roleid = parseInt(req.params.roleid)

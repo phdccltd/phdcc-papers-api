@@ -42,6 +42,12 @@ describe('OWNER', () => {
       error = await runscript.run(app.models, 'tests/api-owner-user-actions.json', false, app)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/api-login-super.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-super-user-actions.json', false, app)
+      if (error) throw new Error(error)
+
       testSucceeded = true
     } catch (e) {
       console.log('TEST EXCEPTION', e.message)

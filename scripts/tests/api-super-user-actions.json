@@ -1,0 +1,28 @@
+{
+  "name": "Super user actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "handleMasquerade: wrong userid",
+      "method": "get",
+      "uri": "/users/masquerade/20",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find userid 20"
+      }
+    },
+    {
+      "name": "handleMasquerade: OK",
+      "method": "get",
+      "uri": "/users/masquerade/2",
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}
