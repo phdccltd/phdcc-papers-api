@@ -23,6 +23,8 @@ async function downloadAnonymousStage (req, res, next) {
   const pubid = parseInt(req.params.pubid)
   const flowstageid = parseInt(req.query.flowstageid)
   console.log('GET /downloads/anon', pubid, flowstageid)
+  if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+  if (isNaN(flowstageid)) return utils.giveup(req, res, 'Duff flowstageid')
   try {
     req.dbpub = await models.pubs.findByPk(pubid)
     if (!req.dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -88,6 +90,8 @@ async function downloadSummary (req, res, next) {
   const pubid = parseInt(req.params.pubid)
   const flowstageid = parseInt(req.query.flowstageid)
   console.log('GET /downloads/summary', pubid, flowstageid)
+  if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+  if (isNaN(flowstageid)) return utils.giveup(req, res, 'Duff flowstageid')
   try {
     req.dbpub = await models.pubs.findByPk(pubid)
     if (!req.dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)

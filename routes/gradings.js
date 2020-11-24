@@ -26,15 +26,16 @@ router.post('/gradings/:submitid', async function (req, res, next) {
 /* ACCESS: OWNER-ONLY TESTED */
 async function deleteGrading (req, res, next) {
   const submitid = parseInt(req.params.submitid)
-  // console.log('DELETE /gradings', submitid)
+  const gradingid = parseInt(req.body.gradingid)
+  console.log('DELETE /gradings', submitid, gradingid)
+  if (isNaN(submitid)) return utils.giveup(req, res, 'Duff submitid')
+  if (isNaN(gradingid)) return utils.giveup(req, res, 'Duff gradingid')
+
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
-
-    const gradingid = req.body.gradingid
-    console.log('DELETE /gradings', submitid, gradingid)
 
     const dbgrading = await models.submitgradings.findByPk(gradingid)
     if (!dbgrading) return utils.giveup(req, res, 'Cannot find grading ' + gradingid)
@@ -62,19 +63,19 @@ async function deleteGrading (req, res, next) {
 */
 async function addGrading (req, res, next) {
   const submitid = parseInt(req.params.submitid)
-  // console.log('Add /gradings', submitid)
   const flowgradeid = parseInt(req.body.flowgradeid)
+  const gradingid = req.body.gradingid // If non-zero then editing. Normally undefined
+  const flowgradescoreId = parseInt(req.body.decision)
+  console.log('Add/Edit /gradings', submitid, gradingid, flowgradescoreId)
+  if (isNaN(submitid)) return utils.giveup(req, res, 'Duff submitid')
+  if (isNaN(flowgradeid)) return utils.giveup(req, res, 'Duff flowgradeid')
+  if (isNaN(flowgradescoreId)) return utils.giveup(req, res, 'Duff decision')
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
-    const gradingid = req.body.gradingid // If non-zero then editing. Normally undefined
-    console.log('Add/Edit /gradings', submitid, gradingid)
-
     const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
     if (!dbflowgrade) return utils.giveup(req, res, 'flowgradeid not found ' + flowgradeid)
-    // console.log('dbflowgrade', dbflowgrade.id, dbflowgrade.flowId)
-    // console.log('dbflowgrade', dbflowgrade)
     if (dbflowgrade.flowId !== req.dbflow.id) return utils.giveup(req, res, 'unmatched flowgradeid ' + flowgradeid)
 
     const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
@@ -82,7 +83,6 @@ async function addGrading (req, res, next) {
     // Re-find flowgrade and check score
     const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === flowgradeid })
     if (!flowgrade) return utils.giveup(req, res, 'flowgrade not found' + flowgradeid)
-    const flowgradescoreId = parseInt(req.body.decision)
     const flowgradescore = _.find(flowgrade.scores, (score) => { return score.id === flowgradescoreId })
     if (!flowgradescore) return utils.giveup(req, res, 'flowgradescore not found ' + flowgradescoreId)
 
@@ -117,7 +117,7 @@ async function addGrading (req, res, next) {
       if (!dbgradingsubmit) return utils.giveup(req, res, 'Cannot find submit for grading')
       if (dbgradingsubmit.id !== submitid) return utils.giveup(req, res, 'Edit grading submitid mismatch ' + dbgradingsubmit.id + ' ' + submitid)
 
-      dbgrading.flowgradescoreId = parseInt(req.body.decision)
+      dbgrading.flowgradescoreId = flowgradescoreId
       dbgrading.comment = req.body.comment
       dbgrading.canreview = req.body.canreview
 
