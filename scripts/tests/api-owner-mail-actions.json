@@ -1,0 +1,43 @@
+{
+  // Not tested:
+  "name": "Owner mail actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "get mail templates duff pubid",
+      "method": "get",
+      "uri": "/mail/templates/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "get mail templates wrong pubid",
+      "method": "get",
+      "uri": "/mail/templates/3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "get mail templates OK",
+      "method": "get",
+      "uri": "/mail/templates/1",
+      "data": {
+      },
+      "return": {
+        "ret": 0,
+        "prop": "pubmails",
+        "length": 6
+      }
+    }
+  ]
+}

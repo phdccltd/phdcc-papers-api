@@ -225,7 +225,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         if (pubmail.sendOnRoleGiven === null) pubmail.sendOnRoleGiven = 0
         pubmail.flowstatusId = lookup(pubmail.flowstatusId, config.pub.flow[0].status)
         pubmail.flowgradeId = lookup(pubmail.flowgradeId, config.pub.flow[0].grade)
-        const newpubmail = { ...defaultPubMail, ...pubmail, weight: weight++ }
+        const newpubmail = { pubId: config.pub.db.id, ...defaultPubMail, ...pubmail, weight: weight++ }
         // console.log('newpubmail', newpubmail)
         pubmail.db = await models.pubmailtemplates.create(newpubmail)
         if (!pubmail.db) return 'Could not create pubmail'
@@ -413,6 +413,9 @@ async function run (models, configfilename, existingconfig, app, resBody) {
               }
               if ('value' in call.return) {
                 if (prop !== call.return.value) return 'Prop \'' + call.return.prop + '\' with value \'' + prop + '\' not \'' + call.return.value + '\' for: ' + call.name
+              }
+              if ('length' in call.return) {
+                if (prop.length !== call.return.length) return 'Prop \'' + call.return.prop + '\' with array length \'' + prop + '\' not \'' + call.return.length + '\' for: ' + call.name
               }
             }
           }
