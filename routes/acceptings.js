@@ -25,6 +25,7 @@ router.post('/acceptings/:flowid', async function (req, res, next) {
 async function deleteAccepting (req, res, next) {
   const flowid = parseInt(req.params.flowid)
   // console.log('DELETE /acceptings', flowid)
+  if (isNaN(flowid)) return utils.giveup(req, res, 'Duff flowid')
   try {
     req.dbflow = await models.flows.findByPk(flowid)
     if (!req.dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
@@ -62,6 +63,7 @@ async function deleteAccepting (req, res, next) {
 async function addEditAccepting (req, res, next) {
   const flowid = parseInt(req.params.flowid)
   // console.log('Add/Edit /acceptings', flowid)
+  if (isNaN(flowid)) return utils.giveup(req, res, 'Duff flowid')
   try {
     req.dbflow = await models.flows.findByPk(flowid)
     if (!req.dbflow) return utils.giveup(req, res, 'Cannot find flowid ' + flowid)
@@ -75,6 +77,11 @@ async function addEditAccepting (req, res, next) {
     const acceptingid = req.body.acceptingid
     console.log('Add/Edit /acceptings', flowid, acceptingid)
 
+    const chosenstage = parseInt(req.body.chosenstage)
+    if (isNaN(chosenstage)) return utils.giveup(req, res, 'Duff chosenstage')
+    const chosenstatus = 'chosenstatus' in req.body ? parseInt(req.body.chosenstatus) : 0
+    if (isNaN(chosenstatus)) return utils.giveup(req, res, 'Duff chosenstatus')
+
     let ok = false
     if (acceptingid) {
       const dbaccepting = await models.flowacceptings.findByPk(acceptingid)
@@ -84,9 +91,9 @@ async function addEditAccepting (req, res, next) {
       if (!dbacceptingflow) return utils.giveup(req, res, 'Cannot find flow for accepting')
       if (dbacceptingflow.id !== flowid) return utils.giveup(req, res, 'Edit accepting flowid mismatch ' + dbacceptingflow.id + ' ' + flowid)
 
-      dbaccepting.flowstageId = parseInt(req.body.chosenstage)
+      dbaccepting.flowstageId = chosenstage
+      if (isNaN(dbaccepting.flowstageId)) return utils.giveup(req, res, 'Duff chosenstage')
       dbaccepting.open = req.body.chosenopen
-      const chosenstatus = parseInt(req.body.chosenstatus)
       dbaccepting.flowstatusId = chosenstatus || null
 
       await dbaccepting.save()
@@ -96,11 +103,10 @@ async function addEditAccepting (req, res, next) {
     } else {
       const params = {
         flowId: flowid,
-        flowstageId: parseInt(req.body.chosenstage),
+        flowstageId: chosenstage,
         open: req.body.chosenopen
       }
 
-      const chosenstatus = parseInt(req.body.chosenstatus)
       if (chosenstatus) params.flowstatusId = chosenstatus
 
       const dbaccepting = await models.flowacceptings.create(params)

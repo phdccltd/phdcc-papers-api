@@ -82,6 +82,67 @@
       "return": {
         "ret": 0
       }
+    },
+    {
+      "name": "deleteAccepting: duff flowid",
+      "method": "postdelete",
+      "uri": "/acceptings/x",
+      "data": {
+        "acceptingid": 3
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff flowid"
+      }
+    },
+    {
+      "name": "addEditAccepting: duff flowid",
+      "method": "post",
+      "uri": "/acceptings/x",
+      "data": {
+        "chosenstage": 1, // Proposal
+        "chosenopen": false,
+        //"chosenstatus": 4, // Proposal accepted
+        "acceptingid": 1
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff flowid"
+      }
+    },
+    {
+      "name": "addEditAccepting: duff chosenstage",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": "x",
+        "chosenopen": false,
+        //"chosenstatus": 4, // Proposal accepted
+        "acceptingid": 1
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff chosenstage"
+      }
+    },
+    {
+      "name": "addEditAccepting: duff chosenstage",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 1,
+        "chosenopen": false,
+        "chosenstatus": "z",
+        "acceptingid": 1
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff chosenstatus"
+      }
     }
   ]
 }
