@@ -162,19 +162,22 @@ async function sendMail (req, res, next) {
   if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
   try {
     req.dbpub = await models.pubs.findByPk(pubid)
-    if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
+    if (!req.dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
     // Set req.isowner, req.onlyanauthor and req.myroles for this publication
     if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
-    if (!req.isowner) return utils.giveup(req, res, 'Not owner')
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
+
+    if (!('mailsubject' in req.body)) return utils.giveup(req, res, 'Missing mailsubject')
+    if (!('mailtext' in req.body)) return utils.giveup(req, res, 'Missing mailtext')
 
     const selecteduser = 'selecteduser' in req.body ? parseInt(req.body.selecteduser) : 0
     const selectedrole = 'selectedrole' in req.body ? parseInt(req.body.selectedrole) : 0
-    const mailsubject = req.body.mailsubject.trim()
-    const mailtext = req.body.mailtext.trim()
     if (isNaN(selecteduser)) return utils.giveup(req, res, 'Duff selecteduser')
     if (isNaN(selectedrole)) return utils.giveup(req, res, 'Duff selectedrole')
+    const mailsubject = req.body.mailsubject.trim()
+    const mailtext = req.body.mailtext.trim()
 
     if (mailsubject.length === 0) return utils.giveup(req, res, 'Empty subject')
     if (mailtext.length === 0) return utils.giveup(req, res, 'Empty text')

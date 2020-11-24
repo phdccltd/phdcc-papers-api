@@ -1,6 +1,7 @@
 {
   // Not tested:
   // - Delete mailtemplate pubid mismatch
+  // - sendMail: No access to this publication
   "name": "Owner mail actions",
   "pubname": "TestPubName",
   "api": [
@@ -179,6 +180,214 @@
       },
       "return": {
         "ret": 0
+      }
+    },
+    {
+      "name": "sendMail: duff pubid",
+      "method": "post",
+      "uri": "/mail/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "sendMail: wrong pubid",
+      "method": "post",
+      "uri": "/mail/3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "sendMail: duff selecteduser",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": "x",
+        "selectedrole": 0,
+        "mailsubject": "Subject",
+        "mailtext": "Body"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff selecteduser"
+      }
+    },
+    {
+      "name": "sendMail: duff selectedrole",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 0,
+        "selectedrole": "x",
+        "mailsubject": "Subject",
+        "mailtext": "Body"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff selectedrole"
+      }
+    },
+    {
+      "name": "sendMail: missing mailsubject",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 0,
+        "selectedrole": 0,
+        "mailtext": "Body"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Missing mailsubject"
+      }
+    },
+    {
+      "name": "sendMail: missing mailtext",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 0,
+        "selectedrole": 9,
+        "mailsubject": "Subject"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Missing mailtext"
+      }
+    },
+    {
+      "name": "sendMail: empty subject",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 0,
+        "selectedrole": 9,
+        "mailsubject": " ",
+        "mailtext": " "
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Empty subject"
+      }
+    },
+    {
+      "name": "sendMail: empty text",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 0,
+        "selectedrole": 9,
+        "mailsubject": "hello",
+        "mailtext": " "
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Empty text"
+      }
+    },
+    {
+      "name": "sendMail: wrong selecteduser",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 10,
+        "selectedrole": 0,
+        "mailsubject": "hello",
+        "mailtext": "there"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Invalid selecteduser 10"
+      }
+    },
+    {
+      "name": "sendMail: selecteduser OK",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 1,
+        "selectedrole": 0,
+        "mailsubject": "hello",
+        "mailtext": "there"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "sendMail: selectedrole OK",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 0,
+        "selectedrole": 2,
+        "mailsubject": "hello",
+        "mailtext": "there"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "sendMail: selectedrole no recipients",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 0,
+        "selectedrole": 4,
+        "mailsubject": "hello",
+        "mailtext": "there"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No recipients"
+      }
+    },
+    {
+      "name": "sendMail: selectedrole OK all users",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 0,
+        "selectedrole": -1,
+        "mailsubject": "hello",
+        "mailtext": "there"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "sendMail: selectedrole Submitters no recipients",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+        "selecteduser": 0,
+        "selectedrole": -2,
+        "mailsubject": "hello",
+        "mailtext": "there"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No recipients"
       }
     }
   ]

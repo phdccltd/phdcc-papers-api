@@ -25,6 +25,18 @@
         "prop": "status",
         "value": "Not an owner"
       }
+    },
+    {
+      "name": "sendMail: not owner",
+      "method": "post",
+      "uri": "/mail/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
     }
   ]
 }
