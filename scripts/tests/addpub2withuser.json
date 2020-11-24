@@ -14,8 +14,26 @@
       }
     ],
     "publookup": [],
-    "flow": [],
-    "formfield": []
+    "flow": [
+      {
+        "name": "Poster", // 3
+        "description": "Poster",
+        "accepting": [],
+        "grade": [],
+        "stage": [],
+        "status": []
+      }
+    ],
+    "formfield": [],
+    "pubmailtemplates": [
+      { // 7
+        "name": "Access requested mail template",
+        "subject": "user requests access",
+        "body": "Dear owner: The following user has requested access to {{pub.name}}.  User: {{user.username}} Please give them an Author role at the site {{site.url}} Best regards",
+        "sendOnSiteAction": 1,
+        "bccToOwners": true
+      }
+    ]
   },
   "pubname": "TestPub2",
   "users": [

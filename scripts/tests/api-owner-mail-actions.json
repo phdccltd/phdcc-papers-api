@@ -91,6 +91,32 @@
       }
     },
     {
+      "name": "deleteMailTemplate wrong templateid",
+      "method": "postdelete",
+      "uri": "/mail/templates/1",
+      "data": {
+        "templateid": 17
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find mailtemplate 17"
+      }
+    },
+    {
+      "name": "deleteMailTemplate wrong templateid",
+      "method": "postdelete",
+      "uri": "/mail/templates/1",
+      "data": {
+        "templateid": 7
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Delete mailtemplate pubid mismatch 2 1"
+      }
+    },
+    {
       "name": "deleteMailTemplate OK",
       "method": "postdelete",
       "uri": "/mail/templates/1",
@@ -136,6 +162,22 @@
         "ret": 1,
         "prop": "status",
         "value": "Duff templateid"
+      }
+    },
+    {
+      "name": "addEditMailTemplate wrong templateid",
+      "method": "post",
+      "uri": "/mail/templates/1",
+      "data": {
+        "templateid": 7,
+        "templatename": "Template name",
+        "templatesubject": "Template subject",
+        "templatebody": "Template body"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Edit mailtemplate pubid mismatch 2 1"
       }
     },
     {

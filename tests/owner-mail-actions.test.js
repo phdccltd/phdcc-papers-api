@@ -27,6 +27,9 @@ describe('OWNER', () => {
       error = await runscript.run(app.models, 'tests/addusers.json', config)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/addpub2withuser.json', config)
+      if (error) throw new Error(error)
+
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
@@ -38,12 +41,6 @@ describe('OWNER', () => {
 
       error = await runscript.run(app.models, 'tests/api-owner-mail-actions.json', false, app)
       if (error) throw new Error(error)
-
-      //error = await runscript.run(app.models, 'tests/api-login-super.json', false, app)
-      //if (error) throw new Error(error)
-
-      //error = await runscript.run(app.models, 'tests/api-super-mail-actions.json', false, app)
-      //if (error) throw new Error(error)
 
       testSucceeded = true
     } catch (e) {
