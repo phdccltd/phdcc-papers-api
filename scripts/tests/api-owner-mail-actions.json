@@ -1,5 +1,6 @@
 {
   // Not tested:
+  // - Delete mailtemplate pubid mismatch
   "name": "Owner mail actions",
   "pubname": "TestPubName",
   "api": [
@@ -37,6 +38,147 @@
         "ret": 0,
         "prop": "pubmails",
         "length": 6
+      }
+    },
+    {
+      "name": "deleteMailTemplate/addEditMailTemplate duff method",
+      "method": "postpatch",
+      "uri": "/mail/templates/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Bad method: PATCH"
+      }
+    },
+    {
+      "name": "deleteMailTemplate duff pubid",
+      "method": "postdelete",
+      "uri": "/mail/templates/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "deleteMailTemplate wrong pubid",
+      "method": "postdelete",
+      "uri": "/mail/templates/3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "deleteMailTemplate duff templateid",
+      "method": "postdelete",
+      "uri": "/mail/templates/1",
+      "data": {
+        "templateid": "x"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff templateid"
+      }
+    },
+    {
+      "name": "deleteMailTemplate OK",
+      "method": "postdelete",
+      "uri": "/mail/templates/1",
+      "data": {
+        "templateid": 6
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addEditMailTemplate duff pubid",
+      "method": "post",
+      "uri": "/mail/templates/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "addEditMailTemplate wrong pubid",
+      "method": "post",
+      "uri": "/mail/templates/3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "addEditMailTemplate duff templateid",
+      "method": "post",
+      "uri": "/mail/templates/1",
+      "data": {
+        "templateid": "x"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff templateid"
+      }
+    },
+    {
+      "name": "addEditMailTemplate add OK",
+      "method": "post",
+      "uri": "/mail/templates/1",
+      "data": {
+        "templatename": "Template name",
+        "templatesubject": "Template subject",
+        "templatebody": "Template body"
+        // Add other params when coped with
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addEditMailTemplate add OK",
+      "method": "post",
+      "uri": "/mail/templates/1",
+      "data": {
+        "templateid": 0,
+        "templatename": "Template name",
+        "templatesubject": "Template subject",
+        "templatebody": "Template body"
+        // Add other params when coped with
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addEditMailTemplate edit OK",
+      "method": "post",
+      "uri": "/mail/templates/1",
+      "data": {
+        "templateid": 5,
+        "templatename": "Template name",
+        "templatesubject": "Template subject",
+        "templatebody": "Template body"
+        // Add other params when coped with
+      },
+      "return": {
+        "ret": 0
       }
     }
   ]

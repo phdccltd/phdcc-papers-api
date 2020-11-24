@@ -13,6 +13,18 @@
         "prop": "status",
         "value": "Not an owner"
       }
+    },
+    {
+      "name": "deleteMailTemplate not owner",
+      "method": "postdelete",
+      "uri": "/mail/templates/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
     }
   ]
 }
