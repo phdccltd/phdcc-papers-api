@@ -14,6 +14,7 @@ const router = Router()
 router.get('/mail/templates/:pubid', async function (req, res, next) {
   const pubid = parseInt(req.params.pubid)
   // console.log('GET /mail/templates', pubid)
+  if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
   try {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -53,6 +54,7 @@ router.post('/mail/templates/:pubid', async function (req, res, next) {
 async function deleteMailTemplate (req, res, next) {
   const pubid = parseInt(req.params.pubid)
   // console.log('DELETE /mail/templates', pubid)
+  if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
   try {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -87,6 +89,7 @@ async function deleteMailTemplate (req, res, next) {
 async function addEditMailTemplate (req, res, next) {
   const pubid = parseInt(req.params.pubid)
   // console.log('POST /mail/templates', pubid)
+  if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
   try {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
@@ -154,6 +157,7 @@ router.post('/mail/:pubid', sendMail)
 async function sendMail (req, res, next) {
   const pubid = parseInt(req.params.pubid)
   // console.log('POST /mail', pubid)
+  if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
   try {
     req.dbpub = await models.pubs.findByPk(pubid)
     if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
@@ -163,10 +167,12 @@ async function sendMail (req, res, next) {
 
     if (!req.isowner) return utils.giveup(req, res, 'Not owner')
 
-    const selecteduser = parseInt(req.body.selecteduser)
-    const selectedrole = parseInt(req.body.selectedrole)
+    const selecteduser = 'selecteduser' in req.body ? parseInt(req.body.selecteduser) : 0
+    const selectedrole = 'selectedrole' in req.body ? parseInt(req.body.selectedrole) : 0
     const mailsubject = req.body.mailsubject.trim()
     const mailtext = req.body.mailtext.trim()
+    if (isNaN(selecteduser)) return utils.giveup(req, res, 'Duff selecteduser')
+    if (isNaN(selectedrole)) return utils.giveup(req, res, 'Duff selectedrole')
 
     if (mailsubject.length === 0) return utils.giveup(req, res, 'Empty subject')
     if (mailtext.length === 0) return utils.giveup(req, res, 'Empty text')

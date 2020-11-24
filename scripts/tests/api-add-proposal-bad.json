@@ -1,0 +1,152 @@
+{
+  "name": "Submit: duff new proposal calls",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addNewSubmit proposal with duff formfieldid",
+      "method": "postform",
+      "uri": "/submits/submit/1", // Proposal
+      "fields": [
+        { "stageid": 1 },
+        { "title": "New proposal #1" },
+        { "values": { "formfieldid": 30, "string": "An exciting new proposal description", "integer": null, "text": null, "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Invalid formfieldid: 30"
+      }
+    },
+    {
+      "name": "addNewSubmit proposal with missing stageid",
+      "method": "postform",
+      "uri": "/submits/submit/1", // Proposal
+      "fields": [
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "stageid not given"
+      }
+    },
+    {
+      "name": "addNewSubmit proposal with duff flowid",
+      "method": "postform",
+      "uri": "/submits/submit/10",
+      "fields": [
+        { "stageid": 1 },
+        { "title": "New proposal #1" }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Could not find flow"
+      }
+    },
+    {
+      "name": "addNewSubmit proposal with missing values",
+      "method": "postform",
+      "uri": "/submits/submit/1", // Proposal
+      "fields": [
+        { "stageid": 1 },
+        { "title": "New proposal #1" },
+        { "values": { "formfieldid": 1, "string": "Author name", "integer": null, "text": null, "existingfile": null, "file": null } }
+        // Required values 2 and 3 missing
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Required entry value not found for field: 2"
+      }
+    },
+    {
+      "name": "addNewSubmit proposal with word count fail",
+      "method": "postform",
+      "uri": "/submits/submit/1", // Proposal
+      "fields": [
+        { "stageid": 1 },
+        { "title": "New proposal #1" },
+        { "values": { "formfieldid": 1, "string": "Author name with more than five words", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 2, "string": "2,3", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 3, "string": null, "integer": null, "text": "An exciting new proposal description", "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Too many words 7 for field: 1"
+      }
+    },
+    {
+      "name": "addNewSubmit proposal with character count fail",
+      "method": "postform",
+      "uri": "/submits/submit/1", // Proposal
+      "fields": [
+        { "stageid": 1 },
+        { "title": "New proposal #1" },
+        { "values": { "formfieldid": 1, "string": "Veryverylongauthorfirstname Superlongauthorsurnameindeed", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 2, "string": "2,3", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 3, "string": null, "integer": null, "text": "An exciting new proposal description", "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Too many characters 56 for field: 1"
+      }
+    },
+    {
+      "name": "addNewSubmit proposal with character count fail",
+      "method": "postform",
+      "uri": "/submits/submit/1", // Proposal
+      "fields": [
+        { "stageid": 1 },
+        { "title": "New proposal #1" },
+        { "values": { "formfieldid": 1, "string": "Author name", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 2, "string": "More than 255 characters ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 3, "string": null, "integer": null, "text": "An exciting new proposal description", "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "String too long 299 for field: 2"
+      }
+    },
+    {
+      "name": "addNewSubmit proposal with requiredif fail",
+      "method": "postform",
+      "uri": "/submits/submit/1", // Proposal
+      "fields": [
+        { "stageid": 1 },
+        { "title": "New proposal #1" },
+        { "values": { "formfieldid": 1, "string": "Author name", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 2, "string": "2,3", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 3, "string": null, "integer": null, "text": "An exciting new proposal description", "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 4, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 5, "string": "", "integer": null, "text": null, "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Required entry value not found for field: 5"
+      }
+    },
+    {
+      "name": "addNewSubmit proposal with invalid duplicate formfieldid",
+      "method": "postform",
+      "uri": "/submits/submit/1", // Proposal
+      "fields": [
+        { "stageid": 1 },
+        { "title": "New proposal #1" },
+        { "values": { "formfieldid": 1, "string": "Author name", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 2, "string": "2,3", "integer": null, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 3, "string": null, "integer": null, "text": "An exciting new proposal description", "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 4, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } },
+        { "values": { "formfieldid": 4, "string": "", "integer": null, "text": null, "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "formfieldid already used: 4"
+      }
+    }
+  ]
+}
