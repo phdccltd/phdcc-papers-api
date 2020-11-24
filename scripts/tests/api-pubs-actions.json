@@ -1,0 +1,18 @@
+{
+  "name": "User pubs actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "get pubs listing",
+      "method": "get",
+      "uri": "/pubs",
+      "data": {
+      },
+      "return": {
+        "ret": 0,
+        "prop": "pubs",
+        "length": 1
+      }
+    }
+  ]
+}
