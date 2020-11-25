@@ -174,13 +174,13 @@
     {
       "name": "deleteUserRole: wrong roleid",
       "method": "postdelete",
-      "uri": "/users/pub/1/6/10",
+      "uri": "/users/pub/1/6/20",
       "data": {
       },
       "return": {
         "ret": 1,
         "prop": "status",
-        "value": "Cannot find roleid 10"
+        "value": "Cannot find roleid 20"
       }
     },
     {

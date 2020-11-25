@@ -9,11 +9,11 @@
     "tz": "Europe/London",
     "role": [
       {
-        "name": "Owner",
+        "name": "Owner", // 9
         "isowner": true
       },
       {
-        "name": "Author",
+        "name": "Author", // 10
         "isowner": true
       }
     ],
