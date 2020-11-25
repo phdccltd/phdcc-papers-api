@@ -1,0 +1,162 @@
+{
+  // Not tested:
+  // - No access to this publication
+  "name": "Owner downloads actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "downloadAnonymousStage: duff pubid",
+      "method": "get",
+      "uri": "/downloads/anon/x?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "downloadAnonymousStage: duff flowstageid",
+      "method": "get",
+      "uri": "/downloads/anon/1?flowstageid=y",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff flowstageid"
+      }
+    },
+    {
+      "name": "downloadAnonymousStage: wrong pubid",
+      "method": "get",
+      "uri": "/downloads/anon/3?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "downloadAnonymousStage: wrong flowstageid",
+      "method": "get",
+      "uri": "/downloads/anon/1?flowstageid=4",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find dbflowstage"
+      }
+    },
+    {
+      "name": "downloadAnonymousStage: wrong flowstageid",
+      "method": "get",
+      "uri": "/downloads/anon/1?flowstageid=3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "dbpubcheck.id and dbpub.id mismatch"
+      }
+    },
+    {
+      "name": "downloadAnonymousStage: proposal OK",
+      "method": "get",
+      "uri": "/downloads/anon/1?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "content-type": "text/plain",
+        "content-length": 248
+      }
+    },
+    {
+      "name": "downloadAnonymousStage: paper OK",
+      "method": "get",
+      "uri": "/downloads/anon/1?flowstageid=2",
+      "data": {
+      },
+      "return": {
+        "content-type": "text/plain",
+        "content-length": 138
+      }
+    },
+    {
+      "name": "downloadSummary: duff pubid",
+      "method": "get",
+      "uri": "/downloads/summary/x?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "downloadSummary: duff flowstageid",
+      "method": "get",
+      "uri": "/downloads/summary/1?flowstageid=y",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff flowstageid"
+      }
+    },
+    {
+      "name": "downloadSummary: wrong pubid",
+      "method": "get",
+      "uri": "/downloads/summary/3?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "downloadSummary: wrong flowstageid",
+      "method": "get",
+      "uri": "/downloads/summary/1?flowstageid=4",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find dbflowstage"
+      }
+    },
+    {
+      "name": "downloadSummary: wrong flowstageid",
+      "method": "get",
+      "uri": "/downloads/summary/1?flowstageid=3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "dbpubcheck.id and dbpub.id mismatch"
+      }
+    }
+    //,
+    //{
+    //  "name": "downloadSummary: proposal OK",
+    //  "method": "get",
+    //  "uri": "/downloads/summary/1?flowstageid=1",
+    //  "data": {
+    //  },
+    //  "return": {
+    //    "content-type": "text/plain",
+    //    "content-length": 248
+    //  }
+    //}
+  ]
+}

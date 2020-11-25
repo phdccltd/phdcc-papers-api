@@ -1,0 +1,30 @@
+{
+  "name": "Not owner downloads actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "downloadAnonymousStage: not owner",
+      "method": "get",
+      "uri": "/downloads/anon/1?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    },
+    {
+      "name": "downloadSummary: not owner",
+      "method": "get",
+      "uri": "/downloads/summary/1?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    }
+  ]
+}

@@ -13,10 +13,11 @@ const dbutils = require('./dbutils')
 const router = Router()
 
 const TMPDIR = process.env.TESTTMPDIR ? process.env.TESTTMPDIR : '/tmp/papers/'
+console.log('TMPDIR', TMPDIR)
 
 /* ************************ */
 /* GET: Get anonymised stage entries */
-/* ACCESS: OWNER-ONLY NOT TESTED */
+/* ACCESS: OWNER-ONLY TESTED */
 router.get('/downloads/anon/:pubid', downloadAnonymousStage)
 
 async function downloadAnonymousStage (req, res, next) {
@@ -83,7 +84,7 @@ async function downloadAnonymousStage (req, res, next) {
 
 /* ************************ */
 /* GET: Get anonymised summary for publication */
-/* ACCESS: OWNER-ONLY NOT TESTED */
+/* ACCESS: OWNER-ONLY TESTED */
 router.get('/downloads/summary/:pubid', downloadSummary)
 
 async function downloadSummary (req, res, next) {
@@ -320,11 +321,15 @@ async function downloadSummary (req, res, next) {
     await closeFile(submissionsStream)
 
     // Make zip file from directory
+    console.log('CCCCCCCCCC', dirName)
     const saveFilename = await makeZipOfDirectory(dirName)
     const outpath = path.join(TMPDIR, saveFilename)
+    console.log('DDDDDDDDD', outpath)
 
     // Send Zip file
-    sendFile(res, saveFilename)
+    console.log('EEEEEEEEEEE', saveFilename)
+    sendFile(res, saveFilename) // outpath
+    console.log('FFFFFFFFFFFFFFFFFF')
 
     // Delete tmp file and directory 1 second after send
     setTimeout(() => { deleteTempFiles(outpath, dirName) }, 1000)
