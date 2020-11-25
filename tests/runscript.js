@@ -399,7 +399,6 @@ async function run (models, configfilename, existingconfig, app, resBody) {
             if (!('content-length' in res.headers)) return 'content-length header missing in response for: ' + call.name
             const foundContentLength = parseInt(res.headers['content-length'])
             console.log('foundContentLength',foundContentLength)
-            //console.log(res.text)
             if (desiredContentLength !== foundContentLength) return 'content-length header incorrect \'' + foundContentLength + '\' in response for: ' + call.name
           }
           if ('prop' in call.return) {

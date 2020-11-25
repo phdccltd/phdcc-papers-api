@@ -39,6 +39,18 @@ describe('OWNER', () => {
       error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/api-status-with-team.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-login-teamster.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-score-proposal.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
+      if (error) throw new Error(error)
+
       error = await runscript.run(app.models, 'tests/api-status-proposal-accepted.json', false, app)
       if (error) throw new Error(error)
 

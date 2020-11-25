@@ -156,6 +156,17 @@
         "content-type": "application/zip"
         // "content-length": seems to vary: 1173, 1174, 1175
       }
+    },
+    {
+      "name": "downloadSummary: paper OK",
+      "method": "get",
+      "uri": "/downloads/summary/1?flowstageid=2",
+      "data": {
+      },
+      "return": {
+        "content-type": "application/zip"
+        //"content-length": 1631 // but will vary
+      }
     }
   ]
 }
