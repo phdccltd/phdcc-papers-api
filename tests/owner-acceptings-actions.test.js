@@ -84,6 +84,9 @@ describe('ACCEPTINGS', () => {
       error = await runscript.run(app.models, 'tests/api-add-paper-author.json', false, app)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/api-accepting-bad1.json', false, app)
+      if (error) throw new Error(error)
+
       testSucceeded = true
     } catch (e) {
       console.log('TEST EXCEPTION', e.message)

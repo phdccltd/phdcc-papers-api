@@ -97,6 +97,19 @@
       }
     },
     {
+      "name": "deleteAccepting: duff flowid",
+      "method": "postdelete",
+      "uri": "/acceptings/4",
+      "data": {
+        "acceptingid": 3
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find flowid 4"
+      }
+    },
+    {
       "name": "addEditAccepting: duff flowid",
       "method": "post",
       "uri": "/acceptings/x",

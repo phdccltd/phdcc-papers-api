@@ -1,0 +1,54 @@
+{
+  "name": "Not owner acceptings actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "deleteAccepting: not owner",
+      "method": "postdelete",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 2, // Paper
+        "chosenopen": true,
+        "chosenstatus": 4, // Proposal accepted
+        "acceptingid": 2
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    },
+    {
+      "name": "deleteAccepting/addEditAccepting: bad method",
+      "method": "postpatch",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 2, // Paper
+        "chosenopen": true,
+        "chosenstatus": 4, // Proposal accepted
+        "acceptingid": 2
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Bad method: PATCH"
+      }
+    },
+    {
+      "name": "addEditAccepting: not owner",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 2, // Paper
+        "chosenopen": true,
+        "chosenstatus": 4, // Proposal accepted
+        "acceptingid": 2
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    }
+  ]
+}
