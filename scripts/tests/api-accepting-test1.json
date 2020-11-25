@@ -110,6 +110,32 @@
       }
     },
     {
+      "name": "deleteAccepting: duff acceptingid",
+      "method": "postdelete",
+      "uri": "/acceptings/1",
+      "data": {
+        "acceptingid": "n"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff acceptingid"
+      }
+    },
+    {
+      "name": "deleteAccepting: wrong acceptingid",
+      "method": "postdelete",
+      "uri": "/acceptings/1",
+      "data": {
+        "acceptingid": 10
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find accepting 10"
+      }
+    },
+    {
       "name": "addEditAccepting: duff flowid",
       "method": "post",
       "uri": "/acceptings/x",
@@ -123,6 +149,54 @@
         "ret": 1,
         "prop": "status",
         "value": "Duff flowid"
+      }
+    },
+    {
+      "name": "addEditAccepting: wrong flowid",
+      "method": "post",
+      "uri": "/acceptings/10",
+      "data": {
+        "chosenstage": 1, // Proposal
+        "chosenopen": false,
+        //"chosenstatus": 4, // Proposal accepted
+        "acceptingid": 1
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find flowid 10"
+      }
+    },
+    {
+      "name": "addEditAccepting: duff acceptingid",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 1, // Proposal
+        "chosenopen": false,
+        //"chosenstatus": 4, // Proposal accepted
+        "acceptingid": "x"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff acceptingid"
+      }
+    },
+    {
+      "name": "addEditAccepting: wrong acceptingid",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 1, // Proposal
+        "chosenopen": false,
+        //"chosenstatus": 4, // Proposal accepted
+        "acceptingid": 10
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find accepting 10"
       }
     },
     {

@@ -36,8 +36,9 @@ async function deleteAccepting (req, res, next) {
     if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
-    const acceptingid = req.body.acceptingid
+    const acceptingid = parseInt(req.body.acceptingid)
     console.log('DELETE /acceptings', flowid, acceptingid)
+    if (isNaN(acceptingid)) return utils.giveup(req, res, 'Duff acceptingid')
 
     const dbaccepting = await models.flowacceptings.findByPk(acceptingid)
     if (!dbaccepting) return utils.giveup(req, res, 'Cannot find accepting ' + acceptingid)
@@ -84,6 +85,7 @@ async function addEditAccepting (req, res, next) {
 
     let ok = false
     if (acceptingid) {
+      if (isNaN(parseInt(acceptingid))) return utils.giveup(req, res, 'Duff acceptingid')
       const dbaccepting = await models.flowacceptings.findByPk(acceptingid)
       if (!dbaccepting) return utils.giveup(req, res, 'Cannot find accepting ' + acceptingid)
 
