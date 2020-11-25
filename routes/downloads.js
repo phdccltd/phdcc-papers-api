@@ -375,7 +375,7 @@ function writeCSVline (stream, items) {
 }
 
 /* ************************ */
-function sendFile(res, saveFilename) {
+function sendFile (res, saveFilename) {
   const ContentType = mime.lookup(saveFilename)
   const options = {
     root: TMPDIR,
