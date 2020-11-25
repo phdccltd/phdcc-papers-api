@@ -321,15 +321,11 @@ async function downloadSummary (req, res, next) {
     await closeFile(submissionsStream)
 
     // Make zip file from directory
-    console.log('CCCCCCCCCC', dirName)
     const saveFilename = await makeZipOfDirectory(dirName)
     const outpath = path.join(TMPDIR, saveFilename)
-    console.log('DDDDDDDDD', outpath)
 
     // Send Zip file
-    console.log('EEEEEEEEEEE', saveFilename)
-    sendFile(res, saveFilename) // outpath
-    console.log('FFFFFFFFFFFFFFFFFF')
+    sendFile(res, saveFilename)
 
     // Delete tmp file and directory 1 second after send
     setTimeout(() => { deleteTempFiles(outpath, dirName) }, 1000)
@@ -375,7 +371,7 @@ function writeCSVline (stream, items) {
 }
 
 /* ************************ */
-function sendFile (res, saveFilename) {
+function sendFile(res, saveFilename) {
   const ContentType = mime.lookup(saveFilename)
   const options = {
     root: TMPDIR,

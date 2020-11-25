@@ -145,18 +145,17 @@
         "prop": "status",
         "value": "dbpubcheck.id and dbpub.id mismatch"
       }
+    },
+    {
+      "name": "downloadSummary: proposal OK",
+      "method": "get",
+      "uri": "/downloads/summary/1?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "content-type": "application/zip",
+        "content-length": 1175
+      }
     }
-    //,
-    //{
-    //  "name": "downloadSummary: proposal OK",
-    //  "method": "get",
-    //  "uri": "/downloads/summary/1?flowstageid=1",
-    //  "data": {
-    //  },
-    //  "return": {
-    //    "content-type": "text/plain",
-    //    "content-length": 248
-    //  }
-    //}
   ]
 }
