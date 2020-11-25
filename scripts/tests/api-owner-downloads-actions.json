@@ -153,8 +153,8 @@
       "data": {
       },
       "return": {
-        "content-type": "application/zip",
-        "content-length": 1175
+        "content-type": "application/zip"
+        // "content-length": seems to vary: 1173, 1174, 1175
       }
     }
   ]

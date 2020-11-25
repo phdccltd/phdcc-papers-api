@@ -76,7 +76,9 @@ async function downloadAnonymousStage (req, res, next) {
     sendFile(res, saveFilename)
 
     // Delete tmp file after send
-    setTimeout(() => { deleteTempFiles(outpath, false) }, 1000)
+    if (!process.env.TESTING) {
+      setTimeout(() => { deleteTempFiles(outpath, false) }, 1000)
+    }
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
@@ -328,7 +330,9 @@ async function downloadSummary (req, res, next) {
     sendFile(res, saveFilename)
 
     // Delete tmp file and directory 1 second after send
-    setTimeout(() => { deleteTempFiles(outpath, dirName) }, 1000)
+    if (!process.env.TESTING) {
+      setTimeout(() => { deleteTempFiles(outpath, dirName) }, 1000)
+    }
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
