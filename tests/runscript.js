@@ -240,7 +240,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
     if (config.sitepages) {
       console.log('----')
       for (const sitepage of config.sitepages) {
-        const newsitepage = { siteId:1, ...sitepage }
+        const newsitepage = { siteId: 1, ...sitepage }
         sitepage.db = await models.sitepages.create(newsitepage)
         if (!sitepage.db) return 'Could not create sitepage ' + sitepage.title
         console.log('sitepage.db created', sitepage.db.id)
@@ -396,7 +396,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
           if (call.return && 'statusCode' in call.return) {
             if (call.return.statusCode !== res.statusCode) return 'Response ret ' + res.statusCode + ' when ' + call.return.statusCode + ' wanted for: ' + call.name
             if ('location' in call.return) {
-              if (call.return.location !== res.headers['location']) return 'Response location ' + res.headers['location'] + ' when ' + call.return.location + ' wanted for: ' + call.name
+              if (call.return.location !== res.headers.location) return 'Response location ' + res.headers.location + ' when ' + call.return.location + ' wanted for: ' + call.name
             }
             delete call.return
           } else {
