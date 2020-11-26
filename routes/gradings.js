@@ -109,8 +109,8 @@ async function addGrading (req, res, next) {
     }
 
     let ok = false
-    if (gradingid) { // NOT TESTED
-      const dbgrading = await models.submitgradings.findByPk(gradingid)
+    if (gradingid) { // NOT TESTED YET
+      /* const dbgrading = await models.submitgradings.findByPk(gradingid)
       if (!dbgrading) return utils.giveup(req, res, 'Cannot find grading ' + gradingid)
 
       const dbgradingsubmit = await dbgrading.getSubmit()
@@ -123,7 +123,7 @@ async function addGrading (req, res, next) {
 
       // await dbgrading.save()
       // logger.log4req(req, 'UPDATED grading', gradingid)
-
+      */
       ok = false
     } else {
       const now = new Date()

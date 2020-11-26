@@ -56,6 +56,19 @@
       }
     },
     {
+      "name": "deleteGrading: wrong gradingid",
+      "method": "postdelete",
+      "uri": "/gradings/1",
+      "data": {
+        "gradingid": 10
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find grading 10"
+      }
+    },
+    {
       "name": "deleteGrading: OK",
       "method": "postdelete",
       "uri": "/gradings/1",
@@ -71,7 +84,7 @@
       "method": "post",
       "uri": "/gradings/x",
       "data": {
-        "acceptingid": 0,
+        "gradingid": 0,
         "flowgradeid": 2, // Paper
         "decision": 4, // Accept
         "comment": "Nice paper",
@@ -88,7 +101,7 @@
       "method": "post",
       "uri": "/gradings/1",
       "data": {
-        "acceptingid": 0,
+        "gradingid": 0,
         "flowgradeid": "x",
         "decision": 4, // Accept
         "comment": "Nice paper",
@@ -105,7 +118,7 @@
       "method": "post",
       "uri": "/gradings/1",
       "data": {
-        "acceptingid": 0,
+        "gradingid": 0,
         "flowgradeid": 2, // Paper
         "decision": "y",
         "comment": "Nice paper",
@@ -122,7 +135,7 @@
       "method": "post",
       "uri": "/gradings/1",
       "data": {
-        "acceptingid": 0,
+        "gradingid": 0,
         "flowgradeid": 10,
         "decision": 4,
         "comment": "Nice paper",
@@ -139,7 +152,7 @@
       "method": "post",
       "uri": "/gradings/1",
       "data": {
-        "acceptingid": 0,
+        "gradingid": 0,
         "flowgradeid": 2,
         "decision": 10,
         "comment": "Nice paper",
@@ -149,6 +162,23 @@
         "ret": 1,
         "prop": "status",
         "value": "flowgradescore not found 10"
+      }
+    },
+    {
+      "name": "addGrading: edit not allowed",
+      "method": "post",
+      "uri": "/gradings/1",
+      "data": {
+        "gradingid": 2,
+        "flowgradeid": 2,
+        "decision": 4,
+        "comment": "Nice paper",
+        "canreview": false
+      },
+      "return": {
+        "ret": 0,
+        "prop": "ok",
+        "value": false
       }
     }
   ]
