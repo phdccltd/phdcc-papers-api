@@ -46,9 +46,9 @@
         "name": "Topics", // 1
         "value": [
           { "text": "Climate Change" }, // 1
-          { "text": "Biodiversity"},
+          { "text": "Biodiversity" },
           { "text": "Air pollution" },
-          { "text": "Nuclear emissions"}
+          { "text": "Nuclear emissions" }
         ]
       }
     ],

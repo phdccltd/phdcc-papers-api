@@ -237,6 +237,17 @@ async function run (models, configfilename, existingconfig, app, resBody) {
       }
     }
     /// //////////////////////
+    // Add sitepages
+    if (config.sitepages) {
+      console.log('----')
+      for (const sitepage of config.sitepages) {
+        const newsitepage = { siteId:1, ...sitepage }
+        sitepage.db = await models.sitepages.create(newsitepage)
+        if (!sitepage.db) return 'Could not create sitepage ' + sitepage.title
+        console.log('sitepage.db created', sitepage.db.id)
+      }
+    }
+    /// //////////////////////
     // Add users
     if (config.users) {
       console.log('----')

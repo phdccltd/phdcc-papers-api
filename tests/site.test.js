@@ -27,11 +27,18 @@ describe('SITE', () => {
       error = await runscript.run(app.models, 'tests/addusers.json', config)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/addsitepages.json', config)
+      if (error) throw new Error(error)
+
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-site-test.json', false, app)
       if (error) throw new Error(error)
+
+      //process.env.TESTING = false
+      //error = await runscript.run(app.models, 'tests/api-site-fail-test.json', false, app)
+      //if (error) throw new Error(error)
 
       testSucceeded = true
     } catch (e) {

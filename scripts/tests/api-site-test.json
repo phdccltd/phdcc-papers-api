@@ -12,6 +12,18 @@
         "statusCode": 301,
         "location": "/api/submits/pub/1"
       }
+    },
+    {
+      "name": "get sitepages",
+      "method": "get",
+      "uri": "/sitepages",
+      "data": {
+      },
+      "return": {
+        "ret": 0,
+        "prop": "sitepages",
+        "length":  3
+      }
     }
   ]
 }
