@@ -198,13 +198,29 @@
     ],
     "pubmailtemplates": [
       { // 1
+        "nullpub": true,
+        "name": "Welcome to site mail template",
+        "subject": "Thanks for registering",
+        "body": "Thank you for registering at this site",
+        "sendOnSiteAction": 1,
+        "sendToUser": true
+      },
+      { // 2
+        "nullpub": true,
+        "name": "Password reset",
+        "subject": "Password reset link",
+        "body": "Please click on this link to login: {{site.url}}resetpwd?{{resettokens}} This single-use link will expire in an hour. ",
+        "sendOnSiteAction": 2,
+        "sendToUser": true
+      },
+      { // 3
         "name": "Access requested mail template",
         "subject": "user requests access",
         "body": "Dear owner: The following user has requested access to {{pub.name}}.  User: {{user.username}} Please give them an Author role at the site {{site.url}} Best regards",
         "sendOnSiteAction": 1,
         "bccToOwners": true
       },
-      { // 2
+      { // 4
         "name": "Welcome to publication template",
         "subject": "Welcome to our submission system",
         "body": "Hello  Thank you for registering at {{site.name}}.  Site: {{site.url}} Username: {{user.username}} You now have access to our submission system. If submissions are being accepted now, you will be able to add a Proposal. Thank you.",
@@ -212,7 +228,7 @@
         "bccToOwners": true,
         "sendToUser": true
       },
-      { // 3
+      { // 5
         "name": "Proposal submission successful mail template",
         "subject": "Proposal submission successful: paper id: {{submit.id}}",
         "body": "Dear Author,  Thank you for submitting a proposal for a paper at our conference. Paper id: {{submit.id}} Entry id: {{entry.id}} Submitter: {{author.username}} {author.id}}) Date: {{now}} Title: {{submit.name}} Author: {{entry.field_1}}",
@@ -220,7 +236,7 @@
         "sendToAuthor": true,
         "bccToOwners": true
       },
-      { // 4
+      { // 6
         "name": "Proposal Score Added mail template",
         "subject": "Proposal Score Added for paper id: {{submit.id}}",
         "body": "Thank you for scoring the following proposal: Paper id: {{submit.id}} Submitter: {{author.username}} ({{author.id}}) Title: {{submit.name}} Score: {{grading.score}} Comments: {{grading.comment}} I can review: {{grading.canreview}}",
@@ -228,7 +244,7 @@
         "bccToOwners": true,
         "sendToUser": true
       },
-      { // 5
+      { // 7
         "name": "Proposal Accepted mail template",
         "subject": "Proposal Accepted: Paper ID: {{submit.id}}",
         "body": "Dear Author: Your proposal entitled '{{submit.name}}' has been accepted. Please now submit your paper.",
@@ -236,7 +252,7 @@
         "sendToAuthor": true,
         "bccToOwners": true
       },
-      { // 6
+      { // 8
         "name": "Proposal Rejected mail template",
         "subject": "Proposal Rejected: Paper ID: {{submit.id}}",
         "body": "Dear Author, Sorry but your proposal entitled '{{submit.name}}' has been rejected.",
