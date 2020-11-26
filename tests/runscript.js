@@ -381,7 +381,17 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         // console.log('res.headers', res.headers)
         if (resBody) resBody.body = res.body
 
-        if (res.statusCode !== 200) return 'Response statusCode ' + res.statusCode + ' returned for: ' + call.name
+        if (res.statusCode !== 200) {
+          if (call.return && 'statusCode' in call.return) {
+            if (call.return.statusCode !== res.statusCode) return 'Response ret ' + res.statusCode + ' when ' + call.return.statusCode + ' wanted for: ' + call.name
+            if ('location' in call.return) {
+              if (call.return.location !== res.headers['location']) return 'Response location ' + res.headers['location'] + ' when ' + call.return.location + ' wanted for: ' + call.name
+            }
+            delete call.return
+          } else {
+            return 'Response statusCode ' + res.statusCode + ' returned for: ' + call.name
+          }
+        }
 
         if (call.return) {
           if ('content-type' in call.return) {

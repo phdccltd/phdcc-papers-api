@@ -9,8 +9,8 @@ const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.acc
 
 process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
-describe('GRADING', () => {
-  it('Score proposal', async () => {
+describe('SITE', () => {
+  it('tests', async () => {
     let testSucceeded = false
     try {
       testhelper.initThisTest()
@@ -30,31 +30,7 @@ describe('GRADING', () => {
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-add-proposal-author.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-status-with-team.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-login-teamster.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-get-entry-proposal.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-score-proposal.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-site-test.json', false, app)
       if (error) throw new Error(error)
 
       testSucceeded = true

@@ -1,0 +1,17 @@
+{
+  "name": "Site and sitepages tests",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "redirect from /x/y/ to /x/y",
+      "method": "get",
+      "uri": "/submits/pub/1/",
+      "data": {
+      },
+      "return": {
+        "statusCode": 301,
+        "location": "/api/submits/pub/1"
+      }
+    }
+  ]
+}
