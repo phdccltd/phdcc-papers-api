@@ -21,7 +21,8 @@ module.exports = (sequelize, DataTypes) => {
     password: { type: Sequelize.STRING, allowNull: false },
     actas: { type: Sequelize.INTEGER, allowNull: false, defaultValue: 0 },
     ...fields
-  },
+  }
+  /*,
   {
     getterMethods: {
       lastlogins () {
@@ -30,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
         return lastlogin.toISOString().substring(0, 16) // YYYY-MM-DDTHH:mm:ss.sssZ -> yyyy-MM-ddThh:mm
       }
     }
-  }
+  } */
   )
   users.fields = fields
 

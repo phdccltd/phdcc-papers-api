@@ -97,7 +97,7 @@
       }
     },
     {
-      "name": "deleteAccepting: duff flowid",
+      "name": "deleteAccepting: wrong flowid",
       "method": "postdelete",
       "uri": "/acceptings/4",
       "data": {

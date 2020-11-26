@@ -94,7 +94,6 @@ async function addEditAccepting (req, res, next) {
       if (dbacceptingflow.id !== flowid) return utils.giveup(req, res, 'Edit accepting flowid mismatch ' + dbacceptingflow.id + ' ' + flowid)
 
       dbaccepting.flowstageId = chosenstage
-      if (isNaN(dbaccepting.flowstageId)) return utils.giveup(req, res, 'Duff chosenstage')
       dbaccepting.open = req.body.chosenopen
       dbaccepting.flowstatusId = chosenstatus || null
 
