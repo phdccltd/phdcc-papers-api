@@ -11,8 +11,8 @@ const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.acc
 
 process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
-describe('LOGIN', () => {
-  it('Check incorrect login fails', async () => {
+describe('AUTH', () => {
+  it('actions', async () => {
     let testSucceeded = false
     try {
       testhelper.initThisTest()
@@ -29,7 +29,10 @@ describe('LOGIN', () => {
       error = await runscript.run(app.models, 'tests/addusers.json', simple)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-login-fail.json', false, app)
+      error = await runscript.run(app.models, 'tests/addpub2withuser.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-auth-actions.json', false, app)
       if (error) throw new Error(error)
 
       testSucceeded = true

@@ -65,7 +65,7 @@ passport.use(new JWTstrategy({
 
 async function doResetLogin (req, res, next) {
   const resettoken = req.body.reset.trim()
-  if (resettoken.length === 0) return utils.giveup(req, res, 'duff reset given')
+  if (resettoken.length === 0) return utils.giveup(req, res, 'No reset')
 
   async function resetlogin () {
     console.log('resettoken', resettoken)
@@ -120,6 +120,7 @@ async function doResetLogin (req, res, next) {
 /// ///////////////////
 /* POST: HANDLE LOGIN ATTEMPT, using given passport */
 async function login (req, res, next) {
+  console.log('g-recaptcha-response', req.body['g-recaptcha-response'])
   if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
 
   if ('reset' in req.body) return await doResetLogin(req, res, next)
@@ -462,6 +463,7 @@ async function forgotpwd (req, res, next) {
         }
 
         forgotten.msg = 'Password reset email sent. The link will expire in an hour.'
+        if (process.env.TESTING) forgotten.resettoken = dbuser.resettoken
       }
       // console.log('forgotten', forgotten)
       utils.returnOK(req, res, forgotten, 'forgotten')

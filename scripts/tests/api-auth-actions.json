@@ -1,0 +1,162 @@
+{
+  "name": "Auth actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "Log in fail as superuser Jo",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "jo",
+        "password": "wrongsecret",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Incorrect password"
+      }
+    },
+    {
+      "name": "Login with no g-recaptcha-response",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "author1",
+        "password": "author1pwd"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "recaptcha not given"
+      }
+    },
+    {
+      "name": "Log in fail - no username",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "password": "wrongsecret",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "username not given"
+      }
+    },
+    {
+      "name": "Log in fail - no password",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "something",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "password not given"
+      }
+    },
+    {
+      "name": "forgotpwd: no email",
+      "method": "post",
+      "uri": "/user/forgot",
+      "data": {
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No email given"
+      }
+    },
+    {
+      "name": "forgotpwd: recaptcha not given",
+      "method": "post",
+      "uri": "/user/forgot",
+      "data": {
+        "email": "something"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "recaptcha not given"
+      }
+    },
+    {
+      "name": "forgotpwd: wrong email",
+      "method": "post",
+      "uri": "/user/forgot",
+      "data": {
+        "email": "something",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "forgotten.err",
+        "value": "Email not found"
+      }
+    },
+    {
+      "name": "forgotpwd: OK",
+      "method": "post",
+      "uri": "/user/forgot",
+      "data": {
+        "email": "owner1@example.com",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0
+      },
+      "set": {
+        "name": "resettoken",
+        "value": "forgotten.resettoken"
+      }
+    },
+    {
+      "name": "doResetLogin: empty reset",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "reset": "",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No reset"
+      }
+    },
+    {
+      "name": "doResetLogin: wrong reset",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "reset": "wrongstring",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Invalid password reset. The link may have been used already. Please restart the password reset process."
+      }
+    },
+    {
+      "name": "doResetLogin: OK",
+      "method": "post",
+      "uri": "/user/login",
+      "preset": [
+        {"name": "reset", "use": "@resettoken" }
+      ],
+      "data": {
+        "reset": "@resettoken",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

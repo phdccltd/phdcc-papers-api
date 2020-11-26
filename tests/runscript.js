@@ -7,7 +7,6 @@ const fs = require('fs')
 const path = require('path')
 const _ = require('lodash')
 const request = require('supertest')
-// const FormData = require('form-data')
 const bcrypt = require('bcrypt')
 const saltRounds = 10
 
@@ -293,6 +292,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
                 const replaceby = usename in persisted ? persisted[usename] : ''
                 const after = before.substring(0, usepos) + replaceby + before.substring(usepos + preset.use.length)
                 data[preset.name] = after
+                console.log('Preset ', preset.name, after)
               }
             }
           }
@@ -429,7 +429,15 @@ async function run (models, configfilename, existingconfig, app, resBody) {
                 if (!(_.isEqual(prop, test.value))) return 'Prop \'' + test.name + '\' does not match: \'' + test.value + '\''
               }
             } else {
-              const prop = res.body[call.return.prop]
+              // Cope with name and object.name
+              const dotpos = call.return.prop.indexOf('.')
+              let prop
+              if (dotpos !== -1) {
+                prop = res.body[call.return.prop.substring(0, dotpos)]
+                if (prop) prop = prop[call.return.prop.substring(dotpos + 1)]
+              } else {
+                prop = res.body[call.return.prop]
+              }
               if ('typeof' in call.return) {
                 if (typeof prop !== call.return.typeof) return 'Prop \'' + call.return.prop + '\' with value \'' + prop + '\' not type \'' + call.return.typeof + '\' for: ' + call.name // eslint-disable-line valid-typeof
               }
@@ -443,7 +451,15 @@ async function run (models, configfilename, existingconfig, app, resBody) {
           }
         }
         if ('set' in call) {
-          persisted[call.set.name] = res.body[call.set.value]
+          const dotpos = call.set.value.indexOf('.')
+          let propvalue = call.set.value
+          if (dotpos !== -1) {
+            propvalue = res.body[call.set.value.substring(0, dotpos)]
+            if (propvalue) propvalue = propvalue[call.set.value.substring(dotpos + 1)]
+          } else {
+            propvalue = res.body[call.set.value]
+          }
+          persisted[call.set.name] = propvalue
           console.log('Persisted ' + call.set.name + ' set to ' + persisted[call.set.name])
         }
       }
