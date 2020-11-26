@@ -324,6 +324,93 @@
         "ret": 0,
         "prop": "token",
         "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "token"
+      }
+    },
+    {
+      "name": "handleMasquerade: not allowed",
+      "method": "get",
+      "uri": "/users/masquerade/3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No joy"
+      }
+    },
+    {
+      "name": "Log in as superuser Jo",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "jo",
+        "password": "asecret",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "token",
+        "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "token"
+      }
+    },
+    {
+      "name": "handleMasquerade: duff userid",
+      "method": "get",
+      "uri": "/users/masquerade/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff userid"
+      }
+    },
+    {
+      "name": "handleMasquerade: wrong userid",
+      "method": "get",
+      "uri": "/users/masquerade/20",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find userid 20"
+      }
+    },
+    {
+      "name": "Masquerade as Author1",
+      "method": "get",
+      "uri": "/users/masquerade/3",
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "Do something as Author1: getPubSubmits",
+      "method": "get",
+      "uri": "/submits/pub/1", // Publication 1
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "Log out and stop masquerading",
+      "method": "delete",
+      "uri": "/user/logout",
+      "return": {
+        "ret": 0
       }
     }
   ]
