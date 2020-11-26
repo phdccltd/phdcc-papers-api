@@ -25,6 +25,7 @@ router.post('/reviewers/:submitid', async function (req, res, next) {
 async function removeReviewer (req, res, next) {
   const submitid = parseInt(req.params.submitid)
   // console.log('DELETE /reviewers', submitid)
+  if (isNaN(submitid)) return utils.giveup(req, res, 'Duff submitid')
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
@@ -33,6 +34,7 @@ async function removeReviewer (req, res, next) {
 
     const submitreviewerid = req.body.submitreviewerid
     // console.log('DELETE /reviewers', submitid, submitreviewerid)
+    if (isNaN(submitreviewerid)) return utils.giveup(req, res, 'Duff submitreviewerid')
 
     const dbsubmitreviewer = await models.submitreviewers.findByPk(submitreviewerid)
     if (!dbsubmitreviewer) return utils.giveup(req, res, 'Cannot find submitreviewer ' + submitreviewerid)
@@ -58,18 +60,21 @@ async function removeReviewer (req, res, next) {
 async function addReviewer (req, res, next) {
   const submitid = parseInt(req.params.submitid)
   console.log('Add /reviewers', submitid)
+  if (isNaN(submitid)) return utils.giveup(req, res, 'Duff submitid')
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
-    const userid = req.body.userid
+    const userid = parseInt(req.body.userid)
     console.log('Add /reviewers', submitid, userid, req.body.lead)
+    if (isNaN(userid)) return utils.giveup(req, res, 'Duff userid')
+
 
     const params = {
       submitId: submitid,
-      userId: parseInt(userid),
+      userId: userid,
       lead: req.body.lead
     }
 

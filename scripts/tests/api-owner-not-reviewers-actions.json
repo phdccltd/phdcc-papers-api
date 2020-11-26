@@ -1,0 +1,34 @@
+{
+  "name": "Not owner reviewers actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "removeReviewer: not owner",
+      "method": "postdelete",
+      "uri": "/reviewers/1",
+      "data": {
+        "userid": 4, // Author2
+        "lead": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    },
+    {
+      "name": "addReviewer: not owner",
+      "method": "post",
+      "uri": "/reviewers/1",
+      "data": {
+        "userid": 4, // Author2
+        "lead": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    }
+  ]
+}

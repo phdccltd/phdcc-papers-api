@@ -1,0 +1,83 @@
+{
+  // Not tested:
+  "name": "Owner reviewers actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "removeReviewer: duff method",
+      "method": "postpatch",
+      "uri": "/reviewers/1",
+      "data": {
+        "submitreviewerid": 4 // Author2
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Bad method: PATCH"
+      }
+    },
+    {
+      "name": "removeReviewer: duff submitid",
+      "method": "postdelete",
+      "uri": "/reviewers/x",
+      "data": {
+        "submitreviewerid": 4 // Author2
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff submitid"
+      }
+    },
+    {
+      "name": "removeReviewer: wrong submitid",
+      "method": "postdelete",
+      "uri": "/reviewers/3",
+      "data": {
+        "submitreviewerid": 4 // Author2
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find submitid 3"
+      }
+    },
+    {
+      "name": "removeReviewer: duff submitreviewerid",
+      "method": "postdelete",
+      "uri": "/reviewers/1",
+      "data": {
+        "submitreviewerid": "x"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff submitreviewerid"
+      }
+    },
+    {
+      "name": "removeReviewer: wrong submitreviewerid",
+      "method": "postdelete",
+      "uri": "/reviewers/1",
+      "data": {
+        "submitreviewerid": 10
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find submitreviewer 10"
+      }
+    },
+    {
+      "name": "removeReviewer: OK",
+      "method": "postdelete",
+      "uri": "/reviewers/1",
+      "data": {
+        "submitreviewerid": 1
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}
