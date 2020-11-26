@@ -210,6 +210,11 @@ RECAPTCHA_BYPASS='Password to avoid recaptcha'
 
 Thanks to all the developers who produced the open-source modules that are used.
 
+# Sponsors
+
+This development has kindly been supported by 
+[![IRCOBI](./docs/ircobi-picto.png)](http://ircobi.org/).
+
 # License
 
 [MIT](LICENCE)
