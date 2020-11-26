@@ -71,6 +71,8 @@ async function addReviewer (req, res, next) {
     console.log('Add /reviewers', submitid, userid, req.body.lead)
     if (isNaN(userid)) return utils.giveup(req, res, 'Duff userid')
 
+    const dbuser = await models.users.findByPk(userid)
+    if (!dbuser) return utils.giveup(req, res, 'Could not find userid ' + userid)
 
     const params = {
       submitId: submitid,

@@ -78,6 +78,62 @@
       "return": {
         "ret": 0
       }
+    },
+    {
+      "name": "addReviewer: duff submitid",
+      "method": "post",
+      "uri": "/reviewers/x",
+      "data": {
+        "userid": 4, // Author2
+        "lead": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff submitid"
+      }
+    },
+    {
+      "name": "addReviewer: wrong submitid",
+      "method": "post",
+      "uri": "/reviewers/3",
+      "data": {
+        "userid": 4, // Author2
+        "lead": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find submitid 3"
+      }
+    },
+    {
+      "name": "addReviewer: duff userid",
+      "method": "post",
+      "uri": "/reviewers/1",
+      "data": {
+        "userid": "x",
+        "lead": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff userid"
+      }
+    },
+    {
+      "name": "addReviewer: wrong userid",
+      "method": "post",
+      "uri": "/reviewers/1",
+      "data": {
+        "userid": 20,
+        "lead": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Could not find userid 20"
+      }
     }
   ]
 }
