@@ -14,14 +14,24 @@ async function testsetup (models) {
     }
     await models.sites.create(params)
 
+    // Get some no transport coverage
+    utils.asyncMail(false, false, false, false)
     // Fake a mail transport
     const transport = {
       sendMail: function (params, callbacks) {
-        callbacks(false, 'MOCK sendMail to ' + params.to)
+        if (params.subject.indexOf('Proposal') !== -1) {
+          callbacks('Pretend fail', false)
+        } else {
+          callbacks(false, 'MOCK sendMail to ' + params.to)
+        }
       }
     }
     utils.setMailTransport(transport, 'from@example.org', 'admin@example.org', 'TESTS')
     utils.getSiteName()
+
+    // Coverage
+    await utils.asyncSleep(10)
+
     console.log('mock site created')
   }
 }
