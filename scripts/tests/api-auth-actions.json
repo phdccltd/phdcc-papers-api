@@ -18,6 +18,21 @@
       }
     },
     {
+      "name": "Log in fail: Incorrect username",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "joanne",
+        "password": "wrongsecret",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Incorrect username"
+      }
+    },
+    {
       "name": "Login with no g-recaptcha-response",
       "method": "post",
       "uri": "/user/login",
@@ -148,7 +163,10 @@
       "method": "post",
       "uri": "/user/login",
       "preset": [
-        {"name": "reset", "use": "@resettoken" }
+        {
+          "name": "reset",
+          "use": "@resettoken"
+        }
       ],
       "data": {
         "reset": "@resettoken",
@@ -156,6 +174,156 @@
       },
       "return": {
         "ret": 0
+      }
+    },
+    {
+      "name": "register: no username",
+      "method": "post",
+      "uri": "/user/register",
+      "data": {
+        "email": "bryoney@example.org",
+        "password": "shhhhh",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "username not given"
+      }
+    },
+    {
+      "name": "register: no password",
+      "method": "post",
+      "uri": "/user/register",
+      "data": {
+        "username": "bryoney",
+        "email": "bryoney@example.org",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "password not given"
+      }
+    },
+    {
+      "name": "register: no email",
+      "method": "post",
+      "uri": "/user/register",
+      "data": {
+        "username": "bryoney",
+        "password": "shhhhh",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "email not given"
+      }
+    },
+    {
+      "name": "register: no recaptcha",
+      "method": "post",
+      "uri": "/user/register",
+      "data": {
+        "username": "bryoney",
+        "password": "shhhhh",
+        "email": "bryoney@example.org"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "recaptcha not given"
+      }
+    },
+    {
+      "name": "register: invalid email",
+      "method": "post",
+      "uri": "/user/register",
+      "data": {
+        "username": "bryoney",
+        "password": "shhhhh",
+        "email": "not an email",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not a valid email address"
+      }
+    },
+    {
+      "name": "register: username already in use",
+      "method": "post",
+      "uri": "/user/register",
+      "data": {
+        "username": "jo",
+        "password": "shhhhh",
+        "email": "bryoney@example.org",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "username already in use"
+      }
+    },
+    {
+      "name": "register: email already in use",
+      "method": "post",
+      "uri": "/user/register",
+      "data": {
+        "username": "bryoney",
+        "password": "shhhhh",
+        "email": "jo@example.com",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "email already in use"
+      }
+    },
+    {
+      "name": "register: OK",
+      "method": "post",
+      "uri": "/user/register",
+      "data": {
+        "username": "bryoney",
+        "password": "shhhhh",
+        "email": "bryoney@example.com",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "user.token",
+        "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "user.token"
+      }
+    },
+    {
+      "name": "Log in as bryoney: postRegisterId",
+      "method": "post",
+      "uri": "/user/login",
+      "preset": [
+        {
+          "name": "token",
+          "use": "@token"
+        }
+      ],
+      "data": {
+        "token": "@token",
+        "username": "author1",
+        "password": "author1pwd",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "token",
+        "typeof": "string"
       }
     }
   ]

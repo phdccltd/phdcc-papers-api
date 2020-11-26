@@ -100,7 +100,7 @@ async function addUserRole (req, res, next) {
       })
       for (const dbpubmail of dbpubmails) {
         if (dbpubmail.sendToUser) {
-          mailutils.sendOneTemplate(dbpubmail, false, dbpub, false, dbuser, false, false, false, false) // dbuser is user affected, not current user
+          await mailutils.sendOneTemplate(dbpubmail, false, dbpub, false, dbuser, false, false, false, false) // dbuser is user affected, not current user
         }
       }
     }

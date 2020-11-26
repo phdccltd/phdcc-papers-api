@@ -259,7 +259,7 @@ async function register (req, res, next) {
           for (const dbpubmail of dbpubmails) {
             if (dbpubmail.bccToOwners) { // CHANGE
               console.log(dbpubmail.id, 'SEND REGISTERED MAIL TO OWNER', dbpub.id)
-              mailutils.sendOneTemplate(dbpubmail, false, dbpub, false, dbuser, false, false, false, false)
+              await mailutils.sendOneTemplate(dbpubmail, false, dbpub, false, dbuser, false, false, false, false)
             }
           }
         }
@@ -274,7 +274,7 @@ async function register (req, res, next) {
       })
       for (const dbpubmail of dbpubmails) {
         if (dbpubmail.sendToUser) {
-          mailutils.sendOneTemplate(dbpubmail, req.site, false, false, dbuser, false, false, false, false)
+          await mailutils.sendOneTemplate(dbpubmail, req.site, false, false, dbuser, false, false, false, false)
         }
       }
 
@@ -458,7 +458,7 @@ async function forgotpwd (req, res, next) {
             const data = {
               resettokens: dbuser.resettoken // Don't use eg t= as = gets mangled sometimes in plain text to &#x3D;
             }
-            mailutils.sendOneTemplate(dbpubmail, req.site, false, false, dbuser, false, false, false, false, data)
+            await mailutils.sendOneTemplate(dbpubmail, req.site, false, false, dbuser, false, false, false, false, data)
           }
         }
 
