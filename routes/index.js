@@ -57,7 +57,7 @@ router.use(function (req, res, next) {
 router.use(function (req, res, next) {
   if (req.path.substr(-1) === '/' && req.path.length > 1) {
     const query = req.url.slice(req.path.length)
-    // console.log("redirect from", req.path)
+    console.log("redirect from", process.env.BASEURL, req.baseUrl, req.path)
     const goto = process.env.BASEURL + req.baseUrl + req.path.slice(0, -1) + query
     // console.log("redirect to", goto)
     res.redirect(301, goto)

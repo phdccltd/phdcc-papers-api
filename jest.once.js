@@ -6,7 +6,8 @@ function setupOnce () {
   console.log('JEST ONCE')
   process.env = {}
 
-  process.env.JWT_SECRET = 'Testing-seret'
+  process.env.JWT_SECRET = 'Testing-secret'
+  process.env.BASEURL = '/api'
   process.env.TESTING = true
   process.env.TESTFILESDIR = __dirname + '/testfilesdir'
   process.env.TESTTMPDIR = __dirname + '/testtmpdir/'
