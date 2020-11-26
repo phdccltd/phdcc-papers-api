@@ -1,0 +1,36 @@
+{
+  "name": "Not owner gradings actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "deleteGrading: not owner",
+      "method": "postdelete",
+      "uri": "/gradings/1",
+      "data": {
+        "gradingid": 1
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    },
+    {
+      "name": "addGrading: cannot grade my own submit",
+      "method": "post",
+      "uri": "/gradings/1",
+      "data": {
+        "acceptingid": 0,
+        "flowgradeid": 2,
+        "decision": 4,
+        "comment": "Nice paper",
+        "canreview": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not allowed"
+      }
+    }
+  ]
+}
