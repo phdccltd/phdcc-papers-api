@@ -13,6 +13,18 @@
         "prop": "pubs",
         "length": 1
       }
+    },
+    {
+      "name": "getFlowFormFields: OK",
+      "method": "get",
+      "uri": "/submits/formfields/1",
+      "data": {
+      },
+      "return": {
+        "ret": 0,
+        "prop": "entry.fields",
+        "length": 5
+      }
     }
   ]
 }

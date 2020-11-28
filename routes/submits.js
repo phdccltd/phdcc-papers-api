@@ -736,6 +736,7 @@ async function getFlowFormFields (req, res, next) {
   try {
     const flowstageid = parseInt(req.params.flowstageId)
     console.log('GET /submits/formfields/', flowstageid, req.dbuser.id)
+    if (isNaN(flowstageid)) return utils.giveup(req, res, 'Duff flowstageid')
 
     const dbflowstage = await models.flowstages.findByPk(flowstageid)
     if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + flowstageid)

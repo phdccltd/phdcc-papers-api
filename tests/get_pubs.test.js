@@ -45,12 +45,12 @@ describe('PUBS', () => {
       error = await runscript.run(app.models, 'tests/api-pubs-actions.json', false, app, resBody)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
+      /* error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-pubs-actions.json', false, app, resBody)
       if (error) throw new Error(error)
-      /* try {
+      try {
         const currentstatus = resBody.body.flows[0].submits[0].statuses[0]
         if (currentstatus.flowstatusId !== 3) throw new Error('currentstatus.flowstatusId!==3')
         console.log('currentstatus.flowstatusId===3')

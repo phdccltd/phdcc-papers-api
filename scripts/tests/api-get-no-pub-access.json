@@ -15,7 +15,31 @@
       }
     },
     {
-      "name": "try getFlowFormFields",
+      "name": "getFlowFormFields: duff flowstageid",
+      "method": "get",
+      "uri": "/submits/formfields/x",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff flowstageid"
+      }
+    },
+    {
+      "name": "getFlowFormFields: wrong flowstageid",
+      "method": "get",
+      "uri": "/submits/formfields/5",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "flowstageid not found: 5"
+      }
+    },
+    {
+      "name": "getFlowFormFields: no access",
       "method": "get",
       "uri": "/submits/formfields/1",
       "data": {
@@ -219,7 +243,7 @@
       "method": "postpost",
       "uri": "/submits/status/1",
       "data": {
-        "newstatusid":  2
+        "newstatusid": 2
       },
       "return": {
         "ret": 1,
