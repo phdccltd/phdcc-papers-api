@@ -445,7 +445,7 @@ async function editEntry (req, res, next) {
       if (existingfile) {
         const existingpath = filesdir + existingfile
         if (fs.existsSync(existingpath)) {
-          const archivepath = TMPDIRARCHIVE + existingpath
+          const archivepath = TMPDIRARCHIVE + existingfile
           if (fs.existsSync(archivepath)) {
             // Do we need to delete?
             console.log('editEntry archivepath exists')

@@ -2,6 +2,25 @@
   "name": "Submit: Add paper by author1",
   "pubname": "TestPubName",
   "api": [
+    //{
+    //  "name": "addEntry paper: ",
+    //  "method": "postform",
+    //  "uri": "/submits/entry",
+    //  "attachs": [
+    //    { "name": "7loremipsum1.txt", "path": "./tests/files/lorem-ipsum1.txt" }
+    //  ],
+    //  "fields": [
+    //    { "submitid": 1 },
+    //    { "stageid": 2 },
+    //    { "values": { "formfieldid": 6, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } },
+    //    { "values": { "formfieldid": 7, "string": null, "integer": null, "text": null, "existingfile": null, "file": "lorem-ipsum1.txt" } }
+    //  ],
+    //  "return": {
+    //    "ret": 1,
+    //    "prop": "status",
+    //    "value": "Bad file originalname format"
+    //  }
+    //},
     {
       "name": "addEntry paper",
       "method": "postform",
