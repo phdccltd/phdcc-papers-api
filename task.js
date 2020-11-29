@@ -9,7 +9,7 @@ let started = false
 
 /* ************************ */
 
-async function backgroundTask(testdays) {
+async function backgroundTask (testdays) {
   let now = new Date()
   if (testdays) now = new Date(now.getTime() + testdays * 24 * 60 * 60 * 1000)
 

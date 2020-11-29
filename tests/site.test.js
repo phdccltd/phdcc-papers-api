@@ -3,6 +3,7 @@
 const testhelper = require('./testhelper')
 const maketestsite = require('./maketestsite')
 const runscript = require('./runscript')
+const logger = require('../logger')
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
@@ -39,6 +40,10 @@ describe('SITE', () => {
       // process.env.TESTING = false
       // error = await runscript.run(app.models, 'tests/api-site-fail-test.json', false, app)
       // if (error) throw new Error(error)
+
+      logger.warn4req()
+      await logger.error4req()
+      logger.error()
 
       testSucceeded = true
     } catch (e) {

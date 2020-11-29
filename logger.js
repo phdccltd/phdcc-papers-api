@@ -3,7 +3,6 @@
 const fs = require('fs')
 const path = require('path')
 const rfs = require('rotating-file-stream')
-const utils = require('./utils')
 
 const logToConsole = process.env.LOGMODE === 'console'
 
@@ -103,9 +102,10 @@ function error () {
 module.exports.error = error
 
 // error4req(req,messages)
-function error4req () {
-  const allargstring = logfull('error', ...arguments)
-  utils.asyncMail(false, utils.getSiteName() + ' error ' + arguments[1], allargstring)
+async function error4req () {
+  logfull('error', ...arguments)
+  // const allargstring = logfull('error', ...arguments)
+  // utils.asyncMail(false, utils.getSiteName() + ' error ' + arguments[1], allargstring)
 }
 module.exports.error4req = error4req
 
