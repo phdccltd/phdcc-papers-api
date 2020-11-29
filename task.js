@@ -19,7 +19,9 @@ async function startup () {
 /* ************************ */
 
 async function backgroundTask () {
-  const now = new Date()
+  let now = new Date()
+  if (process.env.TESTING) now = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000)
+
   // const nowms = now.getTime()  // getTime is in UTC
   console.log('backgroundTask START UTC: ', now)
   try {
