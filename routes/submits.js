@@ -28,6 +28,7 @@ const path = require('path')
 const mime = require('mime-types')
 const _ = require('lodash/core')
 const logger = require('../logger')
+const sequelize = require('../db').sequelize
 const dbutils = require('./dbutils')
 const mailutils = require('./mailutils')
 
@@ -1047,6 +1048,7 @@ router.post('/submits/:submitid', async function (req, res, next) {
 async function deleteSubmit (req, res, next) {
   const submitid = parseInt(req.params.submitid)
   if (isNaN(submitid)) return utils.giveup(req, res, 'Duff submitid')
+  let ta = false
   try {
     const error = await dbutils.getSubmitFlowPub(req, submitid)
     if (error) return utils.giveup(req, res, error)
@@ -1061,26 +1063,31 @@ async function deleteSubmit (req, res, next) {
       if (!ok) return
     }
 
+    ta = await sequelize.transaction()
+
     // Delete statuses
-    let affectedRows = await models.submitstatuses.destroy({ where: { submitId: submitid } }) // Transaction TODO
+    let affectedRows = await models.submitstatuses.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
 
     // Delete submitgradings
-    affectedRows = await models.submitgradings.destroy({ where: { submitId: submitid } }) // Transaction TODO
-
+    affectedRows = await models.submitgradings.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
+    
     // Delete submitreviewers
-    affectedRows = await models.submitreviewers.destroy({ where: { submitId: submitid } }) // Transaction TODO
+    affectedRows = await models.submitreviewers.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
 
     // Delete sentreminders
-    affectedRows = await models.sentreminders.destroy({ where: { submitId: submitid } }) // Transaction TODO
+    affectedRows = await models.sentreminders.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
 
     // Delete submit
-    affectedRows = await models.submits.destroy({ where: { id: submitid } }) // Transaction TODO
+    affectedRows = await models.submits.destroy({ where: { id: submitid } }, { transaction: ta }) // Transaction DONE
+
+    await ta.commit()
 
     logger.log4req(req, 'Deleted submit', submitid, affectedRows)
 
     const ok = affectedRows === 1
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
+    if (ta) ta.rollback()
     utils.giveup(req, res, e.message)
   }
 }
