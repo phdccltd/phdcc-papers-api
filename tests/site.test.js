@@ -1,9 +1,9 @@
 /* eslint-env jest */
 
+process.env.LOGMODE = 'console'
 const testhelper = require('./testhelper')
 const maketestsite = require('./maketestsite')
 const runscript = require('./runscript')
-process.env.LOGMODE = 'console'
 const logger = require('../logger')
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
