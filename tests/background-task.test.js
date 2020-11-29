@@ -57,6 +57,7 @@ describe('BACKGROUND', () => {
 
       await backgroundRunner(1) // No reminders
       await backgroundRunner(7) // Three reminders
+      await backgroundRunner(8) // No more reminders
 
       testSucceeded = true
     } catch (e) {
