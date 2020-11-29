@@ -44,7 +44,7 @@ async function deleteGrading (req, res, next) {
     if (!dbgradingsubmit) return utils.giveup(req, res, 'Cannot find submit for grading')
     if (dbgradingsubmit.id !== submitid) return utils.giveup(req, res, 'Delete grading submitid mismatch ' + dbgradingsubmit.id + ' ' + submitid)
 
-    await dbgrading.destroy()
+    await dbgrading.destroy() // Transaction OK
 
     logger.log4req(req, 'DELETED grading', gradingid)
 
@@ -121,7 +121,7 @@ async function addGrading (req, res, next) {
       dbgrading.comment = req.body.comment
       dbgrading.canreview = req.body.canreview
 
-      // await dbgrading.save()
+      // await dbgrading.save() // Transaction OK
       // logger.log4req(req, 'UPDATED grading', gradingid)
       */
       ok = false
@@ -136,7 +136,7 @@ async function addGrading (req, res, next) {
         comment: req.body.comment,
         canreview: req.body.canreview
       }
-      const dbgrading = await models.submitgradings.create(params)
+      const dbgrading = await models.submitgradings.create(params) // Transaction OK
       if (!dbgrading) return utils.giveup(req, res, 'grading not created')
       logger.log4req(req, 'CREATED new grading', dbgrading.id)
 

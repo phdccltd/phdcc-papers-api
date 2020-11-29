@@ -73,7 +73,7 @@ async function deleteMailTemplate (req, res, next) {
     if (!dbtemplatepub) return utils.giveup(req, res, 'Cannot find pub for mailtemplate')
     if (dbtemplatepub.id !== pubid) return utils.giveup(req, res, 'Delete mailtemplate pubid mismatch ' + dbtemplatepub.id + ' ' + pubid)
 
-    await dbmailtemplate.destroy()
+    await dbmailtemplate.destroy() // Transaction OK
 
     logger.log4req(req, 'DELETED mailtemplate', templateid)
 
@@ -118,7 +118,7 @@ async function addEditMailTemplate (req, res, next) {
       dbmailtemplate.name = templatename
       dbmailtemplate.subject = templatesubject
       dbmailtemplate.body = templatebody
-      await dbmailtemplate.save()
+      await dbmailtemplate.save() // Transaction OK
       logger.log4req(req, 'UPDATED mailtemplate', templateid)
       ok = true
     } else {
@@ -138,7 +138,7 @@ async function addEditMailTemplate (req, res, next) {
         sendToUser: false,
         sendToReviewers: false
       }
-      const dbmailtemplate = await models.pubmailtemplates.create(params)
+      const dbmailtemplate = await models.pubmailtemplates.create(params) // Transaction OK
       if (!dbmailtemplate) return utils.giveup(req, res, 'mailtemplate not created')
       logger.log4req(req, 'CREATED new mailtemplate', dbmailtemplate.id)
       ok = true

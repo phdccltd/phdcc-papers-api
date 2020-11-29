@@ -32,7 +32,7 @@ async (username, password, done) => {
     const match = await bcrypt.compare(password, user.password)
     if (!match) throw new Error('Incorrect password')
     user.lastlogin = new Date()
-    await user.save()
+    await user.save() // Transaction ??
     done(null, user, { message: 'Logged in Successfully' })
   } catch (error) {
     return done(error)
@@ -89,7 +89,7 @@ async function doResetLogin (req, res, next) {
       }
       dbuser.resettoken = null
       dbuser.resetexpires = null
-      await dbuser.save()
+      await dbuser.save() // Transaction ??
 
       logger.log4req(req, 'TOKEN LOGGED IN', dbuser.username, dbuser.id)
       const ppuser = { id: dbuser.id }
@@ -237,7 +237,7 @@ async function register (req, res, next) {
       }
 
       // Create user now
-      const dbuser = await models.users.create(params)
+      const dbuser = await models.users.create(params) // Transaction ??
       if (!dbuser) return utils.giveup(req, res, 'user not created')
 
       // Tell owner that new user needs roles added
@@ -249,7 +249,7 @@ async function register (req, res, next) {
         if (dbuserRequestedRoles.length > 0) {
           await dbpub.addUser(dbuser)
           for (const dbpubrole of dbuserRequestedRoles) {
-            await dbpubrole.addUser(dbuser)
+            await dbpubrole.addUser(dbuser) // Transaction ??
             anyRoleRequested = true
           }
         }
@@ -360,7 +360,7 @@ async function logout (req, res) {
       const dbsuper = await models.users.findByPk(req.dbuser.actas)
       if (dbsuper) {
         dbsuper.actas = 0
-        await dbsuper.save()
+        await dbsuper.save() // Transaction ??
       }
     } catch (e) {
       console.log('logout clear actas fail', e.message)
@@ -415,7 +415,7 @@ async function saveuser (req, res, next) {
     if (name) req.dbuser.name = name
     if (email) req.dbuser.email = email
     if (password) req.dbuser.password = password
-    await req.dbuser.save()
+    await req.dbuser.save() // Transaction OK
     logger.log4req(req, 'auth saveuser OK')
     utils.returnOK(req, res, 'User updated')
   } catch (error) {
@@ -442,7 +442,7 @@ async function forgotpwd (req, res, next) {
         const buf = crypto.randomBytes(20)
         dbuser.resettoken = buf.toString('hex')
         dbuser.resetexpires = Date.now() + 3600000
-        dbuser.save()
+        dbuser.save() // Transaction ??
 
         const dbpubmails = await models.pubmailtemplates.findAll({
           where: {

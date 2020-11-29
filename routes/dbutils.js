@@ -237,7 +237,6 @@ async function getEntryFormFields (entry, flowstageId) {
     ]
   })
   entry.fields = models.sanitiselist(dbformfields, models.formfields)
-  // ????entry.publookups = []
   entry.pubrolelookups = []
   for (const dbformfield of dbformfields) {
     if (dbformfield.pubroleId != null) {

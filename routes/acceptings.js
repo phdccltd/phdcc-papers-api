@@ -47,7 +47,7 @@ async function deleteAccepting (req, res, next) {
     if (!dbacceptingflow) return utils.giveup(req, res, 'Cannot find flow for accepting')
     if (dbacceptingflow.id !== flowid) return utils.giveup(req, res, 'Delete accepting flowid mismatch ' + dbacceptingflow.id + ' ' + flowid)
 
-    await dbaccepting.destroy()
+    await dbaccepting.destroy() // Transaction OK
 
     logger.log4req(req, 'DELETED accepting', acceptingid)
 
@@ -97,7 +97,7 @@ async function addEditAccepting (req, res, next) {
       dbaccepting.open = req.body.chosenopen
       dbaccepting.flowstatusId = chosenstatus || null
 
-      await dbaccepting.save()
+      await dbaccepting.save() // Transaction OK
       logger.log4req(req, 'UPDATED accepting', acceptingid)
 
       ok = true
@@ -110,7 +110,7 @@ async function addEditAccepting (req, res, next) {
 
       if (chosenstatus) params.flowstatusId = chosenstatus
 
-      const dbaccepting = await models.flowacceptings.create(params)
+      const dbaccepting = await models.flowacceptings.create(params) // Transaction OK
       if (!dbaccepting) return utils.giveup(req, res, 'accepting not created')
       logger.log4req(req, 'CREATED new accepting', dbaccepting.id)
       ok = true

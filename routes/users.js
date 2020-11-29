@@ -33,7 +33,7 @@ async function removePubUser (req, res, next) {
     let present = await dbpub.hasUser(dbuser)
     if (!present) return utils.giveup(req, res, 'That user does not have access currently')
 
-    await dbpub.removeUser(dbuser)
+    await dbpub.removeUser(dbuser) // Transaction OK
 
     present = await dbpub.hasUser(dbuser)
 
@@ -87,7 +87,7 @@ async function addUserRole (req, res, next) {
     let present = await dbpubrole.hasUser(dbuser)
     if (present) return utils.giveup(req, res, 'That user already has this role')
 
-    await dbpubrole.addUser(dbuser)
+    await dbpubrole.addUser(dbuser) // Transaction OK
 
     present = await dbpubrole.hasUser(dbuser)
 
@@ -142,7 +142,7 @@ async function deleteUserRole (req, res, next) {
     let present = await dbpubrole.hasUser(dbuser)
     if (!present) return utils.giveup(req, res, 'That user does not have this role')
 
-    await dbpubrole.removeUser(dbuser)
+    await dbpubrole.removeUser(dbuser) // Transaction OK
 
     present = await dbpubrole.hasUser(dbuser)
 
@@ -220,7 +220,7 @@ async function handleMasquerade (req, res, next) {
     if (!dbuser) return utils.giveup(req, res, 'Cannot find userid ' + userid)
 
     req.dbuser.actas = userid
-    req.dbuser.save()
+    req.dbuser.save() // Transaction OK
 
     const ok = true
     utils.returnOK(req, res, ok, 'ok')

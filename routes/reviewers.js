@@ -43,7 +43,7 @@ async function removeReviewer (req, res, next) {
     if (!dbreviewersubmit) return utils.giveup(req, res, 'Cannot find submit for submitreviewer')
     if (dbreviewersubmit.id !== submitid) return utils.giveup(req, res, 'Delete reviewer submitid mismatch ' + dbreviewersubmit.id + ' ' + submitid)
 
-    await dbsubmitreviewer.destroy()
+    await dbsubmitreviewer.destroy() // Transaction OK
 
     logger.log4req(req, 'DELETED submitreviewerid', submitreviewerid)
 
@@ -80,7 +80,7 @@ async function addReviewer (req, res, next) {
       lead: req.body.lead
     }
 
-    const dbsubmitreviewer = await models.submitreviewers.create(params)
+    const dbsubmitreviewer = await models.submitreviewers.create(params) // Transaction OK
     if (!dbsubmitreviewer) return utils.giveup(req, res, 'submitreviewer not created')
     logger.log4req(req, 'CREATED new submitreviewer', dbsubmitreviewer.id)
 

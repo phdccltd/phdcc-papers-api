@@ -69,7 +69,7 @@ function logfull () {
   try {
     if (models) {
       if (allargstring.indexOf('`logs`') === -1) { // Don't log to db writing to the logs!
-        models.logs.create({
+        models.logs.create({ // Transaction OK ie ignore if there's an error but carry on
           ip: userip,
           userid: userid,
           actid: actid,

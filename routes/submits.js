@@ -101,7 +101,7 @@ async function addEntry (req, res, next) {
       submitId: req.submitId,
       flowstageId: req.body.stageid
     }
-    const dbentry = await models.entries.create(entry)
+    const dbentry = await models.entries.create(entry) // Transaction TODO
     if (!dbentry) return utils.giveup(req, res, 'Could not create entry')
     logger.log4req(req, 'CREATED entry', dbentry.id)
 
@@ -235,7 +235,7 @@ async function addEntry (req, res, next) {
         integer: v.integer,
         file: v.file
       }
-      const dbentryvalue = await models.entryvalues.create(entryvalue)
+      const dbentryvalue = await models.entryvalues.create(entryvalue) // Transaction TODO
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
       logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
       console.log('CREATED entryvalue', dbentryvalue.id)
@@ -257,7 +257,7 @@ async function addEntry (req, res, next) {
         flowstatusId: dbflowstatus.id
       }
       // console.log('addEntry submitstatus', submitstatus)
-      const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
+      const dbsubmitstatus = await models.submitstatuses.create(submitstatus) // Transaction TODO
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
 
@@ -373,13 +373,13 @@ async function addNewSubmit (req, res, next) {
       startdt: now
     }
     console.log('addNewSubmit submit', submit)
-    const dbsubmit = await models.submits.create(submit)
+    const dbsubmit = await models.submits.create(submit) // Transaction TODO
     if (!dbsubmit) return utils.giveup(req, res, 'Could not create submit')
     logger.log4req(req, 'CREATED submit', dbsubmit.id)
 
     req.submitId = dbsubmit.id
     req.dbsubmit = dbsubmit
-    const rv = await addEntry(req, res, next)
+    const rv = await addEntry(req, res, next) // Transaction TODO
     if (!rv) return
 
     // All done
@@ -467,7 +467,7 @@ async function editEntry (req, res, next) {
     }
 
     // OK: Now delete any existing entryvalues
-    const affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } })
+    const affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } }) // Transaction TODO
     logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
 
     // And then store the new ones
@@ -493,7 +493,7 @@ async function editEntry (req, res, next) {
         integer: v.integer,
         file: v.file
       }
-      const dbentryvalue = await models.entryvalues.create(entryvalue)
+      const dbentryvalue = await models.entryvalues.create(entryvalue) // Transaction TODO
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
       logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
     }
@@ -571,9 +571,9 @@ async function deleteEntry (req, res, next) {
     }
 
     // Finally delete the entryvalues and entry
-    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } })
+    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } }) // Transaction TODO
     logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
-    affectedRows = await models.entries.destroy({ where: { id: entryid } })
+    affectedRows = await models.entries.destroy({ where: { id: entryid } }) // Transaction TODO
     logger.log4req(req, 'Deleted entry', entryid, affectedRows)
 
     if (affectedRows !== 1) return utils.giveup(req, res, 'Entry not deleted')
@@ -1057,24 +1057,24 @@ async function deleteSubmit (req, res, next) {
     const dbentries = await req.dbsubmit.getEntries()
     for (const dbentry of dbentries) {
       req.entryid = dbentry.id
-      const ok = await deleteEntry(req, res, next)
+      const ok = await deleteEntry(req, res, next) // Transaction TODO
       if (!ok) return
     }
 
     // Delete statuses
-    let affectedRows = await models.submitstatuses.destroy({ where: { submitId: submitid } })
+    let affectedRows = await models.submitstatuses.destroy({ where: { submitId: submitid } }) // Transaction TODO
 
     // Delete submitgradings
-    affectedRows = await models.submitgradings.destroy({ where: { submitId: submitid } })
+    affectedRows = await models.submitgradings.destroy({ where: { submitId: submitid } }) // Transaction TODO
 
     // Delete submitreviewers
-    affectedRows = await models.submitreviewers.destroy({ where: { submitId: submitid } })
+    affectedRows = await models.submitreviewers.destroy({ where: { submitId: submitid } }) // Transaction TODO
 
     // Delete sentreminders
-    affectedRows = await models.sentreminders.destroy({ where: { submitId: submitid } })
+    affectedRows = await models.sentreminders.destroy({ where: { submitId: submitid } }) // Transaction TODO
 
     // Delete submit
-    affectedRows = await models.submits.destroy({ where: { id: submitid } })
+    affectedRows = await models.submits.destroy({ where: { id: submitid } }) // Transaction TODO
 
     logger.log4req(req, 'Deleted submit', submitid, affectedRows)
 
@@ -1114,7 +1114,7 @@ async function editSubmit (req, res, next) {
     }
 
     req.dbsubmit.name = req.body.newtitle
-    await req.dbsubmit.save()
+    await req.dbsubmit.save() // Transaction OK
 
     logger.log4req(req, 'Edited submit', submitid, req.body.newtitle, newauthorid)
 
@@ -1165,7 +1165,7 @@ async function deleteSubmitStatus (req, res, next) {
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
-    const affectedRows = await models.submitstatuses.destroy({ where: { id: submitstatusid } })
+    const affectedRows = await models.submitstatuses.destroy({ where: { id: submitstatusid } }) // Transaction OK
     logger.log4req(req, 'Deleted submit status', submitstatusid, affectedRows)
 
     const ok = affectedRows === 1
@@ -1207,7 +1207,7 @@ async function addSubmitStatus (req, res, next) {
       submitId: submitid,
       flowstatusId: newstatusid
     }
-    const dbsubmitstatus = await models.submitstatuses.create(submitstatus)
+    const dbsubmitstatus = await models.submitstatuses.create(submitstatus) // Transaction OK
     if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
     const newsubmitstatus = models.sanitise(models.submitstatuses, dbsubmitstatus)
 
@@ -1216,7 +1216,7 @@ async function addSubmitStatus (req, res, next) {
     // Send out mails for this status
     await mailutils.sendOutMails(req, dbflowstatus, false, false, false)
 
-    utils.returnOK(req, res, newsubmitstatus, 'submitstatus')
+    return utils.returnOK(req, res, newsubmitstatus, 'submitstatus')
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
