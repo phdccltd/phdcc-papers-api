@@ -18,9 +18,9 @@ async function startup () {
 
 /* ************************ */
 
-async function backgroundTask () {
+async function backgroundTask(testdays) {
   let now = new Date()
-  if (process.env.TESTING) now = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000)
+  if (testdays) now = new Date(now.getTime() + testdays * 24 * 60 * 60 * 1000)
 
   // const nowms = now.getTime()  // getTime is in UTC
   console.log('backgroundTask START UTC: ', now)
@@ -78,10 +78,10 @@ async function backgroundTask () {
           if (!graded) {
             if (!dbreviewer.lead) allReviewsDone = false
             if (sendReminder && !dbreviewer.lead) {
-              sendMail(dbpubmail, dbsubmit, dbreviewer)
+              await sendMail(dbpubmail, dbsubmit, dbreviewer)
             }
             if (sendLeadReminder && dbreviewer.lead) {
-              sendMail(dbpubmail, dbsubmit, dbreviewer)
+              await sendMail(dbpubmail, dbsubmit, dbreviewer)
             }
           }
         }
@@ -91,7 +91,7 @@ async function backgroundTask () {
               const dbsentreminders = await dbpubmail.getSentReminders({ where: { userId: dbreviewer.userId, submitId: dbsubmit.id } })
               if (dbsentreminders.length > 0) continue
 
-              sendMail(dbpubmail, dbsubmit, dbreviewer)
+              await sendMail(dbpubmail, dbsubmit, dbreviewer)
             }
           }
         }
@@ -141,7 +141,7 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
   body = body(data)
   const bcc = bccOwners.join(',')
   console.log('sendMail', dbuser.email, subject)
-  utils.asyncMail(dbuser.email, subject, body, bcc)
+  await utils.asyncMail(dbuser.email, subject, body, bcc)
 
   // Note in sentreminders
   const params = {
@@ -156,14 +156,17 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
 
 /* ************************ */
 
-async function backgroundRunner (app) {
+async function backgroundRunner (testdays) {
   try {
+    if (typeof testdays !== 'number') testdays = 0
+    if (testdays) return await backgroundTask(testdays)
+
     if (!started) {
       started = true
       console.log('background started start')
       await startup() // async and then calls runBackground()
     }
-    await backgroundTask()
+    await backgroundTask(0)
   } catch (e) {
     console.log(__filename, e)
     logger.log(__filename, 'background:', e)

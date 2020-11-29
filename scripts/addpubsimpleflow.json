@@ -259,6 +259,60 @@
         "flowstatusId": "Proposal rejected",
         "sendToAuthor": true,
         "bccToOwners": true
+      },
+      { // 9
+        "name": "Paper submission successful mail template",
+        "subject": "Paper submitted: Paper ID: {{submit.id}}",
+        "body": "Dear Author, Thank you for submitting your full paper manuscript. The manuscript will be peer reviewed. We will provide the review feedback as soon as possible. Paper id: {{submit.id}} Entry id: {{entry.id}} Submitter: {{author.username}} {author.id}}) Date: {{now}} Title: {{submit.name}} Author: {{entry.field_1}}",
+        "flowstatusId": "Paper submitted",
+        "sendToAuthor": true,
+        "bccToOwners": true
+      },
+      { // 10
+        "name": "Paper sent to Reviewers for Review mail template",
+        "subject": "Review Required: Paper ID: {{submit.id}}",
+        "body": "Dear Reviewer, Please review the following paper: Paper id: {{submit.id}} Title: {{submit.name}} Online submission system: {{site.url}}",
+        "flowstatusId": "Paper with reviewers",
+        "bccToOwners": true,
+        "sendToReviewers": true
+      },
+      { // 11
+        "name": "Review Added mail template",
+        "subject": "Review Added for paper id: {{submit.id}}",
+        "body": "Dear Reviewer, Thank you for submitting your review. Paper id: {{submit.id}} Title: {{submit.name}} Submitter: {{author.name}} Date: {{now}} Decision: {{grading.score}} Comments: {{grading.comment}}",
+        "flowgradeId": "Review",
+        "bccToOwners": true,
+        "sendToUser": true
+      },
+      { // 12
+        "name": "Reviewer reminder mail template",
+        "subject": "Review required for paper id: {{submit.id}}",
+        "body": "Dear Reviewer, This is a reminder to review the following paper: Paper id: {{submit.id}} Title: {{submit.name}} Online submission system: {{site.url}}",
+        "flowstatusId": "Paper with reviewers",
+        "flowgradeId": "Review",
+        "sendReviewReminderDays": 2,
+        "bccToOwners": true,
+        "sendToReviewers": true
+      },
+      { // 13
+        "name": "Lead reviewer: reviews are missing mail template",
+        "subject": "Reviews are missing for Paper ID: {{submit.id}}",
+        "body": "Dear Lead Reviewer, The following paper is still missing one or more reviews. Paper id: {{submit.id}} Title: {{submit.name}} Please chase up the reviewers listed at the online submission system: {{site.url}}",
+        "flowstatusId": "Paper with reviewers",
+        "flowgradeId": "Review",
+        "sendReviewChaseUpDays": 2,
+        "bccToOwners": true,
+        "sendToReviewers": true
+      },
+      { // 14
+        "name": "Lead reviewer: final review needed mail template",
+        "subject": "Final review needed for Paper ID: {{submit.id}}",
+        "body": "Dear Lead Reviewer, Please do a final review for the following paper. Paper id: {{submit.id}} Title: {{submit.name}} at the online submission system: {{site.url}}",
+        "flowstatusId": "Paper with reviewers",
+        "flowgradeId": "Review",
+        "sendLeadReminderDays": 4,
+        "bccToOwners": true,
+        "sendToReviewers": true
       }
     ]
   }

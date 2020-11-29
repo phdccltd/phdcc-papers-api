@@ -38,7 +38,7 @@
       "return": {
         "ret": 0,
         "prop": "pubmails",
-        "length": 6
+        "length": 14
       }
     },
     {
@@ -95,12 +95,12 @@
       "method": "postdelete",
       "uri": "/mail/templates/1",
       "data": {
-        "templateid": 17
+        "templateid": 27
       },
       "return": {
         "ret": 1,
         "prop": "status",
-        "value": "Cannot find mailtemplate 17"
+        "value": "Cannot find mailtemplate 27"
       }
     },
     {
@@ -108,7 +108,7 @@
       "method": "postdelete",
       "uri": "/mail/templates/1",
       "data": {
-        "templateid": 9
+        "templateid": 15
       },
       "return": {
         "ret": 1,
@@ -169,7 +169,7 @@
       "method": "post",
       "uri": "/mail/templates/1",
       "data": {
-        "templateid": 9,
+        "templateid": 15,
         "templatename": "Template name",
         "templatesubject": "Template subject",
         "templatebody": "Template body"

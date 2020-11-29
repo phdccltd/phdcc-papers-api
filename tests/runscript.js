@@ -224,7 +224,10 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         if (pubmail.sendOnRoleGiven === null) pubmail.sendOnRoleGiven = 0
         pubmail.flowstatusId = lookup(pubmail.flowstatusId, config.pub.flow[0].status)
         pubmail.flowgradeId = lookup(pubmail.flowgradeId, config.pub.flow[0].grade)
-        const pubid = 'nullpub' in pubmail ? null : config.pub.db.id
+        let pubid = config.pub.db.id
+        if ('nullpub' in pubmail) {
+          pubid - null
+        }
         const newpubmail = { pubId: pubid, ...defaultPubMail, ...pubmail, weight: weight++ }
         // console.log('newpubmail', newpubmail)
         pubmail.db = await models.pubmailtemplates.create(newpubmail)
@@ -446,7 +449,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
                 if (prop !== call.return.value) return 'Prop \'' + call.return.prop + '\' with value \'' + prop + '\' not \'' + call.return.value + '\' for: ' + call.name
               }
               if ('length' in call.return) {
-                if (prop.length !== call.return.length) return 'Prop \'' + call.return.prop + '\' with array length \'' + prop + '\' not \'' + call.return.length + '\' for: ' + call.name
+                if (prop.length !== call.return.length) return 'Prop \'' + call.return.prop + '\' with array length \'' + prop.length + '\' not \'' + call.return.length + '\' for: ' + call.name
               }
             }
           }

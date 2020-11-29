@@ -34,16 +34,13 @@ describe('BACKGROUND', () => {
       error = await runscript.run(app.models, 'tests/api-add-proposal-author.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
-      if (error) throw new Error(error)
-
       error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-status-proposal-accepted.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-add-reviewers.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
@@ -52,7 +49,13 @@ describe('BACKGROUND', () => {
       error = await runscript.run(app.models, 'tests/api-add-paper-author.json', false, app)
       if (error) throw new Error(error)
 
-      await backgroundRunner()
+      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-status-with-reviewers.json', false, app)
+      if (error) throw new Error(error)
+
+      await backgroundRunner(7)
 
       testSucceeded = true
     } catch (e) {
