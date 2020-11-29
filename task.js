@@ -9,15 +9,6 @@ let started = false
 
 /* ************************ */
 
-async function startup () {
-  try {
-    await utils.asyncSleep(1000) // Let startup stuff happen
-  } catch (e) {
-  }
-}
-
-/* ************************ */
-
 async function backgroundTask(testdays) {
   let now = new Date()
   if (testdays) now = new Date(now.getTime() + testdays * 24 * 60 * 60 * 1000)
@@ -159,14 +150,13 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
 async function backgroundRunner (testdays) {
   try {
     if (typeof testdays !== 'number') testdays = 0
-    if (testdays) return await backgroundTask(testdays)
 
     if (!started) {
       started = true
       console.log('background started start')
-      await startup() // async and then calls runBackground()
+      await utils.asyncSleep(1000) // Let startup stuff happen
     }
-    await backgroundTask(0)
+    await backgroundTask(testdays)
   } catch (e) {
     console.log(__filename, e)
     logger.log(__filename, 'background:', e)

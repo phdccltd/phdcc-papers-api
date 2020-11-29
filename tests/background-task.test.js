@@ -55,7 +55,8 @@ describe('BACKGROUND', () => {
       error = await runscript.run(app.models, 'tests/api-status-with-reviewers.json', false, app)
       if (error) throw new Error(error)
 
-      await backgroundRunner(7)
+      await backgroundRunner(1) // No reminders
+      await backgroundRunner(7) // Three reminders
 
       testSucceeded = true
     } catch (e) {

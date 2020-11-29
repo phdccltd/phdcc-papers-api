@@ -226,7 +226,11 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         pubmail.flowgradeId = lookup(pubmail.flowgradeId, config.pub.flow[0].grade)
         let pubid = config.pub.db.id
         if ('nullpub' in pubmail) {
-          pubid - null
+          if ('sendOnSiteAction' in pubmail) {
+            const existing = await models.pubmailtemplates.findOne({ where: { sendOnSiteAction: pubmail.sendOnSiteAction } })
+            if (existing) continue // Skip if this site-wide template already exists
+          }
+          pubid = null
         }
         const newpubmail = { pubId: pubid, ...defaultPubMail, ...pubmail, weight: weight++ }
         // console.log('newpubmail', newpubmail)
