@@ -44,6 +44,11 @@ describe('SITE', () => {
       logger.warn4req()
       await logger.error4req()
       logger.error()
+      logger.logfull('duff')
+      logger.logfull()
+      logger.logfull('info', false, 'Mentioning logs')
+      process.env.LOGSQL = 'true'
+      logger.logdb1('SELECT * FROM tests')
 
       testSucceeded = true
     } catch (e) {
