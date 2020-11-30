@@ -53,13 +53,19 @@ const router = Router()
 async function handleEntryPost (req, res, next) {
   // console.log('/submits/entry/id ', req.headers['x-http-method-override'])
   if (req.headers['x-http-method-override'] === 'PUT') {
-    await editEntry(req, res, next)
+    const ta = await sequelize.transaction()
+    const ok = await editEntry(req, res, next, ta)
+    if (!ok) { await ta.rollback(); return }
+    await ta.commit()
     return
   }
   if (req.headers['x-http-method-override'] === 'DELETE') {
     req.entryid = req.params.entryid
-    const ok = await deleteEntry(req, res, next)
-    if (ok) utils.returnOK(req, res, ok, 'ok')
+    const ta = await sequelize.transaction()
+    const ok = await deleteEntry(req, res, next, ta)
+    if (!ok) { await ta.rollback();  return }
+    await ta.commit()
+    utils.returnOK(req, res, ok, 'ok')
     return
   }
   utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
@@ -77,9 +83,11 @@ router.post('/submits/entry/:entryid', upload.array('files'), handleEntryPost)
 *        AUTHOR: DOES TESTS
 *        OWNER-ONLY: NO. DOES TESTS
 *        OPEN: DOES TESTS
+*
+* Always return true or false so transaction can complete correctly
  */
 
-async function addEntry (req, res, next) {
+async function addEntry (req, res, next, ta) {
   try {
     let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
     if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
@@ -94,7 +102,7 @@ async function addEntry (req, res, next) {
     if (error) return utils.giveup(req, res, error)
 
     const notallowed = await oktoadd(req, res)
-    if (!notallowed) return
+    if (!notallowed) return false
 
     const now = new Date()
     const entry = {
@@ -102,7 +110,7 @@ async function addEntry (req, res, next) {
       submitId: req.submitId,
       flowstageId: req.body.stageid
     }
-    const dbentry = await models.entries.create(entry) // Transaction TODO
+    const dbentry = await models.entries.create(entry, { transaction: ta }) // Transaction DONE
     if (!dbentry) return utils.giveup(req, res, 'Could not create entry')
     logger.log4req(req, 'CREATED entry', dbentry.id)
 
@@ -236,7 +244,7 @@ async function addEntry (req, res, next) {
         integer: v.integer,
         file: v.file
       }
-      const dbentryvalue = await models.entryvalues.create(entryvalue) // Transaction TODO
+      const dbentryvalue = await models.entryvalues.create(entryvalue, { transaction: ta }) // Transaction DONE
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
       logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
       console.log('CREATED entryvalue', dbentryvalue.id)
@@ -258,7 +266,7 @@ async function addEntry (req, res, next) {
         flowstatusId: dbflowstatus.id
       }
       // console.log('addEntry submitstatus', submitstatus)
-      const dbsubmitstatus = await models.submitstatuses.create(submitstatus) // Transaction TODO
+      const dbsubmitstatus = await models.submitstatuses.create(submitstatus, { transaction: ta }) // Transaction DONE
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
 
@@ -269,14 +277,15 @@ async function addEntry (req, res, next) {
     // Return OK
     return rv
   } catch (e) {
-    utils.giveup(req, res, e.message)
-    console.log(e.stack)
+    return utils.giveup(req, res, e.message)
   }
 }
 router.post('/submits/entry', upload.array('files'), async function (req, res, next) {
   req.submitId = req.body.submitid
-  const rv = await addEntry(req, res, next)
-  if (!rv) return
+  const ta = await sequelize.transaction()
+  const rv = await addEntry(req, res, next, ta)
+  if (!rv) { await ta.rollback(); return }
+  await ta.commit()
   utils.returnOK(req, res, rv, 'rv')
 })
 
@@ -365,6 +374,8 @@ async function addNewSubmit (req, res, next) {
     const notallowed = await oktoadd(req, res)
     if (!notallowed) return
 
+    const ta = await sequelize.transaction()
+    let rv = false
     // Start adding...
     const now = new Date()
     const submit = {
@@ -374,14 +385,17 @@ async function addNewSubmit (req, res, next) {
       startdt: now
     }
     console.log('addNewSubmit submit', submit)
-    const dbsubmit = await models.submits.create(submit) // Transaction TODO
-    if (!dbsubmit) return utils.giveup(req, res, 'Could not create submit')
-    logger.log4req(req, 'CREATED submit', dbsubmit.id)
+    const dbsubmit = await models.submits.create(submit, { transaction: ta }) // Transaction DONE
+    if (!dbsubmit) utils.giveup(req, res, 'Could not create submit') // Do not return: so transaction rolled back
+    else {
+      logger.log4req(req, 'CREATED submit', dbsubmit.id)
 
-    req.submitId = dbsubmit.id
-    req.dbsubmit = dbsubmit
-    const rv = await addEntry(req, res, next) // Transaction TODO
-    if (!rv) return
+      req.submitId = dbsubmit.id
+      req.dbsubmit = dbsubmit
+      rv = await addEntry(req, res, next, ta) // Transaction DONE
+    }
+    if (!rv) { await ta.rollback(); return }
+    await ta.commit()
 
     // All done
     utils.returnOK(req, res, rv, 'rv')
@@ -401,9 +415,11 @@ router.post('/submits/submit/:flowid', upload.array('files'), addNewSubmit)
 *        AUTHOR: NO. DOES TESTS
 *        OWNER-ONLY: YES. DOES TESTS
 *        OPEN: N/A
+*
+* Always return true or false so transaction can complete correctly
 */
 
-async function editEntry (req, res, next) {
+async function editEntry (req, res, next, ta) {
   try {
     console.log('editEntry', req.params.entryid)
     let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
@@ -468,7 +484,7 @@ async function editEntry (req, res, next) {
     }
 
     // OK: Now delete any existing entryvalues
-    const affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } }) // Transaction TODO
+    const affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } }, { transaction: ta }) // Transaction DONE
     logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
 
     // And then store the new ones
@@ -494,14 +510,14 @@ async function editEntry (req, res, next) {
         integer: v.integer,
         file: v.file
       }
-      const dbentryvalue = await models.entryvalues.create(entryvalue) // Transaction TODO
+      const dbentryvalue = await models.entryvalues.create(entryvalue, { transaction: ta }) // Transaction DONE
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
       logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
     }
     logger.log4req(req, "entry's values updated", dbentry.id)
-    utils.returnOK(req, res, dbentry.id, 'id')
+    return utils.returnOK(req, res, dbentry.id, 'id')
   } catch (e) {
-    utils.giveup(req, res, e.message)
+    return utils.giveup(req, res, e.message)
   }
 }
 
@@ -516,8 +532,10 @@ async function editEntry (req, res, next) {
 *        AUTHOR: NO. DOES TESTS
 *        OWNER-ONLY: YES. DOES TESTS
 *        OPEN: N/A
+*
+* Always return true or false so transaction can complete correctly
 */
-async function deleteEntry (req, res, next) {
+async function deleteEntry (req, res, next, ta) {
   try {
     // Note: do not use req.params.entryid
     console.log('deleteEntry', req.entryid)
@@ -572,16 +590,16 @@ async function deleteEntry (req, res, next) {
     }
 
     // Finally delete the entryvalues and entry
-    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } }) // Transaction TODO
+    let affectedRows = await models.entryvalues.destroy({ where: { entryId: entryid } }, { transaction: ta }) // Transaction DONE
     logger.log4req(req, 'Deleted entryvalues', entryid, affectedRows)
-    affectedRows = await models.entries.destroy({ where: { id: entryid } }) // Transaction TODO
+    affectedRows = await models.entries.destroy({ where: { id: entryid } }, { transaction: ta }) // Transaction DONE
     logger.log4req(req, 'Deleted entry', entryid, affectedRows)
 
     if (affectedRows !== 1) return utils.giveup(req, res, 'Entry not deleted')
 
     return true
   } catch (e) {
-    utils.giveup(req, res, e.message)
+    return utils.giveup(req, res, e.message)
   }
 }
 
@@ -1055,15 +1073,15 @@ async function deleteSubmit (req, res, next) {
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
+    ta = await sequelize.transaction()
+
     // Delete entries and their contents
     const dbentries = await req.dbsubmit.getEntries()
     for (const dbentry of dbentries) {
       req.entryid = dbentry.id
-      const ok = await deleteEntry(req, res, next) // Transaction TODO
-      if (!ok) return
+      const ok = await deleteEntry(req, res, next, ta) // Transaction DONE
+      if (!ok) { await ta.rollback(); return }
     }
-
-    ta = await sequelize.transaction()
 
     // Delete statuses
     let affectedRows = await models.submitstatuses.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
@@ -1087,7 +1105,7 @@ async function deleteSubmit (req, res, next) {
     const ok = affectedRows === 1
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
-    if (ta) ta.rollback()
+    if (ta) await ta.rollback()
     utils.giveup(req, res, e.message)
   }
 }
