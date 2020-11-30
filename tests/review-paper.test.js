@@ -78,6 +78,9 @@ describe('GRADING', () => {
       error = await runscript.run(app.models, 'tests/api-review-paper.json', false, app)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
+      if (error) throw new Error(error)
+
       testSucceeded = true
     } catch (e) {
       console.log('TEST EXCEPTION', e.message)
