@@ -84,8 +84,11 @@ describe('COMPLETE', () => {
       error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-entry-paper-bad1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-get-entry-paper.json', false, app) // WRONG
       if (error) throw new Error(error)
+
+      //error = await runscript.run(app.models, 'tests/api-get-entry-paper-bad1.json', false, app)
+      //if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-review-paper.json', false, app)
       if (error) throw new Error(error)
