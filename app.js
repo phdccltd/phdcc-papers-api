@@ -6,7 +6,7 @@ const createError = require('http-errors')
 const path = require('path')
 const nodemailer = require('nodemailer')
 
-const db = require('./db')
+const sequelize = require('./db')
 const models = require('./models')
 const logger = require('./logger')
 const utils = require('./utils')
@@ -27,18 +27,18 @@ app.use(cors())
 app.set('init', false)
 app.checkDatabases = async function (setupdb) {
   try {
-    await db.sequelize.authenticate()
+    await sequelize.authenticate()
     console.log('Connection has been established successfully.')
 
     // TODO??: Replace with migrations https://sequelize.org/master/manual/migrations.html
-    await db.sequelize.sync({ alter: true })
+    await sequelize.sync({ alter: true })
     console.log('All models were synchronized successfully')
     await models.logs.create({ msg: 'Started' })
     console.log('Logged start')
 
     // Get rid of any excess INDEXES
     try {
-      await db.sequelize.query('ALTER TABLE `users` DROP INDEX `username_2`;')
+      await sequelize.query('ALTER TABLE `users` DROP INDEX `username_2`;')
       // const [results, metadata] =
       // console.log('DROP users index 2 ', results, metadata)
     } catch (e) {

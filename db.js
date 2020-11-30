@@ -42,6 +42,4 @@ if (process.env.TESTING) {
   })
 }
 
-module.exports = {
-  sequelize
-}
+module.exports = sequelize

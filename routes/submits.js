@@ -28,7 +28,7 @@ const path = require('path')
 const mime = require('mime-types')
 const _ = require('lodash/core')
 const logger = require('../logger')
-const sequelize = require('../db').sequelize
+const sequelize = require('../db')
 const dbutils = require('./dbutils')
 const mailutils = require('./mailutils')
 

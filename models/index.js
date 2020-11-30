@@ -8,7 +8,7 @@ const basename = path.basename(__filename)
 
 const dbs = {}
 
-const sequelize = require('../db').sequelize
+const sequelize = require('../db')
 const { DataTypes } = require('sequelize')
 
 fs.readdirSync(__dirname)
