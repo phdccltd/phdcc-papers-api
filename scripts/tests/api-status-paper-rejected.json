@@ -1,0 +1,17 @@
+{
+  "name": "Status: set proposal status to paper rejected",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addSubmitStatus paper rejected",
+      "method": "postpost",
+      "uri": "/submits/status/1", // Submit 1
+      "data": {
+        "newstatusid": 7
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}
