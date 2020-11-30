@@ -72,6 +72,9 @@ describe('COMPLETE', () => {
       error = await runscript.run(app.models, 'tests/api-status-with-reviewers.json', false, app)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/api-status-with-reviewers2.json', false, app)
+      if (error) throw new Error(error)
+
       error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
       if (error) throw new Error(error)
 
