@@ -5,6 +5,7 @@ const testhelper = require('./testhelper')
 const maketestsite = require('./maketestsite')
 const runscript = require('./runscript')
 const logger = require('../logger')
+const utils = require('../utils')
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
 const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.accumulog)
@@ -16,6 +17,8 @@ describe('SITE', () => {
     let testSucceeded = false
     try {
       testhelper.initThisTest()
+
+      utils.asyncMail(false, false, false, false) // Get some no transport coverage
 
       const app = require('../app')
 

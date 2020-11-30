@@ -14,8 +14,6 @@ async function testsetup (models) {
     }
     await models.sites.create(params)
 
-    // Get some no transport coverage
-    utils.asyncMail(false, false, false, false)
     // Fake a mail transport
     const transport = {
       sendMail: function (params, callbacks) {

@@ -29,7 +29,8 @@ function returnOK (req, res, msg, field) {
   return true
 }
 
-function setMailTransport (_transport, _fromEmail, _adminEmail, _sitename) {
+function setMailTransport(_transport, _fromEmail, _adminEmail, _sitename) {
+console.log('SETMAILTRANSPORT')
   transport = _transport
   fromEmail = _fromEmail
   adminEmail = _adminEmail
@@ -60,6 +61,7 @@ function asyncMail (toEmail, subject, message, bccEmail) {
   if (bccEmail) params.bcc = bccEmail
 
   transport.sendMail(params, (err, info) => {
+    if (process.env.TESTING) console.log('sent mail:', subject, err, info)
     if (err) {
       logger.log('Send mail fail', subject, err)
       return
