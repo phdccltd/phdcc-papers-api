@@ -38,7 +38,7 @@
       "return": {
         "ret": 0,
         "prop": "pubmails",
-        "length": 12
+        "length": 13
       }
     },
     {
@@ -104,11 +104,11 @@
       }
     },
     {
-      "name": "deleteMailTemplate wrong templateid",
+      "name": "deleteMailTemplate templateid on wrong pub",
       "method": "postdelete",
       "uri": "/mail/templates/1",
       "data": {
-        "templateid": 15
+        "templateid": 16
       },
       "return": {
         "ret": 1,
@@ -165,11 +165,11 @@
       }
     },
     {
-      "name": "addEditMailTemplate wrong templateid",
+      "name": "addEditMailTemplate templateid on wrong pub",
       "method": "post",
       "uri": "/mail/templates/1",
       "data": {
-        "templateid": 15,
+        "templateid": 16,
         "templatename": "Template name",
         "templatesubject": "Template subject",
         "templatebody": "Template body"

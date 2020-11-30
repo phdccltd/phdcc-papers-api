@@ -224,6 +224,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         if (pubmail.sendOnRoleGiven === null) pubmail.sendOnRoleGiven = 0
         pubmail.flowstatusId = lookup(pubmail.flowstatusId, config.pub.flow[0].status)
         pubmail.flowgradeId = lookup(pubmail.flowgradeId, config.pub.flow[0].grade)
+        pubmail.pubroleId = lookup(pubmail.pubroleId, config.pub.role)
         let pubid = config.pub.db.id
         if ('nullpub' in pubmail) {
           if ('sendOnSiteAction' in pubmail) {
@@ -238,9 +239,6 @@ async function run (models, configfilename, existingconfig, app, resBody) {
         if (!pubmail.db) return 'Could not create pubmail'
         // console.log('pubmail.db', pubmail.db)
         console.log('pubmail.db created', pubmail.db.id)
-
-        // const gotagain = await models.pubmailtemplates.findByPk(pubmail.db.id)
-        // console.log('gotagain', gotagain)
       }
     }
     /// //////////////////////
