@@ -1,11 +1,11 @@
 {
-  "name": "Status: set status to paper accepted",
+  "name": "Status: set status to paper2 accepted",
   "pubname": "TestPubName",
   "api": [
     {
-      "name": "addSubmitStatus paper accepted",
+      "name": "addSubmitStatus paper2 accepted",
       "method": "postpost",
-      "uri": "/submits/status/1", // Submit 1
+      "uri": "/submits/status/2", // Submit 2
       "data": {
         "newstatusid": 8
       },

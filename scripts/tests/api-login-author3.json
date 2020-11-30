@@ -1,0 +1,25 @@
+{
+  "name": "Submit: Log in as author3",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "Log in as author3",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "author3",
+        "password": "author3pwd",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "token",
+        "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "token"
+      }
+    }
+  ]
+}

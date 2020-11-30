@@ -296,6 +296,7 @@ router.post('/submits/entry', upload.array('files'), async function (req, res, n
 async function oktoadd (req, res) {
   if ('checkedoktoadd' in req) return true
 
+  // console.log('OKTOADD', req.dbuser.id)
   // Set req.isowner, req.onlyanauthor and req.myroles for this publication
   if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 

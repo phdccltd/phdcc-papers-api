@@ -56,6 +56,7 @@ async function getMyRoles (req) {
   req.myroles = []
   for (const dbmypubrole of req.dbmypubroles) {
     if (dbmypubrole.pubId === req.dbpub.id) {
+      // console.log('GETMYROLES', dbmypubrole)
       const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
       req.myroles.push(mypubrole)
       if (mypubrole.isowner) req.isowner = true

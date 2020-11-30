@@ -70,13 +70,13 @@
     {
       "name": "removePubUser: wrong user",
       "method": "postdelete",
-      "uri": "/users/pub/1/8",
+      "uri": "/users/pub/1/9",
       "data": {
       },
       "return": {
         "ret": 1,
         "prop": "status",
-        "value": "Cannot find userid 8"
+        "value": "Cannot find userid 9"
       }
     },
     {

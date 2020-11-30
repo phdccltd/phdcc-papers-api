@@ -1,0 +1,18 @@
+{
+  "name": "Get paper entry: not mine",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "getEntry",
+      "method": "get",
+      "uri": "/submits/entry/2",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not your submit entry"
+      }
+    }
+  ]
+}

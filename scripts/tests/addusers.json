@@ -44,6 +44,13 @@
       "email": "reviewer1@example.com",
       "password": "reviewer1pwd",
       "roles": "Reviewer"
+    },
+    {
+      "name": "Author3", // 7
+      "username": "author3",
+      "email": "author3@example.com",
+      "password": "author3pwd",
+      "roles": "Author"
     }
   ]
 }
