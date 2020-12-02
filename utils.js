@@ -30,7 +30,6 @@ function returnOK (req, res, msg, field) {
 }
 
 function setMailTransport(_transport, _fromEmail, _adminEmail, _sitename) {
-console.log('SETMAILTRANSPORT')
   transport = _transport
   fromEmail = _fromEmail
   adminEmail = _adminEmail
