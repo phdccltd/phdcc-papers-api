@@ -63,7 +63,7 @@ describe('COMPLETE', () => {
       error = await runscript.run(app.models, 'tests/api-login-author2.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-add-paper2-author.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-add-paper-bad2.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
@@ -84,16 +84,19 @@ describe('COMPLETE', () => {
       error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-entry-paper.json', false, app) // WRONG
+      error = await runscript.run(app.models, 'tests/api-get-entry-paper.json', false, app)
       if (error) throw new Error(error)
-
-      //error = await runscript.run(app.models, 'tests/api-get-entry-paper-bad1.json', false, app)
-      //if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-review-paper.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-login-author3.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-get-entry-paper-bad1.json', false, app) // WRONG
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)

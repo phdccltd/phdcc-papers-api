@@ -48,7 +48,7 @@ describe('SUBMIT', () => {
       error = await runscript.run(app.models, 'tests/api-login-author2.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-add-paper-author.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-add-paper-bad2.json', false, app)
       if (error) throw new Error(error)
 
       testSucceeded = true

@@ -296,7 +296,6 @@ router.post('/submits/entry', upload.array('files'), async function (req, res, n
 async function oktoadd (req, res) {
   if ('checkedoktoadd' in req) return true
 
-  // console.log('OKTOADD', req.dbuser.id)
   // Set req.isowner, req.onlyanauthor and req.myroles for this publication
   if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
@@ -305,16 +304,18 @@ async function oktoadd (req, res) {
   const dbflowstage = await models.flowstages.findByPk(flowstageid)
   if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + flowstageid)
 
-  let oktoadd = false
   if (dbflowstage.rolecanadd) {
     const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.rolecanadd })
-    if (canadd) oktoadd = true
+    if (!canadd) return utils.giveup(req, res, 'You are not allowed to add this entry')
   }
   if (dbflowstage.pubroleId) {
     const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.pubroleId })
-    if (canadd) oktoadd = true
+    if (!canadd) return utils.giveup(req, res, 'You are not allowed to add this entry')
+    if (req.dbsubmit && (req.dbsubmit.userId !== req.dbuser.id)) {
+      return utils.giveup(req, res, 'You are not allowed to add this entry')
+    }
+    // We are not disallowed from adding, but we need to do further checks before we can say that you can
   }
-  if (!oktoadd) return utils.giveup(req, res, 'You are not allowed to add this entry')
 
   // To submit this stage, we might need to be at specified statuses
   const submit = {}
