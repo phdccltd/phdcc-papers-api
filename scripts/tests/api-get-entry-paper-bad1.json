@@ -5,7 +5,7 @@
     {
       "name": "getEntry",
       "method": "get",
-      "uri": "/submits/entry/2",
+      "uri": "/submits/entry/3",
       "data": {
       },
       "return": {
