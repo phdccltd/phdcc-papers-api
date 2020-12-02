@@ -96,7 +96,7 @@ describe('COMPLETE', () => {
       error = await runscript.run(app.models, 'tests/api-login-author3.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-entry-paper-bad1.json', false, app) // WRONG
+      error = await runscript.run(app.models, 'tests/api-get-entry-paper-bad1.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
