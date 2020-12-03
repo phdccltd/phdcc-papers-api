@@ -29,7 +29,7 @@ function returnOK (req, res, msg, field) {
   return true
 }
 
-function setMailTransport(_transport, _fromEmail, _adminEmail, _sitename) {
+function setMailTransport (_transport, _fromEmail, _adminEmail, _sitename) {
   transport = _transport
   fromEmail = _fromEmail
   adminEmail = _adminEmail

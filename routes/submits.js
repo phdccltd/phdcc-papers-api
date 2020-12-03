@@ -63,7 +63,7 @@ async function handleEntryPost (req, res, next) {
     req.entryid = req.params.entryid
     const ta = await sequelize.transaction()
     const ok = await deleteEntry(req, res, next, ta)
-    if (!ok) { await ta.rollback();  return }
+    if (!ok) { await ta.rollback(); return }
     await ta.commit()
     utils.returnOK(req, res, ok, 'ok')
     return
