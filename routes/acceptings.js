@@ -102,6 +102,14 @@ async function addEditAccepting (req, res, next) {
 
       ok = true
     } else {
+      const dbacceptings = await models.flowacceptings.findAll({
+        where: {
+          flowId: flowid,
+          flowstageId: chosenstage
+        }
+      })
+      if (dbacceptings.length > 0) return utils.giveup(req, res, 'Cannot add another accepting for this stage. Please edit the existing one.')
+
       const params = {
         flowId: flowid,
         flowstageId: chosenstage,

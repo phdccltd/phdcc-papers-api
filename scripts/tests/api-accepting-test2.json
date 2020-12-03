@@ -3,28 +3,28 @@
   "pubname": "TestPubName",
   "api": [
     {
-      "name": "addEditAccepting: edit proposal open",
+      "name": "addEditAccepting: edit proposal open #3",
       "method": "post",
       "uri": "/acceptings/1",
       "data": {
         "chosenstage": 1, // Proposal
         "chosenopen": true,
         //"chosenstatus": 4, // Proposal accepted
-        "acceptingid": 1
+        "acceptingid": 3
       },
       "return": {
         "ret": 0
       }
     },
     {
-      "name": "addEditAccepting: edit paper closed",
+      "name": "addEditAccepting: edit paper closed #4",
       "method": "post",
       "uri": "/acceptings/1",
       "data": {
         "chosenstage": 2, // Paper
         "chosenopen": false,
         "chosenstatus": 4, // Proposal accepted
-        "acceptingid": 2
+        "acceptingid": 4
       },
       "return": {
         "ret": 0
