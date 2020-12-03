@@ -162,7 +162,7 @@
       "method": "post",
       "uri": "/acceptings/x",
       "data": {
-        "chosenstage": 1, // Proposal
+        "chosenstage": 3, // Edited paper
         "chosenopen": false,
         //"chosenstatus": 4, // Proposal accepted
         "acceptingid": 1
@@ -178,7 +178,7 @@
       "method": "post",
       "uri": "/acceptings/10",
       "data": {
-        "chosenstage": 1, // Proposal
+        "chosenstage": 3, // Edited paper
         "chosenopen": false,
         //"chosenstatus": 4, // Proposal accepted
         "acceptingid": 1
@@ -194,7 +194,7 @@
       "method": "post",
       "uri": "/acceptings/1",
       "data": {
-        "chosenstage": 1, // Proposal
+        "chosenstage": 3, // Edited paper
         "chosenopen": false,
         //"chosenstatus": 4, // Proposal accepted
         "acceptingid": "x"
@@ -210,7 +210,7 @@
       "method": "post",
       "uri": "/acceptings/1",
       "data": {
-        "chosenstage": 1, // Proposal
+        "chosenstage": 3, // Edited paper
         "chosenopen": false,
         //"chosenstatus": 4, // Proposal accepted
         "acceptingid": 10
@@ -242,7 +242,7 @@
       "method": "post",
       "uri": "/acceptings/1",
       "data": {
-        "chosenstage": 1,
+        "chosenstage": 3, // Edited paper
         "chosenopen": false,
         "chosenstatus": "z",
         "acceptingid": 1

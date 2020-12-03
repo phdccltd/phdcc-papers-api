@@ -1,4 +1,5 @@
 const { Router } = require('express')
+const Sequelize = require('sequelize')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
@@ -80,11 +81,21 @@ async function addEditAccepting (req, res, next) {
 
     const chosenstage = parseInt(req.body.chosenstage)
     if (isNaN(chosenstage)) return utils.giveup(req, res, 'Duff chosenstage')
-    const chosenstatus = 'chosenstatus' in req.body ? parseInt(req.body.chosenstatus) : 0
+    const chosenstatus = 'chosenstatus' in req.body ? ((req.body.chosenstatus===null) ? 0 : parseInt(req.body.chosenstatus)) : 0
+    console.log('chosenstatus', chosenstatus, req.body.chosenstatus)
     if (isNaN(chosenstatus)) return utils.giveup(req, res, 'Duff chosenstatus')
 
     let ok = false
     if (acceptingid) {
+      const dbacceptings = await models.flowacceptings.findAll({
+        where: {
+          flowId: flowid,
+          flowstageId: chosenstage,
+          id: { [Sequelize.Op.ne]: acceptingid }
+        }
+      })
+      if (dbacceptings.length > 0) return utils.giveup(req, res, 'Cannot add another accepting for this stage. Please edit the existing one.')
+
       if (isNaN(parseInt(acceptingid))) return utils.giveup(req, res, 'Duff acceptingid')
       const dbaccepting = await models.flowacceptings.findByPk(acceptingid)
       if (!dbaccepting) return utils.giveup(req, res, 'Cannot find accepting ' + acceptingid)

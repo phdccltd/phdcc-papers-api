@@ -1,5 +1,5 @@
 {
-  "name": "Owner acceptings cannot add duplicate for same stage",
+  "name": "Owner acceptings cannot have duplicate for same stage",
   "pubname": "TestPubName",
   "api": [
     {
@@ -10,6 +10,22 @@
         "chosenstage": 1, // Proposal
         "chosenopen": true
         // acceptingid
+        // chosenstatus
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot add another accepting for this stage. Please edit the existing one."
+      }
+    },
+    {
+      "name": "addEditAccepting: try to change paper to proposal",
+      "method": "post",
+      "uri": "/acceptings/1",
+      "data": {
+        "chosenstage": 1, // Proposal
+        "chosenopen": true,
+        "acceptingid": 4
         // chosenstatus
       },
       "return": {

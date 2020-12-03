@@ -39,7 +39,7 @@ describe('ACCEPTINGS', () => {
       error = await runscript.run(app.models, 'tests/api-accepting-test1.json', false, app) // Proposal closed, Paper open
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-accepting-bad2.json', false, app) // Cannot add repeat for same stage
+      error = await runscript.run(app.models, 'tests/api-accepting-bad2.json', false, app) // Cannot have repeat for same stage
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
