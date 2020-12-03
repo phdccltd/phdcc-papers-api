@@ -26,7 +26,7 @@
         "grade": [],
         "stage": [
           {
-            "name": "Suggestion", // 3
+            "name": "Suggestion", // 4
             "role": "Author",
             "rolecanadd": 0
           }
@@ -36,7 +36,7 @@
     ],
     "formfield": [],
     "pubmailtemplates": [
-      { // 7
+      { // 16
         "name": "Access requested mail template",
         "subject": "user requests access",
         "body": "Dear owner: The following user has requested access to {{pub.name}}.  User: {{user.username}} Please give them an Author role at the site {{site.url}} Best regards",
@@ -48,7 +48,7 @@
   "pubname": "TestPub2",
   "users": [
     {
-      "name": "Bry",
+      "name": "Bry", // 9
       "username": "bry",
       "email": "bry@example.com",
       "password": "asecret",

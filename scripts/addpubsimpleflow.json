@@ -66,6 +66,10 @@
             "name": "Paper", // 2
             "role": "Author",
             "rolecanadd": 0
+          },
+          {
+            "name": "Edited paper", // 3
+            "rolecanadd": 4
           }
         ],
         "status": [
@@ -192,6 +196,13 @@
         "label": "Paper", // 7
         "help": "Allowed file types: txt pdf doc docx",
         "flowstage": "Paper",
+        "type": "file",
+        "allowedfiletypes": ".txt, .pdf, .doc, .docx"
+      },
+      {
+        "label": "Edited paper", // 8
+        "help": "Allowed file types: txt pdf doc docx",
+        "flowstage": "Edited paper",
         "type": "file",
         "allowedfiletypes": ".txt, .pdf, .doc, .docx"
       }

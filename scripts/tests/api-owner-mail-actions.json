@@ -392,7 +392,7 @@
       "uri": "/mail/1",
       "data": {
         "selecteduser": 0,
-        "selectedrole": 4,
+        "selectedrole": 8, // Access denied
         "mailsubject": "hello",
         "mailtext": "there"
       },

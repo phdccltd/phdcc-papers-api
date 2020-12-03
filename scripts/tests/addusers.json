@@ -51,6 +51,13 @@
       "email": "author3@example.com",
       "password": "author3pwd",
       "roles": "Author"
+    },
+    {
+      "name": "Editor", // 8
+      "username": "editor",
+      "email": "editor@example.com",
+      "password": "editorpwd",
+      "roles": "Editor"
     }
   ]
 }

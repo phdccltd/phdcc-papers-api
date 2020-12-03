@@ -43,7 +43,7 @@
     {
       "name": "downloadAnonymousStage: wrong flowstageid",
       "method": "get",
-      "uri": "/downloads/anon/1?flowstageid=4",
+      "uri": "/downloads/anon/1?flowstageid=15",
       "data": {
       },
       "return": {
@@ -55,7 +55,7 @@
     {
       "name": "downloadAnonymousStage: wrong flowstageid",
       "method": "get",
-      "uri": "/downloads/anon/1?flowstageid=3",
+      "uri": "/downloads/anon/1?flowstageid=4",
       "data": {
       },
       "return": {
@@ -125,7 +125,7 @@
     {
       "name": "downloadSummary: wrong flowstageid",
       "method": "get",
-      "uri": "/downloads/summary/1?flowstageid=4",
+      "uri": "/downloads/summary/1?flowstageid=15",
       "data": {
       },
       "return": {
@@ -137,7 +137,7 @@
     {
       "name": "downloadSummary: wrong flowstageid",
       "method": "get",
-      "uri": "/downloads/summary/1?flowstageid=3",
+      "uri": "/downloads/summary/1?flowstageid=4",
       "data": {
       },
       "return": {

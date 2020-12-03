@@ -1,0 +1,25 @@
+{
+  "name": "Submit: Log in as editor",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "Log in as editor",
+      "method": "post",
+      "uri": "/user/login",
+      "data": {
+        "username": "editor",
+        "password": "editorpwd",
+        "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
+      },
+      "return": {
+        "ret": 0,
+        "prop": "token",
+        "typeof": "string"
+      },
+      "set": {
+        "name": "token",
+        "value": "token"
+      }
+    }
+  ]
+}
