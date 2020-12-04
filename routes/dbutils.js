@@ -94,9 +94,23 @@ async function addAuthorStageActions (req, flow, submit) {
           // Am I allowed to enter this stage
           const hasRole = _.find(req.myroles, (role) => { return role.id === stage.pubroleId })
           if (hasRole) {
-            const route = '/panel/' + req.dbpub.id + '/' + flow.id + '/' + submit.id + '/add/' + flowstatus.cansubmitflowstageId
-            submit.actions.push({ name: 'Add ' + stage.name, route, show: 3, dograde: 0 })
-            ihaveactions = true
+            let permitted = true
+            for (const accepting of flow.acceptings) { // See if an accepting says no
+              if (accepting.flowstageId === stage.id) {
+                if (_.isNull(accepting.flowstatusId)) {
+                  if (!accepting.open) permitted = false
+                } else {
+                  if (accepting.flowstatusId === req.currentstatus.flowstatusId) {
+                    if (!accepting.open) permitted = false
+                  } else permitted = false
+                }
+              }
+            }
+            if (permitted) {
+              const route = '/panel/' + req.dbpub.id + '/' + flow.id + '/' + submit.id + '/add/' + flowstatus.cansubmitflowstageId
+              submit.actions.push({ name: 'Add ' + stage.name, route, show: 3, dograde: 0 })
+              ihaveactions = true
+            }
           }
         }
       }
