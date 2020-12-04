@@ -9,7 +9,7 @@ const dbutils = require('./dbutils')
 // req.dbsubmit must be set
 // CHECK: could assume that req.dbflow and req.dbpub set
 
-async function sendOutMails(req, dbflowstage, dbflowstatus, dbflowgrade, dbentry, grading) {
+async function sendOutMails (req, dbflowstage, dbflowstatus, dbflowgrade, dbentry, grading) {
   let dbformfields = false
   if (dbentry) {
     dbformfields = await models.formfields.findAll({ where: { formtypeid: dbentry.flowstageId } })

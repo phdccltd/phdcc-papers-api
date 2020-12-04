@@ -81,7 +81,7 @@ async function addEditAccepting (req, res, next) {
 
     const chosenstage = parseInt(req.body.chosenstage)
     if (isNaN(chosenstage)) return utils.giveup(req, res, 'Duff chosenstage')
-    const chosenstatus = 'chosenstatus' in req.body ? ((req.body.chosenstatus===null) ? 0 : parseInt(req.body.chosenstatus)) : 0
+    const chosenstatus = 'chosenstatus' in req.body ? ((req.body.chosenstatus === null) ? 0 : parseInt(req.body.chosenstatus)) : 0
     console.log('chosenstatus', chosenstatus, req.body.chosenstatus)
     if (isNaN(chosenstatus)) return utils.giveup(req, res, 'Duff chosenstatus')
 
