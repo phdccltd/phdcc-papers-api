@@ -332,6 +332,14 @@
         "sendLeadReminderDays": 4,
         "bccToOwners": true,
         "sendToReviewers": true
+      },
+      { // 16
+        "name": "Edited paper submission successful mail template",
+        "subject": "Edited paper submitted: Paper ID: {{submit.id}}",
+        "body": "Dear Editor, Thank you for submitting an edited paper manuscript. Paper id: {{submit.id}} Entry id: {{entry.id}} Submitter: {{author.username}} {author.id}}) Date: {{now}} Title: {{submit.name}} Author: {{entry.field_1}}",
+        "flowstageId": "Edited paper",
+        "sendToAuthor": true,
+        "bccToOwners": true
       }
     ]
   }

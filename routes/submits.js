@@ -271,8 +271,10 @@ async function addEntry (req, res, next, ta) {
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
 
       // Send out mails for this status
-      await mailutils.sendOutMails(req, dbflowstatus, false, dbentry, false)
+      await mailutils.sendOutMails(req, false, dbflowstatus, false, dbentry, false)
     }
+    // Send out mails for this stage
+    await mailutils.sendOutMails(req, req.dbflowstage, false, false, dbentry, false)
 
     // Return OK
     return rv
@@ -301,15 +303,16 @@ async function oktoadd (req, res) {
 
   // Find this flow stage
   const flowstageid = parseInt(req.body.stageid)
-  const dbflowstage = await models.flowstages.findByPk(flowstageid)
-  if (!dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + flowstageid)
+  if (isNaN(flowstageid)) return utils.giveup(req, res, 'Duff stageid')
+  req.dbflowstage = await models.flowstages.findByPk(flowstageid)
+  if (!req.dbflowstage) return utils.giveup(req, res, 'flowstageid not found: ' + flowstageid)
 
-  if (dbflowstage.rolecanadd) {
-    const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.rolecanadd })
+  if (req.dbflowstage.rolecanadd) {
+    const canadd = _.find(req.myroles, (role) => { return role.id === req.dbflowstage.rolecanadd })
     if (!canadd) return utils.giveup(req, res, 'You are not allowed to add this entry')
   }
-  if (dbflowstage.pubroleId) {
-    const canadd = _.find(req.myroles, (role) => { return role.id === dbflowstage.pubroleId })
+  if (req.dbflowstage.pubroleId) {
+    const canadd = _.find(req.myroles, (role) => { return role.id === req.dbflowstage.pubroleId })
     if (!canadd) return utils.giveup(req, res, 'You are not allowed to add this entry')
     if (req.dbsubmit && (req.dbsubmit.userId !== req.dbuser.id)) {
       return utils.giveup(req, res, 'You are not allowed to add this entry')
@@ -1241,7 +1244,7 @@ async function addSubmitStatus (req, res, next) {
     logger.log4req(req, 'Created submit status', submitid, newstatusid, dbsubmitstatus.id)
 
     // Send out mails for this status
-    await mailutils.sendOutMails(req, dbflowstatus, false, false, false)
+    await mailutils.sendOutMails(req, false, dbflowstatus, false, false, false)
 
     return utils.returnOK(req, res, newsubmitstatus, 'submitstatus')
   } catch (e) {

@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     body: { type: Sequelize.TEXT, allowNull: false },
 
     // When to send:
+    // -flowstageId - defined below
     // -flowstatusId - defined below
     // -flowgradeId - defined below
     sendReviewReminderDays: { type: Sequelize.INTEGER, allowNull: false },
@@ -31,6 +32,9 @@ module.exports = (sequelize, DataTypes) => {
     // Adds pubmailtemplates.pubId Sequelize.INTEGER allowNull:false
     dbs.pubs.hasMany(dbs.pubmailtemplates, { as: 'MailTemplates', foreignKey: { allowNull: true }, onDelete: 'RESTRICT' }) // Cannot delete pub while pubmailtemplates exist
     dbs.pubmailtemplates.belongsTo(dbs.pubs, { foreignKey: { allowNull: true } })
+
+    dbs.flowstages.hasMany(dbs.pubmailtemplates, { as: 'PubMails', foreignKey: { allowNull: true }, onDelete: 'RESTRICT' }) // Cannot delete flowstage while pubmailtemplates exist
+    dbs.pubmailtemplates.belongsTo(dbs.flowstages, { foreignKey: { allowNull: true } }) // flowstageId (Trigger)
 
     dbs.flowstatuses.hasMany(dbs.pubmailtemplates, { as: 'PubMails', foreignKey: { allowNull: true }, onDelete: 'RESTRICT' }) // Cannot delete flowstatus while pubmailtemplates exist
     dbs.pubmailtemplates.belongsTo(dbs.flowstatuses, { foreignKey: { allowNull: true } }) // flowstatusId (Trigger)

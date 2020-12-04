@@ -16,6 +16,36 @@
         "prop": "status",
         "value": "You are not allowed to add this entry"
       }
+    },
+    {
+      "name": "addEntry paper",
+      "method": "postform",
+      "uri": "/submits/entry",
+      "fields": [
+        { "submitid": 1 },
+        { "stageid": "x" },
+        { "values": { "formfieldid": 6, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff stageid"
+      }
+    },
+    {
+      "name": "addEntry paper",
+      "method": "postform",
+      "uri": "/submits/entry",
+      "fields": [
+        { "submitid": 1 },
+        { "stageid": 15 },
+        { "values": { "formfieldid": 6, "string": null, "integer": 1, "text": null, "existingfile": null, "file": null } }
+      ],
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "flowstageid not found: 15"
+      }
     }
   ]
 }

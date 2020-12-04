@@ -22,7 +22,7 @@ const acceptingDefaults = { open: true }
 
 const defaultFormfield = { formtype: 2, formtypeid: 1, help: '', helplink: '', required: true, requiredif: '', maxwords: 0, maxchars: 0, hideatgrading: 0, includeindownload: 1 }
 
-const defaultPubMail = { flowstatusId: null, flowgradeId: null, sendReviewReminderDays: 0, sendLeadReminderDays: 0, sendReviewChaseUpDays: 0, sendOnSiteAction: 0, sendOnRoleGiven: 0, sendToAuthor: false, bccToOwners: false, sendToUser: false, sendToReviewers: false, pubroleId: null }
+const defaultPubMail = { flowstatusId: null, flowstageId: null, flowgradeId: null, sendReviewReminderDays: 0, sendLeadReminderDays: 0, sendReviewChaseUpDays: 0, sendOnSiteAction: 0, sendOnRoleGiven: 0, sendToAuthor: false, bccToOwners: false, sendToUser: false, sendToReviewers: false, pubroleId: null }
 
 const defaultUser = { super: false, password: 'pwd' }
 
@@ -222,6 +222,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
       for (const pubmail of config.pub.pubmailtemplates) {
         pubmail.sendOnRoleGiven = lookup(pubmail.sendOnRoleGiven, config.pub.role)
         if (pubmail.sendOnRoleGiven === null) pubmail.sendOnRoleGiven = 0
+        pubmail.flowstageId = lookup(pubmail.flowstageId, config.pub.flow[0].stage)
         pubmail.flowstatusId = lookup(pubmail.flowstatusId, config.pub.flow[0].status)
         pubmail.flowgradeId = lookup(pubmail.flowgradeId, config.pub.flow[0].grade)
         pubmail.pubroleId = lookup(pubmail.pubroleId, config.pub.role)

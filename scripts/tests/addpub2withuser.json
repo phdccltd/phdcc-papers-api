@@ -36,7 +36,7 @@
     ],
     "formfield": [],
     "pubmailtemplates": [
-      { // 16
+      { // 17
         "name": "Access requested mail template",
         "subject": "user requests access",
         "body": "Dear owner: The following user has requested access to {{pub.name}}.  User: {{user.username}} Please give them an Author role at the site {{site.url}} Best regards",

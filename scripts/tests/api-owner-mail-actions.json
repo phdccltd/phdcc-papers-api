@@ -38,7 +38,7 @@
       "return": {
         "ret": 0,
         "prop": "pubmails",
-        "length": 13
+        "length": 14
       }
     },
     {
@@ -108,7 +108,7 @@
       "method": "postdelete",
       "uri": "/mail/templates/1",
       "data": {
-        "templateid": 16
+        "templateid": 17
       },
       "return": {
         "ret": 1,
@@ -169,7 +169,7 @@
       "method": "post",
       "uri": "/mail/templates/1",
       "data": {
-        "templateid": 16,
+        "templateid": 17,
         "templatename": "Template name",
         "templatesubject": "Template subject",
         "templatebody": "Template body"
