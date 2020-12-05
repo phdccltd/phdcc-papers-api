@@ -122,7 +122,7 @@ async function addEntry (req, res, next, ta) {
       file.originalname = file.originalname.substring(hyphenpos + 1)
 
       // Move file to filesdir/<siteid>/<pubid>/<flowid>/<submitid>/<entryid>/
-      let filepath = '/' + req.site.id + '/' + req.dbpub.id + '/' + req.dbflow.id + '/' + req.body.submitid + '/' + dbentry.id
+      let filepath = '/' + req.site.id + '/' + req.dbpub.id + '/' + req.dbflow.id + '/' + req.dbsubmit.id + '/' + dbentry.id
       console.log('filesdir + filepath', filesdir + filepath)
       fs.mkdirSync(filesdir + filepath, { recursive: true })
       filepath += '/' + file.originalname
@@ -480,7 +480,7 @@ async function editEntry (req, res, next, ta) {
         }
       }
 
-      let filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.body.submitid + '/' + dbentry.id
+      let filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.dbsubmit.id + '/' + dbentry.id
       fs.mkdirSync(filesdir + filepath, { recursive: true })
       filepath += '/' + file.originalname
       fs.renameSync(file.path, filesdir + filepath)
