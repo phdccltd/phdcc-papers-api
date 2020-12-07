@@ -646,6 +646,11 @@ async function getEntryFile (req, res, next) {
     const ContentType = mime.lookup(dbentryvalue.file)
     let filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
     if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
+
+    const filepath = path.join(filesdir, dbentryvalue.file)
+    if (!fs.existsSync(filepath)) {
+      return utils.giveup(req, res, 'Sorry: file not available ' + dbentryvalue.file)
+    }
     const options = {
       root: filesdir,
       dotfiles: 'deny',
