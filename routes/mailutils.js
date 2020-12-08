@@ -95,8 +95,8 @@ async function sendOneTemplate (dbpubmail, site, dbpub, dbformfields, dbuser, db
     }
   }
 
-  let subject = Handlebars.compile(dbpubmail.subject)
-  let body = Handlebars.compile(dbpubmail.body)
+  let subject = Handlebars.compile(dbpubmail.subject, { noEscape: true })
+  let body = Handlebars.compile(dbpubmail.body, { noEscape: true })
 
   if (recipients.length === 0 && bccOwners.length === 0) {
     logger.log('No recipients for ' + dbpubmail.name)
