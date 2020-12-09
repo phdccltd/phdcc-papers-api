@@ -2,6 +2,8 @@ const { Router } = require('express')
 const _ = require('lodash/core')
 const models = require('../models')
 const utils = require('../utils')
+const logger = require('../logger')
+const dbutils = require('./dbutils')
 
 const router = Router()
 
@@ -80,6 +82,63 @@ router.get('/pubs', async function (req, res, next) {
       pubs.push(pub)
     }
     utils.returnOK(req, res, pubs, 'pubs')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+})
+
+/* POST bulk op: for all submits at FROM status, add new TO status */
+router.post('/pubs/:pubid', async function (req, res, next) {
+  try {
+    const pubid = parseInt(req.params.pubid)
+    if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+    const fromstatus = parseInt(req.body.fromstatus)
+    if (isNaN(fromstatus)) return utils.giveup(req, res, 'Duff fromstatus')
+    const tostatus = parseInt(req.body.tostatus)
+    if (isNaN(tostatus)) return utils.giveup(req, res, 'Duff tostatus')
+    console.log('POST /pubs', pubid, fromstatus, tostatus)
+
+    req.dbpub = await models.pubs.findByPk(pubid)
+    if (!req.dbpub) return utils.giveup(req, res, 'Invalid pubs:id')
+
+    if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
+
+    const dbfromstatus = await models.flowstatuses.findByPk(fromstatus)
+    if (!dbfromstatus) return utils.giveup(req, res, 'Cannot find fromstatus ' + fromstatus)
+    const dbtostatus = await models.flowstatuses.findByPk(tostatus)
+    if (!dbtostatus) return utils.giveup(req, res, 'Cannot find tostatus ' + tostatus)
+    if (dbfromstatus.flowId !== dbtostatus.flowId) return utils.giveup(req, res, 'fromstatus and tostatus flow mismatch')
+
+    let countAtFromStatus = 0
+    const dbflows = await req.dbpub.getFlows()
+    for (const dbflow of dbflows) {
+      const flow = await dbutils.getFlowWithFlowgrades(dbflow)
+      const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
+      flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
+
+      dbsubmits = await dbflow.getSubmits()
+      for (const dbsubmit of dbsubmits) {
+        const submit = models.sanitise(models.submits, dbsubmit)
+        await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
+        if (!req.currentstatus) continue // If no statuses, then ignore
+        if (req.currentstatus.flowstatusId === fromstatus) {
+          countAtFromStatus++
+
+          const now = new Date()
+          const submitstatus = {
+            dt: now,
+            submitId: dbsubmit.id,
+            flowstatusId: tostatus
+          }
+          const dbsubmitstatus = await models.submitstatuses.create(submitstatus) // Transaction OK - even if we fail after some done
+          if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
+          logger.log4req(req, 'Created submit status', dbsubmit.id, tostatus, dbsubmitstatus.id)
+        }
+      }
+    }
+    const msg = 'Submits updated: ' + countAtFromStatus + (countAtFromStatus?'. No emails sent.':'')
+    utils.returnOK(req, res, msg)
   } catch (e) {
     utils.giveup(req, res, e.message)
   }

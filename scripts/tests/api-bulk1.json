@@ -1,0 +1,34 @@
+{
+  "name": "Owner bulk action OK",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "bulk action change statuses: OK",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "fromstatus": 1, // Proposal submitted
+        "tostatus": 2 // Proposal with team
+      },
+      "return": {
+        "ret": 0,
+        "prop": "status",
+        "value": "Submits updated: 1. No emails sent."
+      }
+    },
+    {
+      "name": "bulk action change statuses: OK again",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "fromstatus": 1, // Proposal submitted
+        "tostatus": 2 // Proposal with team
+      },
+      "return": {
+        "ret": 0,
+        "prop": "status",
+        "value": "Submits updated: 0"
+      }
+    }
+  ]
+}

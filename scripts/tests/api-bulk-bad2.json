@@ -1,0 +1,104 @@
+{
+  "name": "Owner bulk action fails",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "bulk action change statuses: duff pubid",
+      "method": "post",
+      "uri": "/pubs/n",
+      "data": {
+        "fromstatus": 1, // Proposal submitted
+        "tostatus": 2 // Proposal with team
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "bulk action change statuses: wrong pubid",
+      "method": "post",
+      "uri": "/pubs/5",
+      "data": {
+        "fromstatus": 1, // Proposal submitted
+        "tostatus": 2 // Proposal with team
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Invalid pubs:id"
+      }
+    },
+    {
+      "name": "bulk action change statuses: duff fromstatus",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "fromstatus": "x",
+        "tostatus": 2 // Proposal with team
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff fromstatus"
+      }
+    },
+    {
+      "name": "bulk action change statuses: duff tostatus",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "fromstatus": 1, // Proposal submitted
+        "tostatus": "x"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff tostatus"
+      }
+    },
+    {
+      "name": "bulk action change statuses: wrong fromstatus",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "fromstatus": 10,
+        "tostatus": 2 // Proposal with team
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find fromstatus 10"
+      }
+    },
+    {
+      "name": "bulk action change statuses: wrong tostatus",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "fromstatus": 1, // Proposal submitted
+        "tostatus": 10
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find tostatus 10"
+      }
+    },
+    {
+      "name": "bulk action change statuses: fromstatus and tostatus mismatch",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "fromstatus": 1, // Proposal submitted
+        "tostatus": 9 // Suggestion submitted
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "fromstatus and tostatus flow mismatch"
+      }
+    }
+  ]
+}

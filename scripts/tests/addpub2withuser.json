@@ -31,7 +31,14 @@
             "rolecanadd": 0
           }
         ],
-        "status": []
+        "status": [
+          {
+            "name": "Suggestion submitted", // 9
+            "visibletoauthor": true,
+            "submittedflowstage": "Suggestion",
+            "owneradvice": "Awaiting send to team"
+          }
+        ]
       }
     ],
     "formfield": [],

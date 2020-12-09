@@ -1,0 +1,20 @@
+{
+  "name": "Not owner bulk actions",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "bulk action change statuses: not owner",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "fromstatus": 1, // Proposal submitted
+        "tostatus": 2 // Proposal with team
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not an owner"
+      }
+    }
+  ]
+}
