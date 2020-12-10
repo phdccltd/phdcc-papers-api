@@ -117,7 +117,7 @@ router.post('/pubs/:pubid', async function (req, res, next) {
       const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
       flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
 
-      dbsubmits = await dbflow.getSubmits()
+      const dbsubmits = await dbflow.getSubmits()
       for (const dbsubmit of dbsubmits) {
         const submit = models.sanitise(models.submits, dbsubmit)
         await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
@@ -137,7 +137,7 @@ router.post('/pubs/:pubid', async function (req, res, next) {
         }
       }
     }
-    const msg = 'Submits updated: ' + countAtFromStatus + (countAtFromStatus?'. No emails sent.':'')
+    const msg = 'Submits updated: ' + countAtFromStatus + (countAtFromStatus ? '. No emails sent.' : '')
     utils.returnOK(req, res, msg)
   } catch (e) {
     utils.giveup(req, res, e.message)

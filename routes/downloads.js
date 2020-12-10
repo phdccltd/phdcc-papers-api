@@ -53,6 +53,7 @@ async function downloadAnonymousStage (req, res, next) {
 
     const outpath = path.join(TMPDIR, saveFilename)
     const anonStream = await openFile(outpath)
+    anonStream.write('\ufeff')
 
     /// ///////
 
@@ -85,14 +86,19 @@ async function downloadAnonymousStage (req, res, next) {
 }
 
 /* ************************ */
-/* GET: Get anonymised summary for publication */
+/* GET: Get summary for publication */
 /* ACCESS: OWNER-ONLY TESTED */
-router.get('/downloads/summary/:pubid', downloadSummary)
+router.get('/downloads/summary/:pubid', async (req, res, next) => { await downloadFull(req, res, next, false) })
 
-async function downloadSummary (req, res, next) {
+router.get('/downloads/all/:pubid', async (req, res, next) => { await downloadFull(req, res, next, true) })
+
+async function downloadFull (req, res, next, all) {
+  let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+  if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
+
   const pubid = parseInt(req.params.pubid)
   const flowstageid = parseInt(req.query.flowstageid)
-  console.log('GET /downloads/summary', pubid, flowstageid)
+  console.log('GET downloads ', pubid, flowstageid)
   if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
   if (isNaN(flowstageid)) return utils.giveup(req, res, 'Duff flowstageid')
   try {
@@ -133,7 +139,7 @@ async function downloadSummary (req, res, next) {
 
     const flowgradename = dbflowgrade.name.replace(/\s/g, '-') + '-'
     // const dirName = 'summary-' + flowgradename + nowstring
-    const dirName = 'summary-' + nowstring
+    const dirName = (all ? 'all-' : 'summary-') + nowstring
     fs.mkdirSync(TMPDIR + dirName, { recursive: true })
     fs.mkdirSync(TMPDIR + dirName + '/papers', { recursive: true })
 
@@ -148,6 +154,7 @@ async function downloadSummary (req, res, next) {
 
     const flowgradeFilename = flowgradename + nowstring + '.csv'
     const flowgradeStream = await openFile(TMPDIR + dirName + '/' + flowgradeFilename)
+    flowgradeStream.write('\ufeff')
 
     writeCSVline(flowgradeStream, summaryHeader)
 
@@ -223,20 +230,21 @@ async function downloadSummary (req, res, next) {
 
     const submissionsFilename = 'submissions-' + nowstring + '.csv'
     const submissionsStream = await openFile(TMPDIR + dirName + '/' + submissionsFilename)
+    submissionsStream.write('\ufeff')
 
     const subcols = []
-    subcols.push({ id: -15, name: 'Paper id' })
-    subcols.push({ id: -14, name: 'Submitter' })
-    subcols.push({ id: -13, name: 'Type' })
-    subcols.push({ id: -12, name: 'Status' })
-    subcols.push({ id: -11, name: 'Title' })
+    subcols.push({ id: -15, formtypeid: 0, weight: -15, name: 'Paper id' })
+    subcols.push({ id: -14, formtypeid: 0, weight: -14, name: 'Submitter' })
+    subcols.push({ id: -13, formtypeid: 0, weight: -13, name: 'Type' })
+    subcols.push({ id: -12, formtypeid: 0, weight: -12, name: 'Status' })
+    subcols.push({ id: -11, formtypeid: 0, weight: -11, name: 'Title' })
     let nextfreesubcolid = -10
 
     const subrows = []
     const stagesfound = []
 
     for (const dbflow of await req.dbpub.getFlows()) {
-      const flow = {}
+      const flow = models.sanitise(models.flows, dbflow)
       const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
       flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
 
@@ -278,7 +286,7 @@ async function downloadSummary (req, res, next) {
           if (!foundstage) {
             foundstage = { id: dbflowstage.id }
             foundstage.colid = nextfreesubcolid++
-            subcols.push({ id: foundstage.colid, name: dbflowstage.name + ' date' })
+            subcols.push({ id: foundstage.colid, formtypeid: 0, weight: foundstage.colid, name: dbflowstage.name + ' date' })
             stagesfound.push(foundstage)
           }
           row.cols.push({ id: foundstage.colid, value: dbentry.dt.toISOString() })
@@ -287,7 +295,7 @@ async function downloadSummary (req, res, next) {
             const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
             const formfield = _.find(dbflowfields, field => { return field.id === entryvalue.formfieldId })
             if (formfield) {
-              if (!formfield.includeindownload) continue
+              // if (!formfield.includeindownload) continue
               let stringvalue = ''
               if (formfield.includeindownload === 2) {
                 stringvalue = (entryvalue.integer === 1) ? dbentry.dt.toISOString() : 'No'
@@ -295,8 +303,19 @@ async function downloadSummary (req, res, next) {
                 stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
               }
               const hcol = _.find(subcols, (h) => { return h.id === formfield.id })
-              if (!hcol) subcols.push({ id: formfield.id, name: formfield.label })
+              if (!hcol) subcols.push({ id: formfield.id, formtypeid: formfield.formtypeid, weight: formfield.weight, name: formfield.label })
               row.cols.push({ id: formfield.id, value: stringvalue })
+
+              if (all && entryvalue.file && formfield.type === 'file') { // /1/2/2/78/175/Evening sunshine.docx
+                const entrydir = TMPDIR + dirName + '/papers/' + dbsubmit.id + '/' + dbentry.id
+                const filepath = path.join(filesdir, entryvalue.file)
+                if (fs.existsSync(filepath)) {
+                  const topath = path.join(entrydir, path.basename(filepath))
+                  console.log(' - ', filepath, topath)
+                  fs.mkdirSync(entrydir, { recursive: true })
+                  fs.copyFileSync(filepath, topath)
+                } // else console.log('FILE NOT FOUND')
+              }
             }
             // else console.log('field not found', entryvalue.id)
           }
@@ -304,7 +323,10 @@ async function downloadSummary (req, res, next) {
       }
     }
 
-    const sortedcols = subcols.sort((a, b) => { return a.id - b.id })
+    const sortedcols = subcols.sort((a, b) => {
+      if (a.formtypeid === b.formtypeid) return a.weight - b.weight
+      return a.formtypeid - b.formtypeid
+    })
     const submissionsHeader = []
     for (const col of sortedcols) {
       submissionsHeader.push(col.name)
@@ -327,7 +349,7 @@ async function downloadSummary (req, res, next) {
     const outpath = path.join(TMPDIR, saveFilename)
 
     // Send Zip file
-    sendFile(res, saveFilename)
+    sendFile(res, saveFilename) // Might eventually need to send in chunks?
 
     // Delete tmp file and directory 1 second after send
     if (!process.env.TESTING) {
@@ -460,12 +482,18 @@ function deleteFolderRecursivelySync (dirpath) {
 /* ************************ */
 
 async function writeAnonEntryValues (fields, dbentry, anonStream) {
-  for (const dbentryvalue of await dbentry.getEntryValues()) {
-    const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
-    const formfield = _.find(fields, field => { return field.id === entryvalue.formfieldId })
+  const dbentryvalues = await dbentry.getEntryValues()
+  for (const formfield of fields) {
     if (formfield.hideatgrading) continue // Doesn't check that submit is at this grading
-    const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
-    anonStream.write(formfield.label + '\r' + stringvalue + '\r\r')
+    const dbentryvalue = _.find(dbentryvalues, dbentryvalue => { return formfield.id === dbentryvalue.formfieldId })
+    if (dbentryvalue) {
+      const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
+      const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)
+      anonStream.write(formfield.label + '\r' + stringvalue + '\r\r')
+    } else {
+      // Write empty line if no entryvalue
+      anonStream.write(formfield.label + '\r\r')
+    }
   }
 }
 

@@ -72,7 +72,7 @@
       },
       "return": {
         "content-type": "text/plain",
-        "content-length": 248
+        "content-length": 251
       }
     },
     {
@@ -83,7 +83,7 @@
       },
       "return": {
         "content-type": "text/plain",
-        "content-length": 138
+        "content-length": 141
       }
     },
     {
@@ -153,8 +153,8 @@
       "data": {
       },
       "return": {
-        "content-type": "application/zip"
-        // "content-length": seems to vary: 1173, 1174, 1175
+        "content-type": "application/zip",
+        "content-length": "1199-1201"
       }
     },
     {
@@ -164,8 +164,79 @@
       "data": {
       },
       "return": {
-        "content-type": "application/zip"
-        //"content-length": 1631 // but will vary
+        "content-type": "application/zip",
+        "content-length": "1648-1650"
+      }
+    },
+    {
+      "name": "downloadAll: duff pubid",
+      "method": "get",
+      "uri": "/downloads/all/x?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "downloadAll: duff flowstageid",
+      "method": "get",
+      "uri": "/downloads/all/1?flowstageid=y",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff flowstageid"
+      }
+    },
+    {
+      "name": "downloadAll: wrong pubid",
+      "method": "get",
+      "uri": "/downloads/all/3?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "downloadAll: wrong flowstageid",
+      "method": "get",
+      "uri": "/downloads/all/1?flowstageid=15",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find dbflowstage"
+      }
+    },
+    {
+      "name": "downloadAll: wrong flowstageid",
+      "method": "get",
+      "uri": "/downloads/all/1?flowstageid=4",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "dbpubcheck.id and dbpub.id mismatch"
+      }
+    },
+    {
+      "name": "downloadAll: proposal OK",
+      "method": "get",
+      "uri": "/downloads/all/1?flowstageid=1",
+      "data": {
+      },
+      "return": {
+        "content-type": "application/zip",
+        "content-length": "2569-2571"
       }
     }
   ]

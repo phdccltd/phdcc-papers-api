@@ -427,7 +427,13 @@ async function run (models, configfilename, existingconfig, app, resBody) {
             if (!('content-length' in res.headers)) return 'content-length header missing in response for: ' + call.name
             const foundContentLength = parseInt(res.headers['content-length'])
             console.log('foundContentLength', foundContentLength)
-            if (desiredContentLength !== foundContentLength) return 'content-length header incorrect \'' + foundContentLength + '\' in response for: ' + call.name
+            if (typeof desiredContentLength === 'string') {
+              const afromto = desiredContentLength.split('-')
+              if (afromto.length !== 2) return 'desired content-length duff: ' + desiredContentLength
+              const min = parseInt(afromto[0])
+              const max = parseInt(afromto[1])
+              if (foundContentLength < min || foundContentLength > max) return 'content-length header incorrect \'' + foundContentLength + '\' in response for: ' + call.name
+            } else  if (desiredContentLength !== foundContentLength) return 'content-length header incorrect \'' + foundContentLength + '\' in response for: ' + call.name
           }
           if ('prop' in call.return) {
             if (Array.isArray(call.return.prop)) {
