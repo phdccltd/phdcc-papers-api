@@ -154,7 +154,7 @@
       },
       "return": {
         "content-type": "application/zip",
-        "content-length": "1199-1201"
+        "content-length": "1199-1203"
       }
     },
     {
@@ -237,6 +237,89 @@
       "return": {
         "content-type": "application/zip",
         "content-length": "2569-2571"
+      }
+    },
+    {
+      "name": "downloadReviewerPerformance: duff pubid",
+      "method": "get",
+      "uri": "/downloads/reviewers/x?flowgradeids=1,2",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "downloadReviewerPerformance: missing flowgradeids",
+      "method": "get",
+      "uri": "/downloads/reviewers/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Missing flowgradeids"
+      }
+    },
+    {
+      "name": "downloadReviewerPerformance: duff flowgradeids",
+      "method": "get",
+      "uri": "/downloads/reviewers/1?flowgradeids=y",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff flowgradeids"
+      }
+    },
+    {
+      "name": "downloadReviewerPerformance: wrong pubid",
+      "method": "get",
+      "uri": "/downloads/reviewers/3?flowgradeids=1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pubid 3"
+      }
+    },
+    {
+      "name": "downloadReviewerPerformance: wrong flowgradeids",
+      "method": "get",
+      "uri": "/downloads/reviewers/1?flowgradeids=15",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find dbflowgrade"
+      }
+    },
+    {
+      "name": "downloadReviewerPerformance: wrong flowgradeids",
+      "method": "get",
+      "uri": "/downloads/reviewers/1?flowgradeids=3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "dbpubcheck.id and dbpub.id mismatch"
+      }
+    },
+    {
+      "name": "downloadReviewerPerformance: stages OK",
+      "method": "get",
+      "uri": "/downloads/reviewers/1?flowgradeids=1,2",
+      "data": {
+      },
+      "return": {
+        "content-type": "text/csv"
+        //"content-length": 251
       }
     }
   ]

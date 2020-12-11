@@ -86,7 +86,7 @@ async function downloadAnonymousStage (req, res, next) {
 }
 
 /* ************************ */
-/* GET: Get summary for publication */
+/* GET: Get summary and all for publication */
 /* ACCESS: OWNER-ONLY TESTED */
 router.get('/downloads/summary/:pubid', async (req, res, next) => { await downloadFull(req, res, next, false) })
 
@@ -464,6 +464,127 @@ async function makeZipOfDirectory (dirName) {
   return saveFilename
 }
 
+/* ************************ */
+/* GET: Get reviewer performance for publication */
+/* ACCESS: OWNER-ONLY TESTED */
+router.get('/downloads/reviewers/:pubid', downloadReviewerPerformance)
+
+async function downloadReviewerPerformance(req, res, next) {
+  let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
+  if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
+
+  const pubid = parseInt(req.params.pubid)
+  const sflowgradeids = req.query.flowgradeids
+  console.log('GET review performance ', pubid, sflowgradeids)
+  if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+  if (!sflowgradeids) return utils.giveup(req, res, 'Missing flowgradeids')
+  try {
+    req.dbpub = await models.pubs.findByPk(pubid)
+    if (!req.dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
+
+    if (!await dbutils.getMyRoles(req)) return 'No access to this publication'
+
+    if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
+
+    const summaryHeader = ['Paper id', 'Type', 'Reviewer']
+
+    const aflowgradeids = sflowgradeids.split(',')
+    const dbflowgrades = []
+    for (const sflowgradeid of aflowgradeids) {
+      const flowgradeid = parseInt(sflowgradeid)
+      if (isNaN(flowgradeid)) return utils.giveup(req, res, 'Duff flowgradeids', sflowgradeids)
+      const dbflowgrade = await models.flowgrades.findByPk(flowgradeid)
+      if (!dbflowgrade) return utils.giveup(req, res, 'Cannot find dbflowgrade')
+
+      const dbflowstage = await models.flowstages.findByPk(dbflowgrade.displayflowstageId)
+      if (!dbflowstage) return utils.giveup(req, res, 'Cannot find dbflowstage')
+      dbflowgrade.flowstagename = dbflowstage.name
+
+      const dbflow = await dbflowgrade.getFlow()
+      if (!dbflow) return utils.giveup(req, res, 'Cannot find dbflow')
+
+      const dbpubcheck = await dbflow.getPub()
+      if (!dbpubcheck) return utils.giveup(req, res, 'Cannot find dbpubcheck')
+      if (dbpubcheck.id !== req.dbpub.id) return utils.giveup(req, res, 'dbpubcheck.id and dbpub.id mismatch')
+
+      const gradename = dbflowgrade.name
+      summaryHeader.push(gradename+' sent')
+      summaryHeader.push(gradename + ' reviewed')
+      summaryHeader.push(gradename + ' duration')
+      summaryHeader.push(gradename + ' length')
+
+      dbflowgrade.flowgradescores = await dbflowgrade.getFlowgradescores()
+
+      dbflowgrades.push(dbflowgrade)
+    }
+
+
+    fs.mkdirSync(TMPDIR, { recursive: true })
+
+    const now = new Date()
+    const saveFilename = 'reviewers-'+ now.toISOString().substring(0, 16).replace(/:/g, '-') + '.csv'
+
+    const outpath = path.join(TMPDIR, saveFilename)
+    const outStream = await openFile(outpath)
+    outStream.write('\ufeff')
+
+    writeCSVline(outStream, summaryHeader)
+
+    for (const dbflow of await req.dbpub.getFlows()) {
+
+      // Are we looking for any grades in this flow?
+      let wearelooking = false
+      const flowsgrades = await dbflow.getFlowgrades()
+      for (const flowsgrade of flowsgrades) {
+        const weare = _.find(dbflowgrades, (grade) => { return grade.id === flowsgrade.id })
+        if (weare) {
+          wearelooking = true
+          break
+        }
+      }
+      if (!wearelooking) continue
+
+      const dbsubmits = await dbflow.getSubmits()
+      for (const dbsubmit of dbsubmits) {
+
+        const dbgradings = await dbsubmit.getGradings()
+
+        const dbreviewers = await dbsubmit.getReviewers()
+        for (const dbreviewer of dbreviewers) {
+          const dbuser = await models.users.findByPk(dbreviewer.userId)
+
+          const reviewerLine = [dbsubmit.id, dbflow.name, dbuser.username]
+          for (const dbflowgrade of dbflowgrades) {
+            const dbusergrading = _.find(dbgradings, (dbgrading) => { return dbgrading.userId === dbreviewer.userId && dbgrading.flowgradeId === dbflowgrade.id })
+            if (dbusergrading) {
+              reviewerLine.push('sent')
+              reviewerLine.push('reviewed')
+
+              const score = _.find(dbflowgrade.flowgradescores, (score) => { return score.id === dbusergrading.flowgradescoreId })
+              reviewerLine.push(score ? score.name : dbusergrading.flowgradescoreId)
+              reviewerLine.push('duration')
+            } else {
+              reviewerLine.push('')
+              reviewerLine.push('')
+              reviewerLine.push('')
+              reviewerLine.push('')
+            }
+          }
+          writeCSVline(outStream, reviewerLine)
+        }
+      }
+    }
+
+    await closeFile(outStream)
+
+    /// ///////
+    // Send file
+    sendFile(res, saveFilename)
+
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+}
 /* ************************ */
 
 function deleteFolderRecursivelySync (dirpath) {

@@ -23,7 +23,6 @@
         "name": "Poster", // 3
         "description": "Poster",
         "accepting": [],
-        "grade": [],
         "stage": [
           {
             "name": "Suggestion", // 4
@@ -37,6 +36,20 @@
             "visibletoauthor": true,
             "submittedflowstage": "Suggestion",
             "owneradvice": "Awaiting send to team"
+          }
+        ],
+        "grade": [
+          {
+            "name": "Poster score", // 3
+            "flowstatus": "Suggestion submitted",
+            "displayflowstage": "Suggestion",
+            //"visibletorole": "Team",
+            "cancomment": true,
+            "canopttoreview": true,
+            "score": [
+              { "name": "Accept" }, // 6
+              { "name": "Reject" } // 7
+            ]
           }
         ]
       }
