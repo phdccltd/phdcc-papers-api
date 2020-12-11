@@ -323,6 +323,16 @@ async function getEntryStringValue (v, formfield) {
 
 /* ************************ */
 
+async function addActionLog(req, ta, action, onUserId, entryId, stageId, statusId, gradingId, sentPubMailTemplateId) {
+  const now = new Date()
+  const actionlog = { dt: now, action, onUserId, entryId, stageId, statusId, gradingId, sentPubMailTemplateId }
+  if ('dbuser' in req) actionlog.byUserId = req.dbuser.id
+  if ('dbsubmit' in req) actionlog.submitId = req.dbsubmit.id
+  await models.actionlogs.create(actionlog, { transaction: ta }) // Transaction DONE could be null
+}
+
+/* ************************ */
+
 module.exports = {
   getSubmitCurrentStatus,
   getSubmitFlowPub,
@@ -332,5 +342,6 @@ module.exports = {
   isReviewableSubmit,
   getFlowWithFlowgrades,
   getEntryFormFields,
-  getEntryStringValue
+  getEntryStringValue,
+  addActionLog
 }
