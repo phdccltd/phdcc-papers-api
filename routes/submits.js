@@ -114,7 +114,7 @@ async function addEntry (req, res, next, ta) {
     if (!dbentry) return utils.giveup(req, res, 'Could not create entry')
     logger.log4req(req, 'CREATED entry', dbentry.id)
 
-    await dbutils.addActionLog(req, ta, 'add', null, dbentry.id, req.body.stageid)
+    await dbutils.addActionLog(ta, 'add', req.dbuser.id, null, req.dbsubmit.id, dbentry.id, req.body.stageid)
 
     req.files = req.files || []
     for (const file of req.files) {
@@ -272,7 +272,7 @@ async function addEntry (req, res, next, ta) {
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
 
-      await dbutils.addActionLog(req, ta, 'add', null, dbentry.id, req.body.stageid, dbflowstatus.id)
+      await dbutils.addActionLog(ta, 'add', req.dbuser.id, null, req.dbsubmit.id, dbentry.id, req.body.stageid, dbflowstatus.id)
 
       // Send out mails for this status
       await mailutils.sendOutMails(req, false, dbflowstatus, false, dbentry, false)
@@ -401,7 +401,7 @@ async function addNewSubmit (req, res, next) {
 
       req.submitId = dbsubmit.id
       req.dbsubmit = dbsubmit
-      await dbutils.addActionLog(req, ta, 'add')
+      await dbutils.addActionLog(ta, 'add', req.dbuser.id, null, req.dbsubmit.id)
 
       rv = await addEntry(req, res, next, ta) // Transaction DONE
     }

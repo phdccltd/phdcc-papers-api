@@ -311,7 +311,6 @@ async function downloadFull (req, res, next, all) {
                 const filepath = path.join(filesdir, entryvalue.file)
                 if (fs.existsSync(filepath)) {
                   const topath = path.join(entrydir, path.basename(filepath))
-                  console.log(' - ', filepath, topath)
                   fs.mkdirSync(entrydir, { recursive: true })
                   fs.copyFileSync(filepath, topath)
                 } // else console.log('FILE NOT FOUND')

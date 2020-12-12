@@ -45,20 +45,22 @@ async function sendOutMails (req, dbflowstage, dbflowstatus, dbflowgrade, dbentr
       return
     }
 
-    await sendOneTemplate(dbpubmail, false, dbpub, dbformfields, req.dbuser, req.dbsubmit, dbentry, grading, req.body)
+    await sendOneTemplate(req.dbuser.id, dbpubmail, false, dbpub, dbformfields, req.dbuser, req.dbsubmit, dbentry, grading, req.body)
   }
 }
 
 /* ************************ */
 
-async function sendOneTemplate (dbpubmail, site, dbpub, dbformfields, dbuser, dbsubmit, dbentry, grading, reqbody, data) {
+async function sendOneTemplate (dbuserid, dbpubmail, site, dbpub, dbformfields, dbuser, dbsubmit, dbentry, grading, reqbody, data) {
   const bccOwners = []
+  const bccEmails = []
   if (dbpub && dbpubmail.bccToOwners) {
     const dbownerroles = await dbpub.getPubroles({ where: { isowner: true } })
     for (const dbownerrole of dbownerroles) {
       const dbownerusers = await dbownerrole.getUsers()
       for (const dbowneruser of dbownerusers) {
-        bccOwners.push(dbowneruser.email)
+        bccOwners.push(dbowneruser)
+        bccEmails.push(dbowneruser.email)
       }
     }
   }
@@ -68,7 +70,7 @@ async function sendOneTemplate (dbpubmail, site, dbpub, dbformfields, dbuser, db
   if (dbpubrole) {
     const dbroleusers = await dbpubrole.getUsers()
     for (const dbroleuser of dbroleusers) {
-      recipients.push(dbroleuser.email)
+      recipients.push(dbroleuser)
     }
   }
 
@@ -77,12 +79,12 @@ async function sendOneTemplate (dbpubmail, site, dbpub, dbformfields, dbuser, db
     const dbauthor = await dbsubmit.getUser()
     author = dbauthor ? models.sanitise(models.users, dbauthor) : false
     if (dbpubmail.sendToAuthor && author) {
-      recipients.push(author.email)
+      recipients.push(author)
     }
   }
 
   if (dbpubmail.sendToUser) {
-    recipients.push(dbuser.email)
+    recipients.push(dbuser)
   }
 
   if (dbsubmit && dbpubmail.sendToReviewers) {
@@ -90,7 +92,7 @@ async function sendOneTemplate (dbpubmail, site, dbpub, dbformfields, dbuser, db
     for (const dbreviewer of dbreviewers) {
       const dbuser = await dbreviewer.getUser()
       if (dbuser) {
-        recipients.push(dbuser.email)
+        recipients.push(dbuser)
       }
     }
   }
@@ -135,16 +137,22 @@ async function sendOneTemplate (dbpubmail, site, dbpub, dbformfields, dbuser, db
   // console.log('sendOutMails', data)
   subject = subject(data)
   body = body(data)
-  let bcc = bccOwners.join(',')
+  let bcc = bccEmails.join(',')
+  const submitId = dbsubmit ? dbsubmit.id : null
+  const entryId = dbentry ? dbentry.id : null
   if (recipients.length > 0) {
     for (const recipient of recipients) {
-      utils.asyncMail(recipient, subject, body, bcc)
+      utils.asyncMail(recipient.email, subject, body, bcc)
+      await dbutils.addActionLog(null, 'add', dbuserid, recipient.id, submitId, entryId, null, null, null, dbpubmail.id)
       bcc = false
     }
   } else {
     for (const bccOwner of bccOwners) {
       utils.asyncMail(bccOwner, subject, body, false)
     }
+  }
+  for (const bccOwner of bccOwners) {
+    await dbutils.addActionLog(null, 'add', dbuserid, bccOwner.id, submitId, entryId, null, null, null, dbpubmail.id)
   }
 }
 /* ************************ */

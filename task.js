@@ -4,6 +4,7 @@ const _ = require('lodash/core')
 const models = require('./models')
 const utils = require('./utils')
 const logger = require('./logger')
+const dbutils = require('./routes/dbutils')
 
 let started = false
 
@@ -104,6 +105,7 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
   let body = Handlebars.compile(dbpubmail.body)
 
   const bccOwners = []
+  const bccEmails = []
   if (dbpubmail.bccToOwners) {
     const dbflow = await dbsubmit.getFlow()
     if (!dbflow) return logger.warn4req(false, 'Could not find flow so not sending mail')
@@ -113,7 +115,8 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
     for (const dbownerrole of dbownerroles) {
       const dbownerusers = await dbownerrole.getUsers()
       for (const dbowneruser of dbownerusers) {
-        bccOwners.push(dbowneruser.email)
+        bccOwners.push(dbowneruser)
+        bccEmails.push(dbowneruser.email)
       }
     }
   }
@@ -130,7 +133,7 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
   // console.log('sendOutMails', data)
   subject = subject(data)
   body = body(data)
-  const bcc = bccOwners.join(',')
+  const bcc = bccEmails.join(',')
   console.log('sendMail', dbuser.email, subject)
   await utils.asyncMail(dbuser.email, subject, body, bcc)
 
@@ -143,6 +146,11 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
   }
   const dbsentreminder = await models.sentreminders.create(params)
   if (!dbsentreminder) logger.warn4req(false, 'Could not create sentreminder')
+
+  await dbutils.addActionLog(null, 'add', null, dbreviewer.userId, dbsubmit.id, null, null, null, null, dbpubmail.id)
+  for (const bccOwner of bccOwners) {
+    await dbutils.addActionLog(null, 'add', null, bccOwner.id, dbsubmit.id, null, null, null, null, dbpubmail.id)
+  }
 }
 
 /* ************************ */
