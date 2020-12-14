@@ -13,7 +13,6 @@ const dbutils = require('./dbutils')
 const router = Router()
 
 const TMPDIR = process.env.TESTTMPDIR ? process.env.TESTTMPDIR : '/tmp/papers/'
-console.log('TMPDIR', TMPDIR)
 
 /* ************************ */
 /* GET: Get anonymised stage entries */
@@ -468,10 +467,7 @@ async function makeZipOfDirectory (dirName) {
 /* ACCESS: OWNER-ONLY TESTED */
 router.get('/downloads/reviewers/:pubid', downloadReviewerPerformance)
 
-async function downloadReviewerPerformance(req, res, next) {
-  let filesdir = req.site.privatesettings.files // eg /var/sites/papersdevfiles NO FINAL SLASH
-  if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
-
+async function downloadReviewerPerformance (req, res, next) {
   const pubid = parseInt(req.params.pubid)
   const sflowgradeids = req.query.flowgradeids
   console.log('GET review performance ', pubid, sflowgradeids)
@@ -507,21 +503,23 @@ async function downloadReviewerPerformance(req, res, next) {
       if (dbpubcheck.id !== req.dbpub.id) return utils.giveup(req, res, 'dbpubcheck.id and dbpub.id mismatch')
 
       const gradename = dbflowgrade.name
-      summaryHeader.push(gradename+' sent')
+      summaryHeader.push(gradename + ' sent')
       summaryHeader.push(gradename + ' reviewed')
       summaryHeader.push(gradename + ' duration')
       summaryHeader.push(gradename + ' length')
 
       dbflowgrade.flowgradescores = await dbflowgrade.getFlowgradescores()
 
+      const dbsentpubmailtemplate = await models.pubmailtemplates.findOne({ where: { flowstatusId: dbflowgrade.flowstatusId } })
+      dbflowgrade.sentpubmailtemplateId = dbsentpubmailtemplate ? dbsentpubmailtemplate.id : 0
+
       dbflowgrades.push(dbflowgrade)
     }
-
 
     fs.mkdirSync(TMPDIR, { recursive: true })
 
     const now = new Date()
-    const saveFilename = 'reviewers-'+ now.toISOString().substring(0, 16).replace(/:/g, '-') + '.csv'
+    const saveFilename = 'reviewers-' + now.toISOString().substring(0, 16).replace(/:/g, '-') + '.csv'
 
     const outpath = path.join(TMPDIR, saveFilename)
     const outStream = await openFile(outpath)
@@ -530,7 +528,6 @@ async function downloadReviewerPerformance(req, res, next) {
     writeCSVline(outStream, summaryHeader)
 
     for (const dbflow of await req.dbpub.getFlows()) {
-
       // Are we looking for any grades in this flow?
       let wearelooking = false
       const flowsgrades = await dbflow.getFlowgrades()
@@ -545,29 +542,64 @@ async function downloadReviewerPerformance(req, res, next) {
 
       const dbsubmits = await dbflow.getSubmits()
       for (const dbsubmit of dbsubmits) {
-
+        console.log('SUBMIT', dbsubmit.id)
         const dbgradings = await dbsubmit.getGradings()
+
+        const submitactionlogs = await models.actionlogs.findAll({ where: { submitId: dbsubmit.id }, order: [['dt', 'ASC'], ['id', 'ASC']] })
+        for (const submitactionlog of submitactionlogs) {
+          console.log(dbsubmit.id, submitactionlog.onUserId, submitactionlog.sentPubMailTemplateId)
+        }
 
         const dbreviewers = await dbsubmit.getReviewers()
         for (const dbreviewer of dbreviewers) {
+          console.log('===', dbreviewer.userId)
           const dbuser = await models.users.findByPk(dbreviewer.userId)
 
           const reviewerLine = [dbsubmit.id, dbflow.name, dbuser.username]
           for (const dbflowgrade of dbflowgrades) {
-            const dbusergrading = _.find(dbgradings, (dbgrading) => { return dbgrading.userId === dbreviewer.userId && dbgrading.flowgradeId === dbflowgrade.id })
-            if (dbusergrading) {
-              reviewerLine.push('sent')
-              reviewerLine.push('reviewed')
+            console.log('~~~', dbflowgrade.sentpubmailtemplateId, dbreviewer.userId)
+            let dtFirstTold = ''
+            let dtReviewed = ''
+            let review = ''
+            let elapsed = ''
 
-              const score = _.find(dbflowgrade.flowgradescores, (score) => { return score.id === dbusergrading.flowgradescoreId })
-              reviewerLine.push(score ? score.name : dbusergrading.flowgradescoreId)
-              reviewerLine.push('duration')
-            } else {
-              reviewerLine.push('')
-              reviewerLine.push('')
-              reviewerLine.push('')
-              reviewerLine.push('')
+            if (dbflowgrade.sentpubmailtemplateId) {
+              const firstTold = _.find(submitactionlogs, (sal) => { return sal.sentPubMailTemplateId === dbflowgrade.sentpubmailtemplateId && sal.onUserId === dbreviewer.userId })
+              if (firstTold) {
+                console.log('+++', firstTold.id, firstTold.dt)
+                dtFirstTold = firstTold.dt
+              } else console.log('--- Not found')
             }
+            const dbusergrading = _.find(dbgradings, (dbgrading) => { return dbgrading.userId === dbreviewer.userId && dbgrading.flowgradeId === dbflowgrade.id })
+
+            if (dbusergrading) {
+              const score = _.find(dbflowgrade.flowgradescores, (score) => { return score.id === dbusergrading.flowgradescoreId })
+              if (score) {
+                review = score.name
+                dtReviewed = dbusergrading.dt
+                if (dtFirstTold) {
+                  const timeDiff = dtReviewed.getTime() - dtFirstTold.getTime()
+                  let elapsedmins = Math.floor(timeDiff / 1000 / 60)
+                  console.log('elapsedmins', elapsedmins)
+                  if (elapsedmins >= 60) {
+                    let elapsedhours = Math.floor(elapsedmins / 60)
+                    if (elapsedhours >= 24) {
+                      const elapseddays = Math.floor(elapsedhours / 24)
+                      elapsed = elapseddays + ' days, '
+                      elapsedhours -= elapseddays * 24
+                      elapsedmins -= elapseddays * 24 * 60
+                    }
+                    elapsed += elapsedhours + ' hours, '
+                    elapsedmins -= elapsedhours * 60
+                  }
+                  elapsed += elapsedmins + ' mins'
+                }
+              }
+            }
+            reviewerLine.push(dtFirstTold)
+            reviewerLine.push(dtReviewed)
+            reviewerLine.push(review)
+            reviewerLine.push(elapsed)
           }
           writeCSVline(outStream, reviewerLine)
         }
@@ -579,7 +611,6 @@ async function downloadReviewerPerformance(req, res, next) {
     /// ///////
     // Send file
     sendFile(res, saveFilename)
-
   } catch (e) {
     utils.giveup(req, res, e.message)
   }

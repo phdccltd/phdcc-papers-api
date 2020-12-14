@@ -433,7 +433,7 @@ async function run (models, configfilename, existingconfig, app, resBody) {
               const min = parseInt(afromto[0])
               const max = parseInt(afromto[1])
               if (foundContentLength < min || foundContentLength > max) return 'content-length header incorrect \'' + foundContentLength + '\' in response for: ' + call.name
-            } else  if (desiredContentLength !== foundContentLength) return 'content-length header incorrect \'' + foundContentLength + '\' in response for: ' + call.name
+            } else if (desiredContentLength !== foundContentLength) return 'content-length header incorrect \'' + foundContentLength + '\' in response for: ' + call.name
           }
           if ('prop' in call.return) {
             if (Array.isArray(call.return.prop)) {

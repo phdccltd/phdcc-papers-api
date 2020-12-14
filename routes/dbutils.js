@@ -323,9 +323,9 @@ async function getEntryStringValue (v, formfield) {
 
 /* ************************ */
 
-async function addActionLog(ta, action, byUserId, onUserId, submitId, entryId, stageId, statusId, gradingId, sentPubMailTemplateId) {
+async function addActionLog (ta, action, byUserId, onUserId, submitId, entryId, stageId, statusId, submitStatusId, gradingId, sentPubMailTemplateId) {
   const now = new Date()
-  const actionlog = { dt: now, action, byUserId, onUserId, submitId, entryId, stageId, statusId, gradingId, sentPubMailTemplateId }
+  const actionlog = { dt: now, action, byUserId, onUserId, submitId, entryId, stageId, statusId, submitStatusId, gradingId, sentPubMailTemplateId }
   await models.actionlogs.create(actionlog, { transaction: ta }) // Transaction DONE could be null
 }
 

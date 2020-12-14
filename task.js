@@ -147,9 +147,9 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
   const dbsentreminder = await models.sentreminders.create(params)
   if (!dbsentreminder) logger.warn4req(false, 'Could not create sentreminder')
 
-  await dbutils.addActionLog(null, 'add', null, dbreviewer.userId, dbsubmit.id, null, null, null, null, dbpubmail.id)
+  await dbutils.addActionLog(null, 'add', null, dbreviewer.userId, dbsubmit.id, null, null, null, null, null, dbpubmail.id)
   for (const bccOwner of bccOwners) {
-    await dbutils.addActionLog(null, 'add', null, bccOwner.id, dbsubmit.id, null, null, null, null, dbpubmail.id)
+    await dbutils.addActionLog(null, 'add', null, bccOwner.id, dbsubmit.id, null, null, null, null, null, dbpubmail.id)
   }
 }
 

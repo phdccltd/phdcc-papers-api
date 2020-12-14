@@ -11,14 +11,15 @@ module.exports = (sequelize, DataTypes) => {
     entryId: { type: DataTypes.INTEGER, allowNull: true },
     stageId: { type: DataTypes.INTEGER, allowNull: true },
     statusId: { type: DataTypes.INTEGER, allowNull: true },
+    submitStatusId: { type: DataTypes.INTEGER, allowNull: true },
     gradingId: { type: DataTypes.INTEGER, allowNull: true },
-    sentPubMailTemplateId: { type: DataTypes.INTEGER, allowNull: true },
+    sentPubMailTemplateId: { type: DataTypes.INTEGER, allowNull: true }
   }
   const actionlogs = sequelize.define('actionlogs', fields)
   actionlogs.fields = fields
 
-  //actionlogs.associate = function (dbs) {
-  //}
+  // actionlogs.associate = function (dbs) {
+  // }
 
   return actionlogs
 }

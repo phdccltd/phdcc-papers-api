@@ -46,6 +46,8 @@ async function deleteGrading (req, res, next) {
 
     await dbgrading.destroy() // Transaction OK
 
+    await dbutils.addActionLog(null, 'delete', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id, null, null, null, null, dbgrading.flowgradeId)
+
     logger.log4req(req, 'DELETED grading', gradingid)
 
     const ok = true
@@ -139,6 +141,8 @@ async function addGrading (req, res, next) {
       const dbgrading = await models.submitgradings.create(params) // Transaction OK
       if (!dbgrading) return utils.giveup(req, res, 'grading not created')
       logger.log4req(req, 'CREATED new grading', dbgrading.id)
+
+      await dbutils.addActionLog(null, 'add', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id, null, null, null, null, flowgradeid)
 
       // Send out mails for this grading
       const grading = models.sanitise(models.submitgradings, dbgrading)

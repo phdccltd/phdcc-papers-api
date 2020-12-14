@@ -272,7 +272,7 @@ async function addEntry (req, res, next, ta) {
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
 
-      await dbutils.addActionLog(ta, 'add', req.dbuser.id, null, req.dbsubmit.id, dbentry.id, req.body.stageid, dbflowstatus.id)
+      await dbutils.addActionLog(ta, 'add', req.dbuser.id, null, req.dbsubmit.id, dbentry.id, req.body.stageid, dbflowstatus.id, dbsubmitstatus.id)
 
       // Send out mails for this status
       await mailutils.sendOutMails(req, false, dbflowstatus, false, dbentry, false)
@@ -525,6 +525,7 @@ async function editEntry (req, res, next, ta) {
       if (!dbentryvalue) return utils.giveup(req, res, 'Could not create entryvalue')
       logger.log4req(req, 'CREATED entryvalue', dbentryvalue.id)
     }
+    await dbutils.addActionLog(ta, 'update', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id, dbentry.id)
     logger.log4req(req, "entry's values updated", dbentry.id)
     return utils.returnOK(req, res, dbentry.id, 'id')
   } catch (e) {
@@ -607,6 +608,8 @@ async function deleteEntry (req, res, next, ta) {
     logger.log4req(req, 'Deleted entry', entryid, affectedRows)
 
     if (affectedRows !== 1) return utils.giveup(req, res, 'Entry not deleted')
+
+    await dbutils.addActionLog(ta, 'delete', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id, dbentry.id)
 
     return true
   } catch (e) {
@@ -1114,6 +1117,8 @@ async function deleteSubmit (req, res, next) {
     // Delete submit
     affectedRows = await models.submits.destroy({ where: { id: submitid } }, { transaction: ta }) // Transaction DONE
 
+    await dbutils.addActionLog(ta, 'delete', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id)
+
     await ta.commit()
 
     logger.log4req(req, 'Deleted submit', submitid, affectedRows)
@@ -1158,6 +1163,8 @@ async function editSubmit (req, res, next) {
     await req.dbsubmit.save() // Transaction OK
 
     logger.log4req(req, 'Edited submit', submitid, req.body.newtitle, newauthorid)
+
+    await dbutils.addActionLog(null, 'update', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id)
 
     const ok = true
     utils.returnOK(req, res, ok, 'ok')
@@ -1209,6 +1216,8 @@ async function deleteSubmitStatus (req, res, next) {
     const affectedRows = await models.submitstatuses.destroy({ where: { id: submitstatusid } }) // Transaction OK
     logger.log4req(req, 'Deleted submit status', submitstatusid, affectedRows)
 
+    await dbutils.addActionLog(null, 'delete', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id, null, null, dbsubmitstatus.flowstatusId, submitstatusid)
+
     const ok = affectedRows === 1
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
@@ -1251,6 +1260,8 @@ async function addSubmitStatus (req, res, next) {
     const dbsubmitstatus = await models.submitstatuses.create(submitstatus) // Transaction OK
     if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
     const newsubmitstatus = models.sanitise(models.submitstatuses, dbsubmitstatus)
+
+    await dbutils.addActionLog(null, 'add', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id, null, null, newstatusid, dbsubmitstatus.id)
 
     logger.log4req(req, 'Created submit status', submitid, newstatusid, dbsubmitstatus.id)
 
