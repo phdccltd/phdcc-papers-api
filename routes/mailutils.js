@@ -143,7 +143,7 @@ async function sendOneTemplate (dbuserid, dbpubmail, site, dbpub, dbformfields, 
   if (recipients.length > 0) {
     for (const recipient of recipients) {
       utils.asyncMail(recipient.email, subject, body, bcc)
-      await dbutils.addActionLog(null, 'add', dbuserid, recipient.id, submitId, entryId, null, null, null, null, dbpubmail.id)
+      await dbutils.addActionLog(null, 'add', dbuserid, recipient.id, submitId, entryId, null, null, null, dbpubmail.id)
       bcc = false
     }
   } else {
@@ -152,7 +152,7 @@ async function sendOneTemplate (dbuserid, dbpubmail, site, dbpub, dbformfields, 
     }
   }
   for (const bccOwner of bccOwners) {
-    await dbutils.addActionLog(null, 'add', dbuserid, bccOwner.id, submitId, entryId, null, null, null, null, dbpubmail.id)
+    await dbutils.addActionLog(null, 'add', dbuserid, bccOwner.id, submitId, entryId, null, null, null, dbpubmail.id)
   }
 }
 /* ************************ */

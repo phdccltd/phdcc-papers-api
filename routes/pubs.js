@@ -134,7 +134,7 @@ router.post('/pubs/:pubid', async function (req, res, next) {
           const dbsubmitstatus = await models.submitstatuses.create(submitstatus) // Transaction OK - even if we fail after some done
           if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
           logger.log4req(req, 'Created submit status', dbsubmit.id, tostatus, dbsubmitstatus.id)
-          await dbutils.addActionLog(null, 'add', req.dbuser.id, dbsubmit.userId, dbsubmit.id, null, null, tostatus, dbsubmitstatus.id)
+          await dbutils.addActionLog(null, 'add', req.dbuser.id, dbsubmit.userId, dbsubmit.id, null, null, tostatus)
         }
       }
     }

@@ -11,11 +11,18 @@ module.exports = (sequelize, DataTypes) => {
     entryId: { type: DataTypes.INTEGER, allowNull: true },
     stageId: { type: DataTypes.INTEGER, allowNull: true },
     statusId: { type: DataTypes.INTEGER, allowNull: true },
-    submitStatusId: { type: DataTypes.INTEGER, allowNull: true },
     gradingId: { type: DataTypes.INTEGER, allowNull: true },
-    sentPubMailTemplateId: { type: DataTypes.INTEGER, allowNull: true }
+    sentPubMailTemplateId: { type: DataTypes.INTEGER, allowNull: true },
+    sentReminderPubMailTemplateId: { type: DataTypes.INTEGER, allowNull: true }
   }
-  const actionlogs = sequelize.define('actionlogs', fields)
+  const actionlogs = sequelize.define('actionlogs', fields, {
+    indexes: [
+      {
+        name: 'onuser_submit_sentreminder',
+        fields: ['onUserId', 'submitId', 'sentReminderPubMailTemplateId']
+      }
+    ]
+  })
   actionlogs.fields = fields
 
   // actionlogs.associate = function (dbs) {

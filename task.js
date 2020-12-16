@@ -28,7 +28,7 @@ async function backgroundTask (testdays) {
       }
     })
     for (const dbpubmail of dbpubmails) {
-      // console.log('dbpubmail', dbpubmail.id, dbpubmail.name, dbpubmail.flowstatusId, dbpubmail.flowgradeId)
+      // console.log('==== dbpubmail', dbpubmail.id, dbpubmail.name, dbpubmail.flowstatusId, dbpubmail.flowgradeId)
 
       // We need to look for submits at this status that haven't been graded at given grade.
       // So, check these two are specified
@@ -40,6 +40,7 @@ async function backgroundTask (testdays) {
       // Find all submit statuses which have the right status
       const dbsubmitstatuses = await models.submitstatuses.findAll({ where: { flowstatusId: dbpubmail.flowstatusId } })
       for (const dbsubmitstatus of dbsubmitstatuses) {
+        // console.log('--- Submits has this status somewhere', dbpubmail.flowstatusId)
         // Get the submit of this status
         const dbsubmit = await dbsubmitstatus.getSubmit()
         if (!dbsubmit) {
@@ -52,6 +53,8 @@ async function backgroundTask (testdays) {
         // If we're past this status, then don't process rule
         if (dbstatuses[0].id !== dbsubmitstatus.id) continue
 
+        // console.log('>>> Submit', dbsubmit.id)
+
         // See if enough time has elapsed to trigger rule
         const elapseddays = (now - dbsubmitstatus.dt) / 1000 / 60 / 60 / 24
         const sendReminder = dbpubmail.sendReviewReminderDays ? elapseddays > dbpubmail.sendReviewReminderDays : false
@@ -63,7 +66,8 @@ async function backgroundTask (testdays) {
         const dbreviewers = await dbsubmit.getReviewers()
         let allReviewsDone = true
         for (const dbreviewer of dbreviewers) {
-          const dbsentreminders = await dbpubmail.getSentReminders({ where: { userId: dbreviewer.userId, submitId: dbsubmit.id } })
+          const dbsentreminders = await models.actionlogs.findAll({ where: { onUserId: dbreviewer.userId, submitId: dbsubmit.id, sentReminderPubMailTemplateId: dbpubmail.id } })
+          // console.log('dbsentreminders', dbsentreminders.length)
           if (dbsentreminders.length > 0) continue
 
           const graded = _.find(dbgradings, (grading) => { return (grading.userId === dbreviewer.userId) && (grading.flowgradeId === dbpubmail.flowgradeId) })
@@ -80,7 +84,16 @@ async function backgroundTask (testdays) {
         if (sendChaseUp && !allReviewsDone) {
           for (const dbreviewer of dbreviewers) {
             if (dbreviewer.lead) {
-              const dbsentreminders = await dbpubmail.getSentReminders({ where: { userId: dbreviewer.userId, submitId: dbsubmit.id } })
+              const dbsentreminders = await models.actionlogs.findAll(
+                {
+                  where: {
+                    onUserId: dbreviewer.userId,
+                    submitId: dbsubmit.id,
+                    sentReminderPubMailTemplateId: dbpubmail.id
+                  }
+                }
+              )
+              // console.log('*** dbsentreminders', dbsentreminders.length)
               if (dbsentreminders.length > 0) continue
 
               await sendMail(dbpubmail, dbsubmit, dbreviewer)
@@ -100,6 +113,8 @@ async function backgroundTask (testdays) {
 async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
   const dbuser = await dbreviewer.getUser()
   if (!dbuser) return logger.warn4req(false, 'Could not find user for reviewer')
+
+  console.log('### sendMail', dbpubmail.id, dbsubmit.id, dbreviewer.id)
 
   let subject = Handlebars.compile(dbpubmail.subject)
   let body = Handlebars.compile(dbpubmail.body)
@@ -137,19 +152,10 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
   console.log('sendMail', dbuser.email, subject)
   await utils.asyncMail(dbuser.email, subject, body, bcc)
 
-  // Note in sentreminders
-  const params = {
-    dt: now,
-    pubmailtemplateId: dbpubmail.id,
-    submitId: dbsubmit.id,
-    userId: dbreviewer.userId
-  }
-  const dbsentreminder = await models.sentreminders.create(params)
-  if (!dbsentreminder) logger.warn4req(false, 'Could not create sentreminder')
-
-  await dbutils.addActionLog(null, 'add', null, dbreviewer.userId, dbsubmit.id, null, null, null, null, null, dbpubmail.id)
+  // Note in actionlogs
+  await dbutils.addActionLog(null, 'add', null, dbreviewer.userId, dbsubmit.id, null, null, null, null, null, dbpubmail.id) // in sentReminderPubMailTemplateId
   for (const bccOwner of bccOwners) {
-    await dbutils.addActionLog(null, 'add', null, bccOwner.id, dbsubmit.id, null, null, null, null, null, dbpubmail.id)
+    await dbutils.addActionLog(null, 'add', null, bccOwner.id, dbsubmit.id, null, null, null, null, dbpubmail.id) // in sentPubMailTemplateId
   }
 }
 

@@ -20,6 +20,7 @@
   YYY_YYY_  POST    /submits/status/:id                     addSubmitStatus
 */
 const { Router } = require('express')
+const Sequelize = require('sequelize')
 const models = require('../models')
 const utils = require('../utils')
 const multer = require('multer')
@@ -272,7 +273,7 @@ async function addEntry (req, res, next, ta) {
       if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
       logger.log4req(req, 'CREATED submitstatus', dbsubmitstatus.id)
 
-      await dbutils.addActionLog(ta, 'add', req.dbuser.id, null, req.dbsubmit.id, dbentry.id, req.body.stageid, dbflowstatus.id, dbsubmitstatus.id)
+      await dbutils.addActionLog(ta, 'add', req.dbuser.id, null, req.dbsubmit.id, dbentry.id, req.body.stageid, dbflowstatus.id)
 
       // Send out mails for this status
       await mailutils.sendOutMails(req, false, dbflowstatus, false, dbentry, false)
@@ -926,7 +927,13 @@ async function getPubSubmits (req, res, next) {
           reviewer.username = dbuser ? dbuser.name : ''
 
           reviewer.sentreminders = []
-          const dbsentreminders = await models.sentreminders.findAll({ where: { userId: dbreviewer.userId, submitId: req.dbsubmit.id } })
+          const dbsentreminders = await models.actionlogs.findAll({
+            where: {
+              onUserId: dbreviewer.userId,
+              submitId: req.dbsubmit.id,
+              sentReminderPubMailTemplateId: { [Sequelize.Op.ne]: null }
+            }
+          })
           for (const dbsentreminder of dbsentreminders) {
             reviewer.sentreminders.push({ id: dbsentreminder.id, dt: dbsentreminder.dt })
           }
@@ -1111,12 +1118,10 @@ async function deleteSubmit (req, res, next) {
     // Delete submitreviewers
     affectedRows = await models.submitreviewers.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
 
-    // Delete sentreminders
-    affectedRows = await models.sentreminders.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
-
     // Delete submit
     affectedRows = await models.submits.destroy({ where: { id: submitid } }, { transaction: ta }) // Transaction DONE
 
+    // Don't delete anything in actionlogs, but add delete entry instead
     await dbutils.addActionLog(ta, 'delete', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id)
 
     await ta.commit()
@@ -1261,7 +1266,7 @@ async function addSubmitStatus (req, res, next) {
     if (!dbsubmitstatus) return utils.giveup(req, res, 'Could not create submitstatus')
     const newsubmitstatus = models.sanitise(models.submitstatuses, dbsubmitstatus)
 
-    await dbutils.addActionLog(null, 'add', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id, null, null, newstatusid, dbsubmitstatus.id)
+    await dbutils.addActionLog(null, 'add', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id, null, null, newstatusid)
 
     logger.log4req(req, 'Created submit status', submitid, newstatusid, dbsubmitstatus.id)
 
