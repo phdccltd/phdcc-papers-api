@@ -542,7 +542,7 @@ async function downloadReviewerPerformance (req, res, next) {
 
       const dbsubmits = await dbflow.getSubmits()
       for (const dbsubmit of dbsubmits) {
-        console.log('SUBMIT', dbsubmit.id)
+        // console.log('SUBMIT', dbsubmit.id)
         const dbgradings = await dbsubmit.getGradings()
 
         const submitactionlogs = await models.actionlogs.findAll({ where: { submitId: dbsubmit.id }, order: [['dt', 'ASC'], ['id', 'ASC']] })
