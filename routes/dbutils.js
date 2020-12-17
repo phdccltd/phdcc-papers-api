@@ -210,7 +210,7 @@ async function isReviewableSubmit (req, flow, submit) {
         if (entrytograde) {
           route = '/panel/' + req.dbpub.id + '/' + flow.id + '/' + submit.id + '/' + entrytograde.id
           submit.actions.push({ name: flowgrade.name + ' needed', gradename: 'Add ' + flowgrade.name, route, flowgradeid: flowgrade.id, show: 3, dograde: 4, entrytograde: entrytograde.id })
-          submit.user = 'author redacted'
+          // submit.user = 'author redacted'
           req.entergradingcount++
         }
       }

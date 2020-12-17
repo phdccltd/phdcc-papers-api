@@ -886,7 +886,7 @@ async function getPubSubmits (req, res, next) {
         submit.ismine = true
         if (dbsubmit.userId !== req.dbuser.id) {
           const dbauthor = await dbsubmit.getUser()
-          submit.user = dbauthor.name
+          if (req.isowner) submit.user = dbauthor.name
           submit.ismine = false
         }
 
