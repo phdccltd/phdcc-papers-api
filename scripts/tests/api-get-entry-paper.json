@@ -11,6 +11,17 @@
       "return": {
         "ret": 0
       }
+    },
+    {
+      "name": "getEntryFile",
+      "method": "get",
+      "uri": "/submits/entry/2/7", // Paper file: lorem-ipsum1.txt
+      "data": {
+      },
+      "return": {
+        "content-type": "text/plain",
+        "content-length": 2795
+      }
     }
   ]
 }

@@ -144,10 +144,10 @@ async function addRoleStageActions (req, flow, submit) {
  *  return true if this submit should be shown to the user
  *   - ismine
  *   - owner
+ *   - if I am reviewer of this submit
  *   - If currentstatus has associated flowgrade
  *    - if I have graded
  *    - if I have role visibletorole
- *    - if I am reviewer of this submit
  *  If showing, then set submit.actions or submit.actionsdone
 */
 
@@ -166,6 +166,13 @@ async function isReviewableSubmit (req, flow, submit) {
 
   if (req.isowner || req.canviewall) {
     includethissubmit = true
+  }
+
+  const dbreviewers = await req.dbsubmit.getReviewers()
+  for (const dbreviewer of dbreviewers) {
+    if (dbreviewer.userId === req.dbuser.id) {
+      includethissubmit = true
+    }
   }
 
   // Go through grades looking to see if currentstatus means that I need to grade
@@ -194,10 +201,8 @@ async function isReviewableSubmit (req, flow, submit) {
       }
       if (flowgrade.visibletoreviewers) {
         // Check if I am reviewer that means I can grade
-        const dbreviewers = await req.dbsubmit.getReviewers()
         for (const dbreviewer of dbreviewers) {
           if (dbreviewer.userId === req.dbuser.id) {
-            includethissubmit = true
             req.iamgrading = true
             req.iamgradingat = flowgrade.id
             if (dbreviewer.lead) req.iamleadgrader = true

@@ -644,6 +644,21 @@ async function getEntryFile (req, res, next) {
     const error = await dbutils.getSubmitFlowPub(req, 0)
     if (error) return utils.giveup(req, res, error)
 
+    // isReviewableSubmit is enough of an access check
+    const submit = models.sanitise(models.submits, req.dbsubmit)
+    req.dbflow = await req.dbsubmit.getFlow()
+    const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
+    req.dbsubmitgradings = await req.dbsubmit.getGradings()
+
+    submit.ismine = false
+    await dbutils.getSubmitCurrentStatus(req, req.dbsubmit, submit, flow)
+    if (!req.currentstatus) { // If no statuses, then give up here
+      return utils.giveup(req, res, 'No statuses for this submit')
+    }
+
+    const includethissubmit = await dbutils.isReviewableSubmit(req, flow, submit)
+    if (!includethissubmit) return utils.giveup(req, res, 'Access denied')
+
     const dbentryvalue = await models.entryvalues.findByPk(entryvalueid)
     if (!dbentryvalue) return utils.giveup(req, res, 'Invalid entryvalueid')
 
