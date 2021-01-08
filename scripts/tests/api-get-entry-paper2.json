@@ -1,0 +1,16 @@
+{
+  "name": "Get paper entry",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "getEntry",
+      "method": "get",
+      "uri": "/submits/entry/2",
+      "data": {
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

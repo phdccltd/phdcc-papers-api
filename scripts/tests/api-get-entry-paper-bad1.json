@@ -13,6 +13,18 @@
         "prop": "status",
         "value": "Not your submit entry"
       }
+    },
+    {
+      "name": "getEntryFile",
+      "method": "get",
+      "uri": "/submits/entry/3/7", // Paper file: lorem-ipsum1.txt
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Access denied"
+      }
     }
   ]
 }
