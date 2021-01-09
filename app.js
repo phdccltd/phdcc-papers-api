@@ -4,6 +4,7 @@ const cors = require('cors') // https://github.com/expressjs/cors
 const bodyParser = require('body-parser')
 const createError = require('http-errors')
 const path = require('path')
+const fs = require('fs')
 const nodemailer = require('nodemailer')
 
 const sequelize = require('./db')
@@ -78,7 +79,11 @@ app.checkDatabases = async function (setupdb) {
     // Use first site to set mail transport
     const site = sites[0]
     const privatesettings = site.privatesettings
-    if ('transport-sendmail' in privatesettings && 'transport-newline' in privatesettings && 'transport-path' in privatesettings && 'email-from' in privatesettings) {
+    const stopmail = ('stopmailfile' in privatesettings) && fs.existsSync(privatesettings['stopmailfile'])
+    if (stopmail) {
+      logger.log('Stop mail file exists: ' + privatesettings['stopmailfile'])
+    }
+    else if ('transport-sendmail' in privatesettings && 'transport-newline' in privatesettings && 'transport-path' in privatesettings && 'email-from' in privatesettings) {
       try {
         if (privatesettings['transport-sendmail']) {
           const transport = nodemailer.createTransport({
