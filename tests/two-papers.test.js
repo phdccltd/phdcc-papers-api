@@ -19,6 +19,7 @@
  * owner1 sets status paper-accepted for submit 1
  * owner1 sets status paper-accepted for submit 2 (even though no paper submitted)
  * Check owner1 can still see two submits
+ * Check author1 sees only one submit
  */
 
 const testhelper = require('./testhelper')
@@ -135,7 +136,7 @@ describe('COMPLETE', () => {
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(1)) // Check owner1 sees one submit
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(1)) // Check author1 sees only one submit
       if (error) throw new Error(error)
 
       testSucceeded = true
