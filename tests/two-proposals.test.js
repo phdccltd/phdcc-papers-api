@@ -51,7 +51,7 @@ describe('SUBMIT', () => {
       error = await runscript.run(app.models, 'tests/api-login-teamster.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(2))
       if (error) throw new Error(error)
 
       testSucceeded = true

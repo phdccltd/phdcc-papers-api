@@ -54,13 +54,13 @@ describe('GRADING', () => {
       error = await runscript.run(app.models, 'tests/api-status-with-reviewers.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(1))
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-author2.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(1))
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-get-entry-paper.json', false, app)
@@ -69,7 +69,7 @@ describe('GRADING', () => {
       error = await runscript.run(app.models, 'tests/api-review-paper.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(1))
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
@@ -78,13 +78,13 @@ describe('GRADING', () => {
       error = await runscript.run(app.models, 'tests/api-status-paper-accepted.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(1))
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(1))
       if (error) throw new Error(error)
 
       testSucceeded = true

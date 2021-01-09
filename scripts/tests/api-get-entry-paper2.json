@@ -5,11 +5,22 @@
     {
       "name": "getEntry",
       "method": "get",
-      "uri": "/submits/entry/2",
+      "uri": "/submits/entry/3",
       "data": {
       },
       "return": {
         "ret": 0
+      }
+    },
+    {
+      "name": "getEntryFile",
+      "method": "get",
+      "uri": "/submits/entry/3/12", // Paper file: lorem-ipsum1.txt
+      "data": {
+      },
+      "return": {
+        "content-type": "text/plain",
+        "content-length": "2787-2795"
       }
     }
   ]

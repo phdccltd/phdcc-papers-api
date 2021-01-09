@@ -79,11 +79,10 @@ app.checkDatabases = async function (setupdb) {
     // Use first site to set mail transport
     const site = sites[0]
     const privatesettings = site.privatesettings
-    const stopmail = ('stopmailfile' in privatesettings) && fs.existsSync(privatesettings['stopmailfile'])
+    const stopmail = ('stopmailfile' in privatesettings) && fs.existsSync(privatesettings.stopmailfile)
     if (stopmail) {
-      logger.log('Stop mail file exists: ' + privatesettings['stopmailfile'])
-    }
-    else if ('transport-sendmail' in privatesettings && 'transport-newline' in privatesettings && 'transport-path' in privatesettings && 'email-from' in privatesettings) {
+      logger.log('Stop mail file exists: ' + privatesettings.stopmailfile)
+    } else if ('transport-sendmail' in privatesettings && 'transport-newline' in privatesettings && 'transport-path' in privatesettings && 'email-from' in privatesettings) {
       try {
         if (privatesettings['transport-sendmail']) {
           const transport = nodemailer.createTransport({

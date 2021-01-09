@@ -27,6 +27,12 @@ describe('SUBMIT', () => {
       error = await runscript.run(app.models, 'tests/addusers.json', config)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/api-login-editor.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(0))
+      if (error) throw new Error(error)
+
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
@@ -36,7 +42,7 @@ describe('SUBMIT', () => {
       error = await runscript.run(app.models, 'tests/api-login-editor.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, testhelper.countSubmits(1))
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-add-edited-paper.json', false, app)

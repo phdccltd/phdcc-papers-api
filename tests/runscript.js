@@ -38,7 +38,7 @@ function lookup (lookfor, lookin) {
   return null
 }
 
-async function run (models, configfilename, existingconfig, app, resBody) {
+async function run (models, configfilename, existingconfig, app, resBody, resCallback) {
   if (!existingconfig) existingconfig = {}
 
   try {
@@ -462,6 +462,10 @@ async function run (models, configfilename, existingconfig, app, resBody) {
               }
             }
           }
+        }
+        if (resCallback) {
+          const callbackError = resCallback(res)
+          if (callbackError) return callbackError + ' for: ' + call.name
         }
         if ('set' in call) {
           const dotpos = call.set.value.indexOf('.')

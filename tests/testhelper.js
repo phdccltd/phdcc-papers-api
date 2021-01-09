@@ -39,4 +39,18 @@ function waitUntilInited (app) {
   })
 }
 
-module.exports = { initThisTest, accumulog, accumulogged, waitUntilInited }
+function countSubmits (reqd) { // Check count of submits returned by getPubSubmits
+  return function (res) {
+    try {
+      if (reqd === res.body.flows[0].submits.length) {
+        return false
+      } else {
+        return 'countSubmits: wanted ' + reqd + ' got ' + res.body.flows[0].submits.length
+      }
+    } catch (e) {
+      return 'countSubmits exception ' + e.message
+    }
+  }
+}
+
+module.exports = { initThisTest, accumulog, accumulogged, waitUntilInited, countSubmits }
