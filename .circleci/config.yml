@@ -2,11 +2,11 @@ version: 2.1
 orbs:
   node: circleci/node@4.1.0
 workflows:
-  test_phdcc_papers_api:
+  phdcc_papers_api_coverage:
     jobs:
-      - test
+      - test_coverage
 jobs:
-  test:
+  test_coverage:
     executor: node/default
     steps:
       - checkout
@@ -15,5 +15,5 @@ jobs:
           override-ci-command: npm install
       - run: npm install jest
       - run: npm install coveralls
-      - run: npm run test
+      - run: npm run testci
       - run: node node_modules/coveralls/bin/coveralls.js < coverage/lcov.info # .coveralls.yml must contain circleci
