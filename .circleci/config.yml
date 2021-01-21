@@ -1,3 +1,4 @@
+# https://circleci.com/developer/orbs/orb/circleci/node
 version: 2.1
 orbs:
   node: circleci/node@4.1.0
@@ -7,12 +8,14 @@ workflows:
       - test_coverage
 jobs:
   test_coverage:
-    executor: node/default
+    executor: node/default:lts
+    #docker:
+    #  - image: 'cimg/base:stable'
     steps:
       - checkout
-      - node/install-packages:
-          cache-path: ~/project/node_modules
-          override-ci-command: npm install
+      - node/install-packages
+#          cache-path: ~/project/node_modules
+#          override-ci-command: npm install
       - run: npm install coveralls
       - run: npm install jest
       - run: mkdir testtmpdir
