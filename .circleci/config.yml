@@ -10,7 +10,7 @@ jobs:
   test_coverage:
     executor:
       name: node/default
-      tag: 12.20
+      tag: '12.20'
     docker:
       - image: 'cimg/base:stable'
     steps:
