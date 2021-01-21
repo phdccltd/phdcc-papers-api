@@ -15,7 +15,9 @@
     "postinstall": "patch-package"
   },
   "comments": {
-    "create_patch": "npx patch-package sequelize"
+    "create_patch": "npx patch-package sequelize",
+    "note_1": "supertest@6.1.1 has an issue",
+    "note_2": "sqlite3@5.0.1 causes some problem"
   },
   "license": "MIT",
   "dependencies": {
