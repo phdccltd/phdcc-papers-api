@@ -8,14 +8,14 @@ workflows:
       - test_coverage
 jobs:
   test_coverage:
-    executor:
-      name: node/default
-      tag: '12.20'
+    executor: node/default
     docker:
       - image: 'cimg/base:stable'
     steps:
       - checkout
-      - node/install
+      - node/install:
+        lts: true
+#          node-version: '12.20'
 #          cache-path: ~/project/node_modules
 #          override-ci-command: npm install
       - run: npm install coveralls
