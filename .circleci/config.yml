@@ -8,7 +8,9 @@ workflows:
       - test_coverage
 jobs:
   test_coverage:
-    executor: node/default:lts
+    executor:
+      name: node/default
+      tag: lts
     #docker:
     #  - image: 'cimg/base:stable'
     steps:
