@@ -1,6 +1,7 @@
 # phdcc-papers-api
 
-[![Build Status](https://api.travis-ci.com/phdccltd/phdcc-papers-api.svg?branch=main)](https://travis-ci.com/github/phdccltd/phdcc-papers-api)
+<!--[![Build Status](https://api.travis-ci.com/phdccltd/phdcc-papers-api.svg?branch=main)](https://travis-ci.com/github/phdccltd/phdcc-papers-api)-->
+[![CircleCI](https://circleci.com/gh/phdccltd/phdcc-papers-api.svg?style=shield)](https://circleci.com/gh/phdccltd/phdcc-papers-api)
 [![Coverage Status](https://coveralls.io/repos/github/phdccltd/phdcc-papers-api/badge.svg?branch=main)](https://coveralls.io/github/phdccltd/phdcc-papers-api?branch=main)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 [![Dependencies](https://david-dm.org/phdccltd/phdcc-papers-api.svg)](https://david-dm.org/phdccltd/phdcc-papers-api)
