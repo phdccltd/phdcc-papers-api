@@ -14,11 +14,11 @@ jobs:
     steps:
       - checkout
       - node/install:
-          node-version: '12.20'
+          lts: true
+          #node-version: '12.20'
       - run: npm -v
       - run: node -v
       - run: npm install coveralls
       - run: npm install jest
-      - run: mkdir testtmpdir
-      - run: npm run testci -- --runInBand
-      - run: node node_modules/coveralls/bin/coveralls.js < coverage/lcov.info # .coveralls.yml must contain circleci
+      - run: npm run testci # Must --runInBand to run sequentially so working directories not overwritten
+      - run: node node_modules/coveralls/bin/coveralls.js < coverage/lcov.info # .coveralls.yml must contain circleci and add environment variable COVERALLS_REPO_TOKEN

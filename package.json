@@ -7,9 +7,10 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development LOGMODE=console node ./server.js",
     "start": "cross-env NODE_ENV=production node ./server.js",
-    "test": "jest 2>tests1.txt",
-    "testci": "jest",
-    "testrel": "jest && coveralls < coverage/lcov.info",
+    "comment": "Must run tests with --runInBand to run sequentially so working directories not overwritten",
+    "test": "jest --runInBand 2>tests1.txt",
+    "testci": "jest --runInBand",
+    "testtravis": "jest --runInBand && coveralls < coverage/lcov.info",
     "standard": "standard app.js logger.js server.js task.js utils.js models/*.js routes/*.js tests/*.js",
     "postinstall": "patch-package"
   },
