@@ -162,8 +162,8 @@ async function downloadFull (req, res, next, all) {
       const paperdir = TMPDIR + dirName + '/papers/' + dbsubmit.id
       fs.mkdirSync(paperdir, { recursive: true })
 
-      const outpath = path.join(paperdir, flowstagefilename)
-      const anonStream = await openFile(outpath)
+      const _outpath = path.join(paperdir, flowstagefilename)
+      const anonStream = await openFile(_outpath)
       anonStream.write('Paper no: ' + dbsubmit.id + '\r')
       anonStream.write('Title: ' + dbsubmit.name + '\r')
 
@@ -179,7 +179,7 @@ async function downloadFull (req, res, next, all) {
 
       let status = 'UNKNOWN'
       if (req.currentstatus) {
-        const flowstatus = _.find(flow.statuses, (flowstatus) => { return flowstatus.id === req.currentstatus.flowstatusId })
+        const flowstatus = _.find(flow.statuses, _flowstatus => { return _flowstatus.id === req.currentstatus.flowstatusId })
         if (flowstatus) status = flowstatus.status
       }
 
@@ -242,26 +242,26 @@ async function downloadFull (req, res, next, all) {
     const subrows = []
     const stagesfound = []
 
-    for (const dbflow of await req.dbpub.getFlows()) {
-      const flow = models.sanitise(models.flows, dbflow)
-      const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
-      flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
+    for (const dbflow2 of await req.dbpub.getFlows()) {
+      const flow2 = models.sanitise(models.flows, dbflow2)
+      const dbstatuses2 = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
+      flow2.statuses = models.sanitiselist(dbstatuses2, models.flowstatuses)
 
-      const dbflowfields = []
-      for (const dbstage of await dbflow.getFlowStages()) {
+      const dbflowfields2 = []
+      for (const dbstage of await dbflow2.getFlowStages()) {
         const stageformfields = await models.formfields.findAll({ where: { formtypeid: dbstage.id } })
-        dbflowfields.push(...stageformfields)
+        dbflowfields2.push(...stageformfields)
       }
 
-      const dbsubmits = await dbflow.getSubmits()
-      for (const dbsubmit of dbsubmits) {
+      const dbsubmits2 = await dbflow2.getSubmits()
+      for (const dbsubmit of dbsubmits2) {
         const row = {}
         row.cols = []
         subrows.push(row)
 
         const req = { onlyanauthor: false }
         const submit = { ismine: false }
-        await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
+        await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow2)
 
         let status = 'UNKNOWN'
         if (req.currentstatus) {
@@ -292,7 +292,7 @@ async function downloadFull (req, res, next, all) {
 
           for (const dbentryvalue of await dbentry.getEntryValues()) {
             const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
-            const formfield = _.find(dbflowfields, field => { return field.id === entryvalue.formfieldId })
+            const formfield = _.find(dbflowfields2, field => { return field.id === entryvalue.formfieldId })
             if (formfield) {
               // if (!formfield.includeindownload) continue
               let stringvalue = ''

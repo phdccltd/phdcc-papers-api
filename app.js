@@ -57,10 +57,10 @@ app.checkDatabases = async function (setupdb) {
     const sites = []
     for (const sitedb of await models.sites.findAll()) {
       try {
-        const privatesettings = JSON.parse(sitedb.privatesettings)
-        const publicsettings = JSON.parse(sitedb.publicsettings)
-        const site = { id: sitedb.id, url: sitedb.url, name: sitedb.name, privatesettings: privatesettings || {}, publicsettings: publicsettings || {} }
-        sites.push(site)
+        const _privatesettings = JSON.parse(sitedb.privatesettings)
+        const _publicsettings = JSON.parse(sitedb.publicsettings)
+        const _site = { id: sitedb.id, url: sitedb.url, name: sitedb.name, privatesettings: _privatesettings || {}, publicsettings: _publicsettings || {} }
+        sites.push(_site)
       } catch (e) {
         console.error('SYNTAX ERROR IN settings for site', sitedb.id, sitedb.privatesettings, sitedb.publicsettings)
         if (!process.env.TESTING) {
@@ -85,12 +85,12 @@ app.checkDatabases = async function (setupdb) {
     } else if ('transport-sendmail' in privatesettings && 'transport-newline' in privatesettings && 'transport-path' in privatesettings && 'email-from' in privatesettings) {
       try {
         if (privatesettings['transport-sendmail']) {
-          const transport = nodemailer.createTransport({
+          const _transport = nodemailer.createTransport({
             sendmail: privatesettings['transport-sendmail'],
             newline: privatesettings['transport-newline'],
             path: privatesettings['transport-path']
           })
-          app.set('transport', transport)
+          app.set('transport', _transport)
         } else { // SMTP
           const transportOptions = {
             host: privatesettings['transport-host']
@@ -104,11 +104,11 @@ app.checkDatabases = async function (setupdb) {
               pass: privatesettings['transport-auth-pass']
             }
           }
-          const transport = nodemailer.createTransport(transportOptions)
-          if (transport) {
+          const _transport = nodemailer.createTransport(transportOptions)
+          if (_transport) {
             const rv = await transport.verify()
             console.log('transport verify', rv)
-            app.set('transport', transport)
+            app.set('transport', _transport)
           }
         }
       } catch (e) {
