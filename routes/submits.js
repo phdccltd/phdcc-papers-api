@@ -1119,21 +1119,21 @@ async function deleteSubmit (req, res, next) {
     const dbentries = await req.dbsubmit.getEntries()
     for (const dbentry of dbentries) {
       req.entryid = dbentry.id
-      const ok = await deleteEntry(req, res, next, ta) // Transaction DONE
-      if (!ok) { await ta.rollback(); return }
+      const ok2 = await deleteEntry(req, res, next, ta) // Transaction DONE
+      if (!ok2) { await ta.rollback(); return }
     }
 
     // Delete statuses
-    let affectedRows = await models.submitstatuses.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
+    await models.submitstatuses.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
 
     // Delete submitgradings
-    affectedRows = await models.submitgradings.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
+    await models.submitgradings.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
 
     // Delete submitreviewers
-    affectedRows = await models.submitreviewers.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
+    await models.submitreviewers.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
 
     // Delete submit
-    affectedRows = await models.submits.destroy({ where: { id: submitid } }, { transaction: ta }) // Transaction DONE
+    let affectedRows = await models.submits.destroy({ where: { id: submitid } }, { transaction: ta }) // Transaction DONE
 
     // Don't delete anything in actionlogs, but add delete entry instead
     await dbutils.addActionLog(ta, 'delete', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id)

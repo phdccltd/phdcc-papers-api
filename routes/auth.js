@@ -128,7 +128,7 @@ async function login (req, res, next) {
   if (!('username' in req.body) || (req.body.username.trim().length === 0)) return utils.giveup(req, res, 'username not given')
   if (!('password' in req.body) || (req.body.password.trim().length === 0)) return utils.giveup(req, res, 'password not given')
 
-  function authenticate (postRegisterId) {
+  function authenticate (_postRegisterId) {
     // console.log('post login', req.body['username'])
     passport.authenticate('login', // Calls login function above which fills in user (or err)
       async (err, user, info) => {
@@ -142,7 +142,7 @@ async function login (req, res, next) {
             if (!err) err = new Error('Login Error')
             return utils.giveup(req, res, err.message)
           }
-          if (postRegisterId && (postRegisterId !== user.id)) {
+          if (_postRegisterId && (_postRegisterId !== user.id)) {
             return utils.giveup(req, res, 'postRegisterId mismatch')
           }
 
@@ -179,7 +179,7 @@ async function login (req, res, next) {
 
   const recaptchaResponseToken = req.body['g-recaptcha-response']
   if (postRegisterId || (recaptchaResponseToken === process.env.RECAPTCHA_BYPASS)) {
-    authenticate()
+    authenticate(postRegisterId)
     return
   }
 
