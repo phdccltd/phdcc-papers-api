@@ -9,7 +9,7 @@ async function getSubmitCurrentStatus (req, dbsubmit, submit, flow) {
   req.currentstatus = false
   for (const dbstatus of dbstatuses) {
     const submitstatus = models.sanitise(models.submitstatuses, dbstatus)
-    const flowstatus = _.find(flow.statuses, flowstatus => { return flowstatus.id === submitstatus.flowstatusId })
+    const flowstatus = _.find(flow.statuses, _flowstatus => { return _flowstatus.id === submitstatus.flowstatusId })
     if (submit.ismine && !flowstatus.visibletoauthor) continue // If author of this submission: only return statuses with visibletoauthor
     submit.statuses.push(submitstatus)
     if (!req.currentstatus) req.currentstatus = submitstatus
@@ -49,7 +49,7 @@ async function getMyRoles (req) {
   req.canviewall = false
 
   const dbpubchecks = await req.dbuser.getPublications()
-  const dbpubcheck = _.find(dbpubchecks, (dbpubcheck) => { return dbpubcheck.id === req.dbpub.id })
+  const dbpubcheck = _.find(dbpubchecks, _dbpubcheck => { return _dbpubcheck.id === req.dbpub.id })
   if (!dbpubcheck) return false
 
   req.dbmypubroles = await req.dbuser.getRoles()
@@ -86,10 +86,10 @@ async function addAuthorStageActions (req, flow, submit) {
   if (!submit.ismine) return false
   let ihaveactions = false
   if (req.currentstatus.flowstatusId) {
-    const flowstatus = _.find(flow.statuses, (status) => { return status.id === req.currentstatus.flowstatusId })
+    const flowstatus = _.find(flow.statuses, _status => { return _status.id === req.currentstatus.flowstatusId })
     if (flowstatus) {
       if (flowstatus.cansubmitflowstageId) {
-        const stage = _.find(flow.stages, (stage) => { return stage.id === flowstatus.cansubmitflowstageId })
+        const stage = _.find(flow.stages, _stage => { return _stage.id === flowstatus.cansubmitflowstageId })
         if (stage) {
           // Am I allowed to enter this stage
           const hasRole = _.find(req.myroles, (role) => { return role.id === stage.pubroleId })

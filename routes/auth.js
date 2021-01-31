@@ -136,7 +136,7 @@ async function login (req, res, next) {
           // console.log('authenticate OVER:', err, info)
           if (info) {
             logger.log4req(req, 'login authenticate info', info.message)
-          } else info = ''
+          }
 
           if (err || !user) {
             if (!err) err = new Error('Login Error')
@@ -146,10 +146,10 @@ async function login (req, res, next) {
             return utils.giveup(req, res, 'postRegisterId mismatch')
           }
 
-          req.login(user, { session: false }, async (err) => {
-            if (err) {
-              console.log('req.login err', err)
-              return utils.giveup(req, res, err.message)
+          req.login(user, { session: false }, async (err2) => {
+            if (err2) {
+              console.log('req.login err2', err2)
+              return utils.giveup(req, res, err2.message)
             }
             logger.log4req(req, 'LOGGED IN', user.username, user.id)
             const ppuser = { id: user.id }
@@ -255,8 +255,8 @@ async function register (req, res, next) {
         }
         if (anyRoleRequested) {
           // Send per-pub user-just-registered mail
-          const dbpubmails = await dbpub.getMailTemplates({ where: { sendOnSiteAction: models.pubmailtemplates.consts.SITE_REGISTER } })
-          for (const dbpubmail of dbpubmails) {
+          const dbpubmails2 = await dbpub.getMailTemplates({ where: { sendOnSiteAction: models.pubmailtemplates.consts.SITE_REGISTER } })
+          for (const dbpubmail of dbpubmails2) {
             if (dbpubmail.bccToOwners) { // CHANGE
               console.log(dbpubmail.id, 'SEND REGISTERED MAIL TO OWNER', dbpub.id)
               await mailutils.sendOneTemplate(dbuser.id, dbpubmail, false, dbpub, false, dbuser, false, false, false, false)
