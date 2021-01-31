@@ -151,7 +151,7 @@ async function addEntry (req, res, next, ta) {
     }
     // Add any missing formfields
     for (const ff of dbformfields) {
-      let v = _.find(values, v => { return ff.id === v.formfieldid })
+      let v = _.find(values, _v => { return ff.id === _v.formfieldid })
       if (!v) {
         v = { formfieldid: ff.id, string: null, integer: null, text: null, existingfile: null, file: null }
         values.push(v)
@@ -262,9 +262,8 @@ async function addEntry (req, res, next, ta) {
     // Find flow status that should be set when this flow stage is submitted - usually just one
     const dbflowstatuses = await models.flowstatuses.findAll({ where: { submittedflowstageId: req.body.stageid } })
     for (const dbflowstatus of dbflowstatuses) {
-      const now = new Date()
       const submitstatus = {
-        dt: now,
+        dt: new Date(),
         submitId: rv.submitid,
         flowstatusId: dbflowstatus.id
       }
@@ -342,7 +341,7 @@ async function oktoadd (req, res) {
 
   // Check if this stage is open
   flow.acceptings = models.sanitiselist(await req.dbflow.getFlowAcceptings(), models.flowacceptings)
-  const accepting = _.find(flow.acceptings, accepting => { return accepting.flowstageId === flowstageid })
+  const accepting = _.find(flow.acceptings, _accepting => { return _accepting.flowstageId === flowstageid })
   if (accepting) {
     if (accepting.flowstatusId === null) {
       if (!accepting.open) return utils.giveup(req, res, 'Sorry, entries are closed at the moment')
@@ -762,7 +761,7 @@ async function getEntry (req, res, next) {
     for (const dbentryvalue of await dbentry.getEntryValues()) {
       const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
       if (req.iamgrading) {
-        const field = _.find(entry.fields, field => { return field.id === entryvalue.formfieldId })
+        const field = _.find(entry.fields, _field => { return _field.id === entryvalue.formfieldId })
         if (field.hideatgrading && (field.hideatgrading === req.iamgradingat)) continue
       }
       entry.values.push(entryvalue)
@@ -972,10 +971,10 @@ async function getPubSubmits (req, res, next) {
         for (const dbgrading of req.dbsubmitgradings) {
           let returnthisone = req.isowner
           if (submit.ismine) {
-            const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
+            const flowgrade = _.find(flow.flowgrades, _flowgrade => { return _flowgrade.id === dbgrading.flowgradeId })
             if (flowgrade && flowgrade.authorcanseeatthesestatuses) {
               const canseeat = flowgrade.authorcanseeatthesestatuses.split(',')
-              const found = _.find(canseeat, (flowgradeid) => { return parseInt(flowgradeid) === req.currentstatus.flowstatusId })
+              const found = _.find(canseeat, _flowgradeid => { return parseInt(_flowgradeid) === req.currentstatus.flowstatusId })
               if (found) {
                 returnthisone = true
                 submit.gradings.push({ flowgradeId: dbgrading.flowgradeId, comment: dbgrading.comment })
@@ -985,7 +984,7 @@ async function getPubSubmits (req, res, next) {
           }
           let overrideviewall = false
           if (req.iamgrading) {
-            const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
+            const flowgrade = _.find(flow.flowgrades, _flowgrade => { return _flowgrade.id === dbgrading.flowgradeId })
             if (flowgrade) {
               if (req.iamleadgrader) returnthisone = true
               if (dbgrading.userId === req.dbuser.id) returnthisone = true
@@ -1000,7 +999,7 @@ async function getPubSubmits (req, res, next) {
             if (!submit.ismine) {
               const grading = models.sanitise(models.submitgradings, dbgrading)
               if (!req.onlyanauthor) {
-                const reviewer = _.find(reviewers, (reviewer) => { return reviewer.userId === grading.userId })
+                const reviewer = _.find(reviewers, _reviewer => { return _reviewer.userId === grading.userId })
                 grading.lead = reviewer ? reviewer.lead : false
                 const dbgrader = await dbgrading.getUser()
                 grading.username = ''
@@ -1014,7 +1013,7 @@ async function getPubSubmits (req, res, next) {
               }
               submit.gradings.push(grading)
               if (req.isowner) {
-                const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === dbgrading.flowgradeId })
+                const flowgrade = _.find(flow.flowgrades, _flowgrade => { return _flowgrade.id === dbgrading.flowgradeId })
                 if (flowgrade) {
                   const existinggrade = _.find(ownergradingsummary, (og) => { return og.id === flowgrade.id })
                   if (existinggrade) existinggrade.count++

@@ -173,13 +173,13 @@ async function downloadFull (req, res, next, all) {
       }
       await closeFile(anonStream)
 
-      const req = { onlyanauthor: false }
+      const req2 = { onlyanauthor: false }
       const submit = { ismine: false }
-      await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow)
+      await dbutils.getSubmitCurrentStatus(req2, dbsubmit, submit, flow)
 
       let status = 'UNKNOWN'
-      if (req.currentstatus) {
-        const flowstatus = _.find(flow.statuses, _flowstatus => { return _flowstatus.id === req.currentstatus.flowstatusId })
+      if (req2.currentstatus) {
+        const flowstatus = _.find(flow.statuses, _flowstatus => { return _flowstatus.id === req2.currentstatus.flowstatusId })
         if (flowstatus) status = flowstatus.status
       }
 
@@ -259,13 +259,13 @@ async function downloadFull (req, res, next, all) {
         row.cols = []
         subrows.push(row)
 
-        const req = { onlyanauthor: false }
+        const req2 = { onlyanauthor: false }
         const submit = { ismine: false }
-        await dbutils.getSubmitCurrentStatus(req, dbsubmit, submit, flow2)
+        await dbutils.getSubmitCurrentStatus(req2, dbsubmit, submit, flow2)
 
         let status = 'UNKNOWN'
-        if (req.currentstatus) {
-          const flowstatus = _.find(flow.statuses, (flowstatus) => { return flowstatus.id === req.currentstatus.flowstatusId })
+        if (req2.currentstatus) {
+          const flowstatus = _.find(flow.statuses, _flowstatus => { return _flowstatus.id === req2.currentstatus.flowstatusId })
           if (flowstatus) status = flowstatus.status
         }
 
@@ -280,12 +280,12 @@ async function downloadFull (req, res, next, all) {
 
         const dbentries = await dbsubmit.getEntries({ order: [['id', 'ASC']] })
         for (const dbentry of dbentries) {
-          const dbflowstage = await dbentry.getFlowstage()
-          let foundstage = _.find(stagesfound, (stage) => { return stage.id === dbflowstage.id })
+          const dbflowstage2 = await dbentry.getFlowstage()
+          let foundstage = _.find(stagesfound, _stage => { return _stage.id === dbflowstage2.id })
           if (!foundstage) {
-            foundstage = { id: dbflowstage.id }
+            foundstage = { id: dbflowstage2.id }
             foundstage.colid = nextfreesubcolid++
-            subcols.push({ id: foundstage.colid, formtypeid: 0, weight: foundstage.colid, name: dbflowstage.name + ' date' })
+            subcols.push({ id: foundstage.colid, formtypeid: 0, weight: foundstage.colid, name: dbflowstage2.name + ' date' })
             stagesfound.push(foundstage)
           }
           row.cols.push({ id: foundstage.colid, value: dbentry.dt.toISOString() })
@@ -321,19 +321,19 @@ async function downloadFull (req, res, next, all) {
       }
     }
 
-    const sortedcols = subcols.sort((a, b) => {
+    subcols.sort((a, b) => {
       if (a.formtypeid === b.formtypeid) return a.weight - b.weight
       return a.formtypeid - b.formtypeid
     })
     const submissionsHeader = []
-    for (const col of sortedcols) {
+    for (const col of subcols) {
       submissionsHeader.push(col.name)
     }
     writeCSVline(submissionsStream, submissionsHeader)
 
     for (const row of subrows) {
       const submissionsLine = []
-      for (const col of sortedcols) {
+      for (const col of subcols) {
         const v = _.find(row.cols, (o) => { return o.id === col.id })
         const sv = v ? v.value : ''
         submissionsLine.push(sv)
@@ -359,9 +359,9 @@ async function downloadFull (req, res, next, all) {
 }
 
 /* ************************ */
-function openFile (path) {
+function openFile (_path) {
   return new Promise((resolve, reject) => {
-    const stream = fs.createWriteStream(path)
+    const stream = fs.createWriteStream(_path)
     stream.on('open', async function (fd) {
       resolve(stream)
     })
@@ -573,7 +573,7 @@ async function downloadReviewerPerformance (req, res, next) {
             const dbusergrading = _.find(dbgradings, (dbgrading) => { return dbgrading.userId === dbreviewer.userId && dbgrading.flowgradeId === dbflowgrade.id })
 
             if (dbusergrading) {
-              const score = _.find(dbflowgrade.flowgradescores, (score) => { return score.id === dbusergrading.flowgradescoreId })
+              const score = _.find(dbflowgrade.flowgradescores, _score => { return _score.id === dbusergrading.flowgradescoreId })
               if (score) {
                 review = score.name
                 dtReviewed = dbusergrading.dt
@@ -620,11 +620,11 @@ async function downloadReviewerPerformance (req, res, next) {
 function deleteFolderRecursivelySync (dirpath) {
   const files = fs.readdirSync(dirpath)
   files.forEach(file => {
-    const path = dirpath + '/' + file
-    if (fs.lstatSync(path).isDirectory()) {
-      deleteFolderRecursivelySync(path)
+    const _path = dirpath + '/' + file
+    if (fs.lstatSync(_path).isDirectory()) {
+      deleteFolderRecursivelySync(_path)
     } else {
-      fs.unlinkSync(path)
+      fs.unlinkSync(_path)
     }
   })
   fs.rmdirSync(dirpath)
@@ -636,7 +636,7 @@ async function writeAnonEntryValues (fields, dbentry, anonStream) {
   const dbentryvalues = await dbentry.getEntryValues()
   for (const formfield of fields) {
     if (formfield.hideatgrading) continue // Doesn't check that submit is at this grading
-    const dbentryvalue = _.find(dbentryvalues, dbentryvalue => { return formfield.id === dbentryvalue.formfieldId })
+    const dbentryvalue = _.find(dbentryvalues, _dbentryvalue => { return formfield.id === _dbentryvalue.formfieldId })
     if (dbentryvalue) {
       const entryvalue = models.sanitise(models.entryvalues, dbentryvalue)
       const stringvalue = await dbutils.getEntryStringValue(entryvalue, formfield)

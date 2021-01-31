@@ -150,7 +150,7 @@ async function sendMail (dbpubmail, dbsubmit, dbreviewer) {
   body = body(data)
   const bcc = bccEmails.join(',')
   console.log('sendMail', dbuser.email, subject)
-  await utils.asyncMail(dbuser.email, subject, body, bcc)
+  utils.asyncMail(dbuser.email, subject, body, bcc)
 
   // Note in actionlogs
   await dbutils.addActionLog(null, 'add', null, dbreviewer.userId, dbsubmit.id, null, null, null, null, null, dbpubmail.id) // in sentReminderPubMailTemplateId

@@ -16,11 +16,11 @@ async function testsetup (models) {
 
     // Fake a mail transport
     const transport = {
-      sendMail: function (params, callbacks) {
-        if (params.subject.indexOf('Proposal') !== -1) {
+      sendMail: function (_params, callbacks) {
+        if (_params.subject.indexOf('Proposal') !== -1) {
           callbacks('Pretend fail', false)
         } else {
-          callbacks(false, 'MOCK sendMail to ' + params.to)
+          callbacks(false, 'MOCK sendMail to ' + _params.to)
         }
       }
     }

@@ -30,7 +30,7 @@ const persisted = {}
 
 function lookup (lookfor, lookin) {
   if (lookfor) {
-    const thing = _.find(lookin, thing => { return thing.name === lookfor })
+    const thing = _.find(lookin, _thing => { return _thing.name === lookfor })
     if (thing) {
       return thing.db.id
     } else throw new Error('Unrecognised lookup: ' + lookfor)

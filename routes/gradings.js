@@ -83,9 +83,9 @@ async function addGrading (req, res, next) {
     const flow = await dbutils.getFlowWithFlowgrades(req.dbflow)
 
     // Re-find flowgrade and check score
-    const flowgrade = _.find(flow.flowgrades, (flowgrade) => { return flowgrade.id === flowgradeid })
+    const flowgrade = _.find(flow.flowgrades, _flowgrade => { return _flowgrade.id === flowgradeid })
     if (!flowgrade) return utils.giveup(req, res, 'flowgrade not found' + flowgradeid)
-    const flowgradescore = _.find(flowgrade.scores, (score) => { return score.id === flowgradescoreId })
+    const flowgradescore = _.find(flowgrade.scores, _score => { return _score.id === flowgradescoreId })
     if (!flowgradescore) return utils.giveup(req, res, 'flowgradescore not found ' + flowgradescoreId)
 
     if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')

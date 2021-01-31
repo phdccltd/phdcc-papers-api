@@ -90,9 +90,9 @@ async function sendOneTemplate (dbuserid, dbpubmail, site, dbpub, dbformfields, 
   if (dbsubmit && dbpubmail.sendToReviewers) {
     const dbreviewers = await dbsubmit.getReviewers()
     for (const dbreviewer of dbreviewers) {
-      const dbuser = await dbreviewer.getUser()
-      if (dbuser) {
-        recipients.push(dbuser)
+      const dbuser2 = await dbreviewer.getUser()
+      if (dbuser2) {
+        recipients.push(dbuser2)
       }
     }
   }
@@ -113,7 +113,7 @@ async function sendOneTemplate (dbuserid, dbpubmail, site, dbpub, dbformfields, 
     const svalues = (typeof reqbody.values === 'string') ? [reqbody.values] : reqbody.values // Single value comes in as string; otherwise array
     for (const sv of svalues) {
       const v = JSON.parse(sv)
-      const formfield = _.find(dbformfields, formfield => { return formfield.id === v.formfieldid })
+      const formfield = _.find(dbformfields, _formfield => { return _formfield.id === v.formfieldid })
       entryout['field_' + v.formfieldid] = await dbutils.getEntryStringValue(v, formfield)
     }
   }

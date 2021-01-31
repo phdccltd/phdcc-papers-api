@@ -22,16 +22,16 @@ server.on('error', onError)
 server.on('listening', onListening)
 
 function normalizePort (val) {
-  const port = parseInt(val, 10)
+  const _port = parseInt(val, 10)
 
-  if (isNaN(port)) {
+  if (isNaN(_port)) {
     // named pipe
     return val
   }
 
-  if (port >= 0) {
+  if (_port >= 0) {
     // port number
-    return port
+    return _port
   }
 
   return false
