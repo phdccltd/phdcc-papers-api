@@ -97,8 +97,10 @@ async function sendOneTemplate (dbuserid, dbpubmail, site, dbpub, dbformfields, 
     }
   }
 
-  let subject = Handlebars.compile(dbpubmail.subject, { noEscape: true })
-  let body = Handlebars.compile(dbpubmail.body, { noEscape: true })
+  // If need be, set noEscape to true to allow HTML: https://handlebarsjs.com/api-reference/compilation.html
+  // Characters such as ' and & are currently escaped into &#x27; and &amp; which could be undone.
+  let subject = Handlebars.compile(dbpubmail.subject, { noEscape: false })
+  let body = Handlebars.compile(dbpubmail.body, { noEscape: false })
 
   if (recipients.length === 0 && bccOwners.length === 0) {
     logger.log('No recipients for ' + dbpubmail.name)
