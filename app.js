@@ -20,6 +20,7 @@ logger.log('PAPERS STARTING: ', global.starttime, process.pid, 'LOGMODE', proces
 
 // Create express instance
 const app = express()
+app.disable("x-powered-by");
 app.set('sites', [])
 
 app.options('*', cors()) // include before other routes

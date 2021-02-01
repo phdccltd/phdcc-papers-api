@@ -26,7 +26,7 @@ passport.use('login', new LocalStrategy({
 },
 async (username, password, done) => {
   try {
-    // console.log('verify', username)
+    //console.log('verify', username)
     const user = await models.users.findOne({ where: { username: username } })
     if (!user) throw new Error('Incorrect username')
     const match = await bcrypt.compare(password, user.password)
@@ -142,6 +142,7 @@ async function login (req, res, next) {
             if (!err) err = new Error('Login Error')
             return utils.giveup(req, res, err.message)
           }
+
           if (_postRegisterId && (_postRegisterId !== user.id)) {
             return utils.giveup(req, res, 'postRegisterId mismatch')
           }
@@ -169,7 +170,7 @@ async function login (req, res, next) {
   if ('token' in req.body) {
     try {
       const tuser = jwt.verify(req.body.token, process.env.JWT_SECRET)
-      console.log('TUSER', tuser)
+      //console.log('TUSER', tuser)
       postRegisterId = tuser.id
       if (!postRegisterId) return utils.giveup(req, res, 'Post-registration token no id')
     } catch (e) {
@@ -282,6 +283,7 @@ async function register (req, res, next) {
       utils.asyncMail(false, req.site.name + '. API User registered: ' + username, 'Name: ' + params.name + '\r\nEmail: ' + params.email)
 
       const token = jwt.sign({ id: dbuser.id }, process.env.JWT_SECRET)
+      console.log('REGISTERED', dbuser.id)
       utils.returnOK(req, res, { token }, 'user')
     } catch (e) {
       logger.log(e.message)

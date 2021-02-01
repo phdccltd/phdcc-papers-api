@@ -286,7 +286,7 @@
       }
     },
     {
-      "name": "register: OK",
+      "name": "register: OK", // 10
       "method": "post",
       "uri": "/user/register",
       "data": {
@@ -317,8 +317,8 @@
       ],
       "data": {
         "token": "@token",
-        "username": "author1",
-        "password": "author1pwd",
+        "username": "bryoney",
+        "password": "shhhhh",
         "g-recaptcha-response": "process.env.RECAPTCHA_BYPASS"
       },
       "return": {
