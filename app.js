@@ -108,7 +108,7 @@ app.checkDatabases = async function (setupdb) {
           }
           const _transport = nodemailer.createTransport(transportOptions)
           if (_transport) {
-            const rv = await transport.verify()
+            const rv = await _transport.verify()
             console.log('transport verify', rv)
             app.set('transport', _transport)
           }
