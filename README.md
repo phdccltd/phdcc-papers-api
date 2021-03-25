@@ -133,6 +133,8 @@ pm2 start papersapi
 
 cd /var/www/papers
 git pull
+rm package-lock.json
+rm -r node_modules
 npm install
 npm run build
 pm2 start papers
