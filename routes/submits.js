@@ -61,7 +61,7 @@ async function handleEntryPost (req, res, next) {
     return
   }
   if (req.headers['x-http-method-override'] === 'DELETE') {
-    req.entryid = req.params.entryid
+    req.entryid = parseInt(req.params.entryid)
     const ta = await sequelize.transaction()
     const ok = await deleteEntry(req, res, next, ta)
     if (!ok) { await ta.rollback(); return }
@@ -486,7 +486,7 @@ async function editEntry (req, res, next, ta) {
         }
       }
 
-      let filepath = '/' + req.site.id + '/' + req.body.pubid + '/' + req.body.flowid + '/' + req.dbsubmit.id + '/' + dbentry.id
+      let filepath = '/' + req.site.id + '/' + parseInt(req.body.pubid) + '/' + parseInt(req.body.flowid) + '/' + req.dbsubmit.id + '/' + dbentry.id
       fs.mkdirSync(filesdir + filepath, { recursive: true })
       filepath += '/' + file.originalname
       fs.renameSync(file.path, filesdir + filepath)
