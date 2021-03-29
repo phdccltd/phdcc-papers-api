@@ -146,11 +146,11 @@ async function sendOneTemplate (dbuserid, dbpubmail, site, dbpub, dbformfields, 
     for (const recipient of recipients) {
       utils.asyncMail(recipient.email, subject, body, bcc)
       await dbutils.addActionLog(null, 'add', dbuserid, recipient.id, submitId, entryId, null, null, null, dbpubmail.id)
-      bcc = false
+      // bcc = false
     }
   } else {
-    for (const bccOwner of bccOwners) {
-      utils.asyncMail(bccOwner, subject, body, false)
+    for (const bccEmail of bccEmails) {
+      utils.asyncMail(bccEmail, subject, body, false)
     }
   }
   for (const bccOwner of bccOwners) {
