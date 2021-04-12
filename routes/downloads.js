@@ -160,8 +160,6 @@ async function downloadFull (req, res, next, all) {
 
     const dbsubmits = await dbflow.getSubmits()
     for (const dbsubmit of dbsubmits) {
-      console.log('flow submit', dbsubmit.id)
-
       // Create folder for each paper
       const paperdir = TMPDIR + dirName + '/papers/' + dbsubmit.id
       fs.mkdirSync(paperdir, { recursive: true })
@@ -249,7 +247,7 @@ async function downloadFull (req, res, next, all) {
 
     for (const dbflow2 of await req.dbpub.getFlows()) {
       const flow2 = models.sanitise(models.flows, dbflow2)
-      const dbstatuses2 = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
+      const dbstatuses2 = await dbflow2.getFlowStatuses({ order: [['weight', 'ASC']] })
       flow2.statuses = models.sanitiselist(dbstatuses2, models.flowstatuses)
 
       const dbflowfields2 = []
@@ -270,7 +268,7 @@ async function downloadFull (req, res, next, all) {
 
         let status = 'UNKNOWN'
         if (req2.currentstatus) {
-          const flowstatus = _.find(flow.statuses, _flowstatus => { return _flowstatus.id === req2.currentstatus.flowstatusId })
+          const flowstatus = _.find(flow2.statuses, _flowstatus => { return _flowstatus.id === req2.currentstatus.flowstatusId })
           if (flowstatus) status = flowstatus.status
         }
 
@@ -279,7 +277,7 @@ async function downloadFull (req, res, next, all) {
 
         row.cols.push({ id: -15, value: dbsubmit.id })
         row.cols.push({ id: -14, value: authorusername })
-        row.cols.push({ id: -13, value: dbflow.name })
+        row.cols.push({ id: -13, value: dbflow2.name })
         row.cols.push({ id: -12, value: status })
         row.cols.push({ id: -11, value: dbsubmit.name })
 
