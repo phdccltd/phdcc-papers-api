@@ -134,7 +134,7 @@ async function downloadFull (req, res, next, all) {
 
     // Prep to write reviews for this flowstage
     const dbflowgrades = await dbflow.getFlowgrades({ where: { displayflowstageId: flowstageid } })
-    if (dbflowgrades.length !== 1) return utils.giveup(req, res, 'No flowgrades for the flow stage')
+    if (dbflowgrades.length !== 1) return utils.giveup(req, res, 'Cannot do download when no flowgrades for the flow stage')
     const dbflowgrade = dbflowgrades[0]
 
     const flowgradename = dbflowgrade.name.replace(/\s/g, '-') + '-'
