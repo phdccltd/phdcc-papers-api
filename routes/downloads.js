@@ -230,7 +230,7 @@ async function downloadFull (req, res, next, all) {
     /// //////////////////
     // FIND ALL SUBMISSIONS FOR THIS PUBLICATION
 
-    const submissionsFilename = 'submissions-' + nowstring + '.csv'
+    const submissionsFilename = 'submissions-all-' + nowstring + '.csv'
     const submissionsStream = await openFile(TMPDIR + dirName + '/' + submissionsFilename)
     submissionsStream.write('\ufeff')
 
@@ -549,9 +549,9 @@ async function downloadReviewerPerformance (req, res, next) {
         const dbgradings = await dbsubmit.getGradings()
 
         const submitactionlogs = await models.actionlogs.findAll({ where: { submitId: dbsubmit.id }, order: [['dt', 'ASC'], ['id', 'ASC']] })
-        for (const submitactionlog of submitactionlogs) {
-          console.log(dbsubmit.id, submitactionlog.onUserId, submitactionlog.sentPubMailTemplateId)
-        }
+        // for (const submitactionlog of submitactionlogs) {
+        //   console.log(dbsubmit.id, submitactionlog.onUserId, submitactionlog.sentPubMailTemplateId)
+        // }
 
         const dbreviewers = await dbsubmit.getReviewers()
         for (const dbreviewer of dbreviewers) {
