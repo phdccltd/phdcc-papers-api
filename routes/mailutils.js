@@ -139,7 +139,7 @@ async function sendOneTemplate (dbuserid, dbpubmail, site, dbpub, dbformfields, 
   // console.log('sendOutMails', data)
   subject = subject(data)
   body = body(data)
-  let bcc = bccEmails.join(',')
+  const bcc = bccEmails.join(',')
   const submitId = dbsubmit ? dbsubmit.id : null
   const entryId = dbentry ? dbentry.id : null
   if (recipients.length > 0) {

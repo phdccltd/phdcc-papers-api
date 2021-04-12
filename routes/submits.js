@@ -1133,7 +1133,7 @@ async function deleteSubmit (req, res, next) {
     await models.submitreviewers.destroy({ where: { submitId: submitid } }, { transaction: ta }) // Transaction DONE
 
     // Delete submit
-    let affectedRows = await models.submits.destroy({ where: { id: submitid } }, { transaction: ta }) // Transaction DONE
+    const affectedRows = await models.submits.destroy({ where: { id: submitid } }, { transaction: ta }) // Transaction DONE
 
     // Don't delete anything in actionlogs, but add delete entry instead
     await dbutils.addActionLog(ta, 'delete', req.dbuser.id, req.dbsubmit.userId, req.dbsubmit.id)

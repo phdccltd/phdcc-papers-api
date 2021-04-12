@@ -26,7 +26,7 @@ passport.use('login', new LocalStrategy({
 },
 async (username, password, done) => {
   try {
-    //console.log('verify', username)
+    // console.log('verify', username)
     const user = await models.users.findOne({ where: { username: username } })
     if (!user) throw new Error('Incorrect username')
     const match = await bcrypt.compare(password, user.password)
@@ -170,7 +170,7 @@ async function login (req, res, next) {
   if ('token' in req.body) {
     try {
       const tuser = jwt.verify(req.body.token, process.env.JWT_SECRET)
-      //console.log('TUSER', tuser)
+      // console.log('TUSER', tuser)
       postRegisterId = tuser.id
       if (!postRegisterId) return utils.giveup(req, res, 'Post-registration token no id')
     } catch (e) {

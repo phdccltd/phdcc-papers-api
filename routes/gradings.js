@@ -126,7 +126,7 @@ async function addGrading (req, res, next) {
       // await dbgrading.save() // Transaction OK
       // logger.log4req(req, 'UPDATED grading', gradingid)
       */
-      //ok = false
+      // ok = false
     } else {
       const now = new Date()
       const params = {
