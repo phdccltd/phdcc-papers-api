@@ -132,8 +132,9 @@ async function downloadFull (req, res, next, all) {
     const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
     flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
 
+    // Prep to write reviews for this flowstage
     const dbflowgrades = await dbflow.getFlowgrades({ where: { displayflowstageId: flowstageid } })
-    if (dbflowgrades.length !== 1) return utils.giveup(req, res, 'dbpubcheck.id and dbpub.id mismatch')
+    if (dbflowgrades.length !== 1) return utils.giveup(req, res, 'No flowgrades for the flow stage')
     const dbflowgrade = dbflowgrades[0]
 
     const flowgradename = dbflowgrade.name.replace(/\s/g, '-') + '-'
@@ -159,9 +160,13 @@ async function downloadFull (req, res, next, all) {
 
     const dbsubmits = await dbflow.getSubmits()
     for (const dbsubmit of dbsubmits) {
+      console.log('flow submit', dbsubmit.id)
+
+      // Create folder for each paper
       const paperdir = TMPDIR + dirName + '/papers/' + dbsubmit.id
       fs.mkdirSync(paperdir, { recursive: true })
 
+      // Write anonymised txt of submission
       const _outpath = path.join(paperdir, flowstagefilename)
       const anonStream = await openFile(_outpath)
       anonStream.write('Paper no: ' + dbsubmit.id + '\r')
