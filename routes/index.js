@@ -1,6 +1,7 @@
 // Always set 'ret', 0 if OK
 
 const { Router } = require('express')
+const path = require('path')
 
 const utils = require('../utils')
 
@@ -57,8 +58,11 @@ router.use(function (req, res, next) {
 router.use(function (req, res, next) {
   if (req.path.substr(-1) === '/' && req.path.length > 1) {
     const query = req.url.slice(req.path.length)
-    // console.log("redirect from", process.env.BASEURL, req.baseUrl, req.path)
-    const goto = process.env.BASEURL + req.baseUrl + req.path.slice(0, -1) + query
+    const npath = path.normalize(req.path)
+    if (npath.indexOf('..') !== -1) return utils.giveup(req, res, 'Invalid path')
+    if (npath.substr(-1) !== '/') return utils.giveup(req, res, 'Invalid path')
+    console.log("redirect from", process.env.BASEURL, req.baseUrl, npath)
+    const goto = process.env.BASEURL + req.baseUrl + npath.slice(0, -1) + query
     // console.log("redirect to", goto)
     res.redirect(301, goto)
   } else {
