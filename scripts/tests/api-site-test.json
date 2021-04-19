@@ -3,17 +3,6 @@
   "pubname": "TestPubName",
   "api": [
     {
-      "name": "redirect from /x/y/ to /x/y",
-      "method": "get",
-      "uri": "/submits/pub/1/",
-      "data": {
-      },
-      "return": {
-        "statusCode": 301,
-        "location": "/api/submits/pub/1"
-      }
-    },
-    {
       "name": "get sitepages",
       "method": "get",
       "uri": "/sitepages",

@@ -13,6 +13,20 @@
         "prop": "status",
         "value": "Not running on valid site"
       }
+    },
+    {
+      "name": "redirect from /x/y/ to /x/y",
+      "method": "get",
+      "uri": "/submits/pub/1/",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Invalid path"
+        //"statusCode": 301,
+        //"location": "/api/submits/pub/1"
+      }
     }
   ]
 }
