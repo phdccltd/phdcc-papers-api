@@ -54,17 +54,18 @@ router.use(function (req, res, next) {
   next()
 })
 
-/* ALL: redirect from xxx/ to xxx */
+/* ALL: just give up if path ends / */
 router.use(function (req, res, next) {
   if (req.path.substr(-1) === '/' && req.path.length > 1) {
-    const query = req.url.slice(req.path.length)
+    return utils.giveup(req, res, 'Invalid path')
+    /* const query = req.url.slice(req.path.length)
     const npath = path.normalize(req.path)
     if (npath.indexOf('..') !== -1) return utils.giveup(req, res, 'Invalid path')
     if (npath.substr(-1) !== '/') return utils.giveup(req, res, 'Invalid path')
     console.log("redirect from", process.env.BASEURL, req.baseUrl, npath)
     const goto = process.env.BASEURL + req.baseUrl + npath.slice(0, -1) + query
     // console.log("redirect to", goto)
-    res.redirect(301, goto)
+    res.redirect(301, goto) */
   } else {
     next()
   }
