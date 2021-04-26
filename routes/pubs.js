@@ -87,6 +87,42 @@ router.get('/pubs', async function (req, res, next) {
   }
 })
 
+/* POST: create publication */
+router.post('/pubs', async function (req, res, next) {
+  try {
+    if (!req.dbuser.super) return utils.giveup(req, res, 'Not a super')
+
+    if (!('pubname' in req.body)) return utils.giveup(req, res, 'pubname missing')
+    const pubname = req.body.pubname.trim()
+    if (pubname.length === 0) return utils.giveup(req, res, 'pubname empty')
+
+    if (!('pubdescr' in req.body)) return utils.giveup(req, res, 'pubdescr missing')
+    const pubdescr = req.body.pubdescr.trim()
+    if (pubdescr.length === 0) return utils.giveup(req, res, 'pubdescr empty')
+
+    // Make an alias. Not used for now so doesn't matter if duplicate
+    let alias = req.site.url.split('.').reverse().join('.') // eg from 'papers.phdcc.com' to 'com.phdcc.papers'
+    alias += '.' + pubname.toLowerCase().replace(/ /g,'-')
+    console.log('alias', alias)
+
+    const pub = {
+      siteId: req.site.id,
+      alias,
+      name: pubname,
+      title: pubname,
+      description: pubdescr,
+      email: ''
+    }
+    const dbpub = await models.pubs.create(pub) // Transaction OK
+    if (!dbpub) return utils.giveup(req, res, 'Could not create publication')
+
+    const ok = true
+    utils.returnOK(req, res, ok, 'ok')
+    } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+})
+
 /* POST bulk op: for all submits at FROM status, add new TO status */
 router.post('/pubs/:pubid', async function (req, res, next) {
   try {

@@ -1,6 +1,4 @@
 /* eslint-env jest */
-// https://dev.to/nedsoft/testing-nodejs-express-api-with-jest-and-supertest-1km6
-// https://www.npmjs.com/package/supertest
 
 const testhelper = require('./testhelper')
 const maketestsite = require('./maketestsite')
@@ -11,8 +9,8 @@ const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.acc
 
 process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
-describe('PUBS', () => {
-  it('tests', async () => {
+describe('SUPER', () => {
+  it('pubs actions', async () => {
     let testSucceeded = false
     try {
       testhelper.initThisTest()
@@ -22,36 +20,27 @@ describe('PUBS', () => {
       const initresult = await app.checkDatabases(maketestsite)
       if (initresult !== 1) throw new Error('initresult:' + initresult)
 
-      const simple = {}
-      let error = await runscript.run(app.models, 'addpubsimpleflow.json', simple)
+      const config = {}
+      let error = await runscript.run(app.models, 'addpubsimpleflow.json', config)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/addusers.json', simple)
+      error = await runscript.run(app.models, 'tests/addusers.json', config)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/addpub2withuser.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-super.json', false, app)
       if (error) throw new Error(error)
 
-      const resBody = {}
-      error = await runscript.run(app.models, 'tests/api-pubs-actions.json', false, app, resBody)
+      error = await runscript.run(app.models, 'tests/api-super-pubs-actions.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-super-not-pubs-actions.json', false, app, resBody)
+      error = await runscript.run(app.models, 'tests/api-super-not-pubs-actions.json', false, app)
       if (error) throw new Error(error)
-
-      /* try {
-        const currentstatus = resBody.body.flows[0].submits[0].statuses[0]
-        if (currentstatus.flowstatusId !== 3) throw new Error('currentstatus.flowstatusId!==3')
-        console.log('currentstatus.flowstatusId===3')
-      } catch (e) {
-        console.log(e.message)
-      } */
 
       testSucceeded = true
     } catch (e) {

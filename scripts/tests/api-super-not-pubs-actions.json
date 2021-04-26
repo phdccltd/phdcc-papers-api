@@ -1,0 +1,17 @@
+{
+  "name": "Not super pubs actions",
+  "api": [
+    {
+      "name": "addPub not super",
+      "method": "postdelete",
+      "uri": "/pubs",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not a super"
+      }
+    }
+  ]
+}

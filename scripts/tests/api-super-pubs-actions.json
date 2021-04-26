@@ -1,6 +1,5 @@
 {
   "name": "Super pubs actions",
-  "pubname": "TestPubName",
   "api": [
     {
       "name": "get pubs listing",
@@ -12,6 +11,70 @@
         "ret": 0,
         "prop": "pubs",
         "length": 2
+      }
+    },
+    {
+      "name": "addPub pubname missing",
+      "method": "post",
+      "uri": "/pubs",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pubname missing"
+      }
+    },
+    {
+      "name": "addPub pubname missing",
+      "method": "post",
+      "uri": "/pubs",
+      "data": {
+        "pubname": "New pub"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pubdescr missing"
+      }
+    },
+    {
+      "name": "addPub pubname empty",
+      "method": "post",
+      "uri": "/pubs",
+      "data": {
+        "pubname": ""
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pubname empty"
+      }
+    },
+    {
+      "name": "addPub pubdescr empty",
+      "method": "post",
+      "uri": "/pubs",
+      "data": {
+        "pubname": "New pub",
+        "pubdescr": ""
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pubdescr empty"
+      }
+    },
+    {
+      "name": "addPub add OK",
+      "method": "post",
+      "uri": "/pubs",
+      "data": {
+        "pubname": "New pub",
+        "pubdescr": "My crucial publication"
+      },
+      "return": {
+        "ret": 0
       }
     }
   ]
