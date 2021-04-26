@@ -13,6 +13,7 @@ const mailRouter = require('./mail')
 const pubsRouter = require('./pubs')
 const reviewersRouter = require('./reviewers')
 const sitepagesRouter = require('./sitepages')
+const sitepagessuperRouter = require('./sitepagessuper')
 const submitsRouter = require('./submits')
 const users = require('./users')
 
@@ -111,6 +112,10 @@ router.get('/users/pub/:pubid', users.getPubUsers)
 
 /* GET: MASQUERADE */
 router.get('/users/masquerade/:userid', users.handleMasquerade)
+
+/// ///////////////////
+// /sitepages super
+router.use(sitepagessuperRouter)
 
 /// ///////////////////
 // /pubs/*

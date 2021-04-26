@@ -9,12 +9,11 @@ const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.acc
 
 process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
-describe('BACKGROUND', () => {
-  it('task tests', async () => {
+describe('SUPER', () => {
+  it('sitepages actions', async () => {
     let testSucceeded = false
     try {
       testhelper.initThisTest()
-      const backgroundRunner = require('../task')
 
       const app = require('../app')
 
@@ -28,36 +27,17 @@ describe('BACKGROUND', () => {
       error = await runscript.run(app.models, 'tests/addusers.json', config)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-login-super.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-add-proposal-author.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-status-proposal-accepted.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-add-reviewers.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-super-sitepages-actions.json', false, app)
       if (error) throw new Error(error)
 
       error = await runscript.run(app.models, 'tests/api-login-author1.json', false, app)
       if (error) throw new Error(error)
 
-      error = await runscript.run(app.models, 'tests/api-add-paper-author.json', false, app)
+      error = await runscript.run(app.models, 'tests/api-super-not-sitepages-actions.json', false, app)
       if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
-      if (error) throw new Error(error)
-
-      error = await runscript.run(app.models, 'tests/api-status-with-reviewers.json', false, app)
-      if (error) throw new Error(error)
-
-      await backgroundRunner(1) // No reminders
-      await backgroundRunner(7) // Three reminders
-      await backgroundRunner(8) // No more reminders
 
       testSucceeded = true
     } catch (e) {

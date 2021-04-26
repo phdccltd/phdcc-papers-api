@@ -1,10 +1,8 @@
 /* eslint-env jest */
 
-process.env.LOGMODE = 'console'
 const testhelper = require('./testhelper')
 const maketestsite = require('./maketestsite')
 const runscript = require('./runscript')
-const logger = require('../logger')
 const utils = require('../utils')
 
 const spyclog = jest.spyOn(console, 'log').mockImplementation(testhelper.accumulog)
@@ -45,6 +43,8 @@ describe('SITE', () => {
       // error = await runscript.run(app.models, 'tests/api-site-fail-test.json', false, app)
       // if (error) throw new Error(error)
 
+      process.env.LOGMODE = 'console'
+      const logger = require('../logger')
       logger.warn4req()
       await logger.error4req()
       logger.error()

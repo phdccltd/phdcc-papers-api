@@ -1,0 +1,214 @@
+{
+  "name": "Admin sitepages actions",
+  "api": [
+    {
+      "name": "addEditSitePage duff pageid",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": "x"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pageid"
+      }
+    },
+    {
+      "name": "addEditSitePage pagepath missing",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 0,
+        "pagetitle": "Welcome",
+        "pagecontent": "Hello world!"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pagepath missing"
+      }
+    },
+    {
+      "name": "addEditSitePage pagepath empty",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 0,
+        "pagepath": "",
+        "pagetitle": "Welcome",
+        "pagecontent": "Hello world!"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pagepath empty"
+      }
+    },
+    {
+      "name": "addEditSitePage pagetitle missing",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 0,
+        "pagepath": "/",
+        "pagecontent": "Hello world!"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pagetitle missing"
+      }
+    },
+    {
+      "name": "addEditSitePage pagetitle empty",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 0,
+        "pagepath": "/",
+        "pagetitle": "",
+        "pagecontent": "Hello world!"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pagetitle empty"
+      }
+    },
+    {
+      "name": "addEditSitePage pagecontent missing",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 0,
+        "pagepath": "/",
+        "pagetitle": "About"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pagecontent missing"
+      }
+    },
+    {
+      "name": "addEditSitePage pagecontent empty",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 0,
+        "pagepath": "/",
+        "pagetitle": "About",
+        "pagecontent": ""
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "pagecontent empty"
+      }
+    },
+    {
+      "name": "addEditSitePage add OK",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 0,
+        "pagepath": "/",
+        "pagetitle": "Welcome",
+        "pagecontent": "Hello world!"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addEditSitePage add OK",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 0,
+        "pagepath": "/about",
+        "pagetitle": "About",
+        "pagecontent": "About us"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "addEditSitePage edit OK",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 1,
+        "pagepath": "/",
+        "pagetitle": "Welcome",
+        "pagecontent": "Hello big bad world!"
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "get sitepages OK",
+      "method": "get",
+      "uri": "/sitepages",
+      "data": {
+      },
+      "return": {
+        "ret": 0,
+        "prop": "sitepages",
+        "length": 2
+      }
+    },
+    {
+      "name": "deleteSitePage/addEditSitePage duff method",
+      "method": "postpatch",
+      "uri": "/sitepages",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Bad method: PATCH"
+      }
+    },
+    {
+      "name": "deleteSitePage duff pageid",
+      "method": "postdelete",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": "x"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pageid"
+      }
+    },
+    {
+      "name": "deleteSitePage wrong pageid",
+      "method": "postdelete",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 27
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find sitepage 27"
+      }
+    },
+    {
+      "name": "deleteSitePage OK",
+      "method": "postdelete",
+      "uri": "/sitepages",
+      "data": {
+        "pageid": 2
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Not admin sitepages actions",
+  "api": [
+    {
+      "name": "deleteSitePage not admin",
+      "method": "postdelete",
+      "uri": "/sitepages",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not a super"
+      }
+    },
+    {
+      "name": "addEditSitePage not admin",
+      "method": "post",
+      "uri": "/sitepages",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not a super"
+      }
+    }
+  ]
+}
