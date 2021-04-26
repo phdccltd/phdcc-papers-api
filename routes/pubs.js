@@ -102,7 +102,7 @@ router.post('/pubs', async function (req, res, next) {
 
     // Make an alias. Not used for now so doesn't matter if duplicate
     let alias = req.site.url.split('.').reverse().join('.') // eg from 'papers.phdcc.com' to 'com.phdcc.papers'
-    alias += '.' + pubname.toLowerCase().replace(/ /g,'-')
+    alias += '.' + pubname.toLowerCase().replace(/ /g, '-')
     console.log('alias', alias)
 
     const pub = {
@@ -118,7 +118,7 @@ router.post('/pubs', async function (req, res, next) {
 
     const ok = true
     utils.returnOK(req, res, ok, 'ok')
-    } catch (e) {
+  } catch (e) {
     utils.giveup(req, res, e.message)
   }
 })
