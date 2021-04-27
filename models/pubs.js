@@ -19,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
     description: { type: Sequelize.TEXT, allowNull: false },
     startdate: { type: Sequelize.DATEONLY, allowNull: true }, // Used to sort pubs
     email: { type: Sequelize.STRING, allowNull: false },
-    tz: { type: Sequelize.STRING(50), allowNull: true }
+    tz: { type: Sequelize.STRING(50), allowNull: true },
+    enabled: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true }
   }
   const pubs = sequelize.define('pubs', fields)
   pubs.fields = fields

@@ -844,6 +844,8 @@ async function getPubSubmits (req, res, next) {
 
     if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
 
+    if (!req.dbuser.super && !req.isowner && !req.dbpub.enabled) return utils.giveup(req, res, 'Pub not enabled')
+
     /// ///////
     req.entergradingcount = 0
     const dbflows = await req.dbpub.getFlows()

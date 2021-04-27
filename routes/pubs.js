@@ -46,6 +46,9 @@ router.get('/pubs', async function (req, res, next) {
       }
       // pub.isowner = true // When testing add this fake ownership so subsequent tests fail
 
+      // Don't list disabled pubs for ordinary users
+      if (!req.dbuser.super && !pub.isowner && !pub.enabled) continue
+
       const dbpubroles = await dbpub.getPubroles()
       pub.pubroles = models.sanitiselist(dbpubroles, models.pubroles)
 
