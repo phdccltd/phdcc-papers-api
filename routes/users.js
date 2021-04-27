@@ -21,7 +21,7 @@ async function removePubUser (req, res, next) {
 
     // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner }) || req.dbuser.super
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const dbuser = await models.users.findByPk(userid)
@@ -74,7 +74,7 @@ async function addUserRole (req, res, next) {
 
     // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner }) || req.dbuser.super
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const dbpubrole = await models.pubroles.findByPk(roleid)
@@ -129,7 +129,7 @@ async function deleteUserRole (req, res, next) {
 
     // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner }) || req.dbuser.super
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     const dbpubrole = await models.pubroles.findByPk(roleid)
@@ -167,7 +167,7 @@ async function getPubUsers (req, res, next) {
 
     // Get MY roles in all publications - check isowner
     const dbmypubroles = await req.dbuser.getRoles()
-    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner })
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner }) || req.dbuser.super
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
     // console.log('isowner', isowner.id, isowner.name)
 

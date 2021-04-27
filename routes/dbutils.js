@@ -48,9 +48,14 @@ async function getMyRoles (req) {
   req.onlyanauthor = false
   req.canviewall = false
 
-  const dbpubchecks = await req.dbuser.getPublications()
-  const dbpubcheck = _.find(dbpubchecks, _dbpubcheck => { return _dbpubcheck.id === req.dbpub.id })
-  if (!dbpubcheck) return false
+  if (req.dbuser.super) {
+    req.onlyanauthor = false
+    req.isowner = true
+  } else {
+    const dbpubchecks = await req.dbuser.getPublications()
+    const dbpubcheck = _.find(dbpubchecks, _dbpubcheck => { return _dbpubcheck.id === req.dbpub.id })
+    if (!dbpubcheck) return false
+  }
 
   req.dbmypubroles = await req.dbuser.getRoles()
   req.myroles = []
@@ -69,10 +74,6 @@ async function getMyRoles (req) {
   }
   if (req.myroles.length >= 2) req.onlyanauthor = false
 
-  if (req.dbuser.super) {
-    req.onlyanauthor = false
-    req.isowner = true
-  }
   return true
 }
 
