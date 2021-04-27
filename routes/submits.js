@@ -18,6 +18,9 @@
   YYY_YYY_  DELETE  /submits/:submitid                      deleteSubmit      delete submit and all entries, etc
   YYY_YYY_  DELETE  /submits/status/:id                     deleteSubmitStatus
   YYY_YYY_  POST    /submits/status/:id                     addSubmitStatus
+
+  TODO: More checks to see if pub.enabled:
+  - Done: getPubSubmits
 */
 const { Router } = require('express')
 const Sequelize = require('sequelize')
