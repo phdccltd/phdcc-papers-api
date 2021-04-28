@@ -5,7 +5,7 @@
     {
       "name": "bulk action change statuses: OK",
       "method": "post",
-      "uri": "/pubs/1",
+      "uri": "/pubs/bulk/1",
       "data": {
         "fromstatus": 1, // Proposal submitted
         "tostatus": 2 // Proposal with team
@@ -19,7 +19,7 @@
     {
       "name": "bulk action change statuses: OK again",
       "method": "post",
-      "uri": "/pubs/1",
+      "uri": "/pubs/bulk/1",
       "data": {
         "fromstatus": 1, // Proposal submitted
         "tostatus": 2 // Proposal with team

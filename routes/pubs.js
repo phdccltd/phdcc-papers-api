@@ -127,7 +127,7 @@ router.post('/pubs', async function (req, res, next) {
 })
 
 /* POST bulk op: for all submits at FROM status, add new TO status */
-router.post('/pubs/:pubid', async function (req, res, next) {
+router.post('/pubs/bulk/:pubid', async function (req, res, next) {
   try {
     const pubid = parseInt(req.params.pubid)
     if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
