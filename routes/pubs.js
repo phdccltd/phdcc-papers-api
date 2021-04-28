@@ -224,7 +224,7 @@ async function deletePublication(req, res, next) {
 /* ************************ */
 /* POST edit publication */
 /* ACCESS: OWNER OR SUPER TO TEST */
-async function addEditSitePage(req, res, next) {
+async function editPublication(req, res, next) {
   // console.log('POST /pubs')
   try {
     // TODO: Also allow owner...
@@ -235,7 +235,14 @@ async function addEditSitePage(req, res, next) {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pub ' + pubid)
 
-    const ok = false
+    if (!('enabled' in req.body)) return utils.giveup(req, res, 'enabled missing')
+
+    dbpub.enabled = req.body.enabled
+    await dbpub.save() // Transaction OK
+
+    logger.log4req(req, 'Publication enabled toggled', pubid, req.body.enabled)
+
+    const ok = true
     utils.returnOK(req, res, ok, 'ok')
   } catch (e) {
     utils.giveup(req, res, e.message)
