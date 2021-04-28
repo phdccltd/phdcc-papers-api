@@ -200,7 +200,7 @@ router.post('/pubs/:pubid', async function (req, res, next) {
 /* ************************ */
 /* POST delete publication */
 /* ACCESS: SUPER-ONLY TO TEST */
-async function deletePublication(req, res, next) {
+async function deletePublication (req, res, next) {
   // console.log('DELETE /pubs')
   try {
     if (!req.dbuser.super) return utils.giveup(req, res, 'Not a super')
@@ -224,7 +224,7 @@ async function deletePublication(req, res, next) {
 /* ************************ */
 /* POST edit publication */
 /* ACCESS: OWNER OR SUPER TO TEST */
-async function editPublication(req, res, next) {
+async function editPublication (req, res, next) {
   // console.log('POST /pubs')
   try {
     // TODO: Also allow owner...
