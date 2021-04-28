@@ -1,0 +1,92 @@
+{
+  "name": "Owner pubs actions",
+  "api": [
+    {
+      "name": "get pubs listing",
+      "method": "get",
+      "uri": "/pubs",
+      "data": {
+      },
+      "return": {
+        "ret": 0,
+        "prop": "pubs",
+        "length": 1
+      }
+    },
+    {
+      "name": "editPublication duff pubid",
+      "method": "post",
+      "uri": "/pubs/x",
+      "data": {
+        "enabled": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "editPublication invalid pubid",
+      "method": "post",
+      "uri": "/pubs/4",
+      "data": {
+        "enabled": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pub 4"
+      }
+    },
+    {
+      "name": "editPublication missing enabled",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "enabled missing"
+      }
+    },
+    {
+      "name": "editPublication duff enabled",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "enabled": "not a bool"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "enabled not boolean"
+      }
+    },
+    {
+      "name": "editPublication not owner",
+      "method": "post",
+      "uri": "/pubs/2",
+      "data": {
+        "enabled": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No access to this publication"
+      }
+    },
+    {
+      "name": "editPublication OK",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "enabled": false
+      },
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

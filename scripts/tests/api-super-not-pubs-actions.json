@@ -3,8 +3,32 @@
   "api": [
     {
       "name": "addPub not super",
-      "method": "postdelete",
+      "method": "post",
       "uri": "/pubs",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Not a super"
+      }
+    },
+    {
+      "name": "editPublication not super or owner",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "No access to this publication"
+      }
+    },
+    {
+      "name": "deletePublication not super or owner",
+      "method": "postdelete",
+      "uri": "/pubs/1",
       "data": {
       },
       "return": {

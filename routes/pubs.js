@@ -106,7 +106,6 @@ router.post('/pubs', async function (req, res, next) {
     // Make an alias. Not used for now so doesn't matter if duplicate
     let alias = req.site.url.split('.').reverse().join('.') // eg from 'papers.phdcc.com' to 'com.phdcc.papers'
     alias += '.' + pubname.toLowerCase().replace(/ /g, '-')
-    console.log('alias', alias)
 
     const pub = {
       siteId: req.site.id,
@@ -240,9 +239,10 @@ async function editPublication (req, res, next) {
     }
 
     if (!('enabled' in req.body)) return utils.giveup(req, res, 'enabled missing')
+    if (typeof req.body.enabled !== 'boolean') return utils.giveup(req, res, 'enabled not boolean')
 
-    dbpub.enabled = req.body.enabled
-    await dbpub.save() // Transaction OK
+    req.dbpub.enabled = req.body.enabled
+    await req.dbpub.save() // Transaction OK
 
     logger.log4req(req, 'Publication enabled toggled', pubid, req.body.enabled)
 

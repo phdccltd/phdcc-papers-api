@@ -76,6 +76,96 @@
       "return": {
         "ret": 0
       }
+    },
+    {
+      "name": "editPublication duff pubid",
+      "method": "post",
+      "uri": "/pubs/x",
+      "data": {
+        "enabled": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "editPublication invalid pubid",
+      "method": "post",
+      "uri": "/pubs/4",
+      "data": {
+        "enabled": false
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pub 4"
+      }
+    },
+    {
+      "name": "editPublication missing enabled",
+      "method": "post",
+      "uri": "/pubs/3",
+      "data": {
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "enabled missing"
+      }
+    },
+    {
+      "name": "editPublication duff enabled",
+      "method": "post",
+      "uri": "/pubs/3",
+      "data": {
+        "enabled": "not a bool"
+      },
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "enabled not boolean"
+      }
+    },
+    {
+      "name": "editPublication OK",
+      "method": "post",
+      "uri": "/pubs/3",
+      "data": {
+        "enabled": false
+      },
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "deletePublication duff pubid",
+      "method": "postdelete",
+      "uri": "/pubs/x",
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Duff pubid"
+      }
+    },
+    {
+      "name": "deletePublication invalid pubid",
+      "method": "postdelete",
+      "uri": "/pubs/4",
+      "return": {
+        "ret": 1,
+        "prop": "status",
+        "value": "Cannot find pub 4"
+      }
+    },
+    {
+      "name": "deletePublication OK",
+      "method": "postdelete",
+      "uri": "/pubs/3",
+      "return": {
+        "ret": 0
+      }
     }
   ]
 }
