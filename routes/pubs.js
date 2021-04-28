@@ -7,7 +7,7 @@ const dbutils = require('./dbutils')
 
 const router = Router()
 
-/* GET pubs listing. */
+/* GET pubs listing */
 router.get('/pubs', async function (req, res, next) {
   // console.log('GET /pubs')
 
@@ -183,5 +183,63 @@ router.post('/pubs/bulk/:pubid', async function (req, res, next) {
     utils.giveup(req, res, e.message)
   }
 })
+
+/* POST: Edit or Delete publication */
+router.post('/pubs/:pubid', async function (req, res, next) {
+  if (req.headers['x-http-method-override'] === 'DELETE') {
+    await deletePublication(req, res, next)
+    return
+  }
+  if (!('x-http-method-override' in req.headers)) {
+    await editPublication(req, res, next)
+    return
+  }
+  return utils.giveup(req, res, 'Bad method: ' + req.headers['x-http-method-override'])
+})
+
+/* ************************ */
+/* POST delete publication */
+/* ACCESS: SUPER-ONLY TO TEST */
+async function deletePublication(req, res, next) {
+  // console.log('DELETE /pubs')
+  try {
+    if (!req.dbuser.super) return utils.giveup(req, res, 'Not a super')
+
+    const pubid = parseInt(req.params.pubid)
+    if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+    const dbpub = await models.pubs.findByPk(pubid)
+    if (!dbpub) return utils.giveup(req, res, 'Cannot find pub ' + pubid)
+
+    await dbpub.destroy() // Transaction ???  // DO DELETES CASCADE???
+
+    logger.log4req(req, 'DELETED publication', pubid)
+
+    const ok = true
+    utils.returnOK(req, res, ok, 'ok')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+}
+
+/* ************************ */
+/* POST edit publication */
+/* ACCESS: OWNER OR SUPER TO TEST */
+async function addEditSitePage(req, res, next) {
+  // console.log('POST /pubs')
+  try {
+    // TODO: Also allow owner...
+    if (!req.dbuser.super) return utils.giveup(req, res, 'Not a super')
+
+    const pubid = parseInt(req.params.pubid)
+    if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
+    const dbpub = await models.pubs.findByPk(pubid)
+    if (!dbpub) return utils.giveup(req, res, 'Cannot find pub ' + pubid)
+
+    const ok = false
+    utils.returnOK(req, res, ok, 'ok')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+}
 
 module.exports = router

@@ -21,7 +21,7 @@ router.post('/sitepages', async function (req, res, next) {
 })
 
 /* ************************ */
-/* POST add/edit site page */
+/* POST delete site page */
 /* ACCESS: SUPER-ONLY TESTED */
 async function deleteSitePage (req, res, next) {
   // console.log('DELETE /sitepages')
