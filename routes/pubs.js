@@ -227,13 +227,17 @@ async function deletePublication (req, res, next) {
 async function editPublication (req, res, next) {
   // console.log('POST /pubs')
   try {
-    // TODO: Also allow owner...
-    if (!req.dbuser.super) return utils.giveup(req, res, 'Not a super')
-
     const pubid = parseInt(req.params.pubid)
     if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
-    const dbpub = await models.pubs.findByPk(pubid)
-    if (!dbpub) return utils.giveup(req, res, 'Cannot find pub ' + pubid)
+    req.dbpub = await models.pubs.findByPk(pubid)
+    if (!req.dbpub) return utils.giveup(req, res, 'Cannot find pub ' + pubid)
+
+    // TODO: Also allow owner...
+    if (!req.dbuser.super) {
+      // Set req.isowner, req.onlyanauthor and req.myroles for this publication
+      if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
+      if (!req.isowner) return utils.giveup(req, res, 'No access to this publication')
+    }
 
     if (!('enabled' in req.body)) return utils.giveup(req, res, 'enabled missing')
 
