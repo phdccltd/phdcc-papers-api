@@ -113,6 +113,9 @@ router.get('/users/pub/:pubid', users.getPubUsers)
 /* GET: MASQUERADE */
 router.get('/users/masquerade/:userid', users.handleMasquerade)
 
+/* GET: USERS */
+router.get('/users', users.getAllUsers)
+
 /// ///////////////////
 // /sitepages super
 router.use(sitepagessuperRouter)

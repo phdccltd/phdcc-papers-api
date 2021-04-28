@@ -5,6 +5,27 @@ const logger = require('../logger')
 const mailutils = require('./mailutils')
 
 /* ************************ */
+/* GET: Get all users */
+async function getAllUsers(req, res, next) {
+  try {
+    // console.log('getAllUsers')
+    if (!req.dbuser.super) return utils.giveup(req, res, 'Not a super')
+
+    const allusers = await models.users.findAll({
+      order: [
+        ['username', 'ASC']
+      ]
+    })
+
+    logger.log4req(req, 'Returning allusers')
+    utils.returnOK(req, res, allusers, 'allusers')
+  } catch (e) {
+    utils.giveup(req, res, e.message)
+  }
+}
+
+
+/* ************************ */
 /* POST+DELETE: Delete pub user role  */
 async function removePubUser (req, res, next) {
   try {
@@ -233,5 +254,6 @@ module.exports = {
   removePubUser,
   handleUserRole,
   handleMasquerade,
-  getPubUsers
+  getPubUsers,
+  getAllUsers
 }
