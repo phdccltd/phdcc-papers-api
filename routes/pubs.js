@@ -82,6 +82,18 @@ router.get('/pubs', async function (req, res, next) {
         }
       }
 
+      // If super then add user and role info for super admin screen
+      if (req.dbuser.super) {
+        const dbsuperpubroles = await dbpub.getPubroles()
+        pub.superpubroles = []
+        for (const dbpubrole of dbsuperpubroles) {
+          const pubrole = models.sanitise(models.pubroles, dbpubrole)
+          const pubusers = await dbpubrole.getUsers()
+          pubrole.users = models.sanitiselist(pubusers, models.users)
+          pub.superpubroles.push(pubrole)
+        }
+      }
+
       pubs.push(pub)
     }
     utils.returnOK(req, res, pubs, 'pubs')
@@ -221,7 +233,11 @@ async function deletePublication (req, res, next) {
 }
 
 /* ************************ */
-/* POST edit publication */
+/* POST edit publication: different calls:
+ * - enabled:
+ * - addPubRoleOwner:
+ * - addPubOwner:
+ * */
 /* ACCESS: OWNER OR SUPER TO TEST */
 async function editPublication (req, res, next) {
   // console.log('POST /pubs')
@@ -231,20 +247,77 @@ async function editPublication (req, res, next) {
     req.dbpub = await models.pubs.findByPk(pubid)
     if (!req.dbpub) return utils.giveup(req, res, 'Cannot find pub ' + pubid)
 
-    // TODO: Also allow owner...
+    // TODO: Also allow owner to change enabled
     if (!req.dbuser.super) {
       // Set req.isowner, req.onlyanauthor and req.myroles for this publication
       if (!await dbutils.getMyRoles(req)) return utils.giveup(req, res, 'No access to this publication')
       if (!req.isowner) return utils.giveup(req, res, 'No access to this publication')
     }
 
-    if (!('enabled' in req.body)) return utils.giveup(req, res, 'enabled missing')
-    if (typeof req.body.enabled !== 'boolean') return utils.giveup(req, res, 'enabled not boolean')
+    let somethingDone = false
+    // ADMIN or SUPER: TOGGLE PUB ENABLED
+    if ('enabled' in req.body) {
+      if (typeof req.body.enabled !== 'boolean') return utils.giveup(req, res, 'enabled not boolean')
+      req.dbpub.enabled = req.body.enabled
+      await req.dbpub.save() // Transaction OK
 
-    req.dbpub.enabled = req.body.enabled
-    await req.dbpub.save() // Transaction OK
+      logger.log4req(req, 'Publication enabled toggled', pubid, req.body.enabled)
+      somethingDone = true
+    }
+    if (req.dbuser.super) {
+      // SUPER: ADD PUBROLE OWNER FOR PUB
+      if ('addPubRoleOwner' in req.body) {
+        if (typeof req.body.addPubRoleOwner !== 'boolean') return utils.giveup(req, res, 'addPubRoleOwner not boolean')
+        if (!req.body.addPubRoleOwner) return utils.giveup(req, res, 'addPubRoleOwner not true')
 
-    logger.log4req(req, 'Publication enabled toggled', pubid, req.body.enabled)
+        const dbsuperpubroles = await req.dbpub.getPubroles()
+        for (const dbpubrole of dbsuperpubroles) {
+          if (dbpubrole.isowner) return utils.giveup(req, res, 'PubRoleOwner already present')
+        }
+
+        const newrole = {
+          pubId: pubid,
+          name: 'Owner',
+          isowner: true,
+          canviewall: false,
+          defaultrole: false,
+          isreviewer: false,
+          userRequested: false,
+          userDeniedAccess: false
+        }
+        const dbpubrole = await models.pubroles.create(newrole) // Transaction OK
+        if (!dbpubrole) return utils.giveup(req, res, 'Could not create pubrole owner')
+
+        logger.log4req(req, 'Publication role Owner created', pubid)
+        somethingDone = true
+      }
+      // SUPER: ADD USER AS OWNER OF PUB
+      if ('addPubOwner' in req.body) {
+        const userid = parseInt(req.body.addPubOwner)
+        if (isNaN(userid)) return utils.giveup(req, res, 'Duff addPubOwner')
+
+        const dbuser = await models.users.findByPk(userid)
+        if (!dbuser) return utils.giveup(req, res, 'Cannot find user ' + userid)
+
+        const dbsuperpubroles = await req.dbpub.getPubroles()
+        const dbpubroleowner = _.find(dbsuperpubroles, (pubrole) => { return pubrole.isowner })
+        if (!dbpubroleowner) return utils.giveup(req, res, 'No pubrole owner found')
+
+        const dbexistingowners = await dbpubroleowner.getUsers()
+        const isexistingowner = _.find(dbexistingowners, (user) => { return user.id === userid })
+        if (isexistingowner) return utils.giveup(req, res, 'Already an owner')
+
+        // Give user access to publication if need be
+        const ispubuser = await req.dbpub.hasUser(dbuser)
+        if (!ispubuser) await req.dbpub.addUser(dbuser)
+        // Give user owner role
+        await dbpubroleowner.addUser(dbuser) // Transaction ???
+
+        logger.log4req(req, 'Publication user added as Owner', userid)
+        somethingDone = true
+      }
+    }
+    if (!somethingDone) return utils.giveup(req, res, 'editPublication: invalid parameters')
 
     const ok = true
     utils.returnOK(req, res, ok, 'ok')

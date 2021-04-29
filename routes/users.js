@@ -205,8 +205,7 @@ async function getPubUsers (req, res, next) {
       for (const dbuserpubrole of dbuserpubroles) {
         let userpubrole = models.sanitise(models.pubuserroles, dbuserpubrole)
         const pubrole = _.find(pubroles, _pubrole => { return _pubrole.id === userpubrole.id })
-        if (pubrole) userpubrole = pubrole
-        user.roles.push(userpubrole)
+        if (pubrole) user.roles.push(pubrole)
       }
 
       user.submits = models.sanitiselist(await dbuser.getSubmits(), models.submits)

@@ -48,7 +48,7 @@
       "return": {
         "ret": 1,
         "prop": "status",
-        "value": "enabled missing"
+        "value": "editPublication: invalid parameters"
       }
     },
     {
