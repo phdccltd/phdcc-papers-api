@@ -6,7 +6,7 @@ const mailutils = require('./mailutils')
 
 /* ************************ */
 /* GET: Get all users */
-async function getAllUsers(req, res, next) {
+async function getAllUsers (req, res, next) {
   try {
     // console.log('getAllUsers')
     if (!req.dbuser.super) return utils.giveup(req, res, 'Not a super')
@@ -23,7 +23,6 @@ async function getAllUsers(req, res, next) {
     utils.giveup(req, res, e.message)
   }
 }
-
 
 /* ************************ */
 /* POST+DELETE: Delete pub user role  */
@@ -203,8 +202,7 @@ async function getPubUsers (req, res, next) {
       user.roles = []
       const dbuserpubroles = await dbuser.getRoles()
       for (const dbuserpubrole of dbuserpubroles) {
-        let userpubrole = models.sanitise(models.pubuserroles, dbuserpubrole)
-        const pubrole = _.find(pubroles, _pubrole => { return _pubrole.id === userpubrole.id })
+        const pubrole = _.find(pubroles, _pubrole => { return _pubrole.id === dbuserpubrole.id })
         if (pubrole) user.roles.push(pubrole)
       }
 

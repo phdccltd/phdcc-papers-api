@@ -271,8 +271,8 @@ async function editPublication (req, res, next) {
         if (!req.body.addPubRoleOwner) return utils.giveup(req, res, 'addPubRoleOwner not true')
 
         const dbsuperpubroles = await req.dbpub.getPubroles()
-        for (const dbpubrole of dbsuperpubroles) {
-          if (dbpubrole.isowner) return utils.giveup(req, res, 'PubRoleOwner already present')
+        for (const dbpubrole2 of dbsuperpubroles) {
+          if (dbpubrole2.isowner) return utils.giveup(req, res, 'PubRoleOwner already present')
         }
 
         const newrole = {
