@@ -236,7 +236,7 @@ async function deletePublication (req, res, next) {
 /* POST edit publication: different calls:
  * - enabled:
  * - addPubRoleOwner:
- * - addPubOwner:
+ * - addroleid:
  * */
 /* ACCESS: OWNER OR SUPER TO TEST */
 async function editPublication (req, res, next) {
@@ -291,29 +291,32 @@ async function editPublication (req, res, next) {
         logger.log4req(req, 'Publication role Owner created', pubid)
         somethingDone = true
       }
-      // SUPER: ADD USER AS OWNER OF PUB
-      if ('addPubOwner' in req.body) {
-        const userid = parseInt(req.body.addPubOwner)
-        if (isNaN(userid)) return utils.giveup(req, res, 'Duff addPubOwner')
+      // SUPER: ADD USER WITH ROLE IN PUB
+      if ('addroleid' in req.body && 'addroleuserid' in req.body) {
+        const addroleid = parseInt(req.body.addroleid)
+        if (isNaN(addroleid)) return utils.giveup(req, res, 'Duff addroleid')
+
+        const dbsuperpubroles = await req.dbpub.getPubroles()
+        const dbpubrole = _.find(dbsuperpubroles, (pubrole) => { return pubrole.id === addroleid })
+        if (!dbpubrole) return utils.giveup(req, res, 'pubrole not found')
+
+        const userid = parseInt(req.body.addroleuserid)
+        if (isNaN(userid)) return utils.giveup(req, res, 'Duff addroleuserid')
 
         const dbuser = await models.users.findByPk(userid)
         if (!dbuser) return utils.giveup(req, res, 'Cannot find user ' + userid)
 
-        const dbsuperpubroles = await req.dbpub.getPubroles()
-        const dbpubroleowner = _.find(dbsuperpubroles, (pubrole) => { return pubrole.isowner })
-        if (!dbpubroleowner) return utils.giveup(req, res, 'No pubrole owner found')
-
-        const dbexistingowners = await dbpubroleowner.getUsers()
-        const isexistingowner = _.find(dbexistingowners, (user) => { return user.id === userid })
-        if (isexistingowner) return utils.giveup(req, res, 'Already an owner')
+        const dbexistingusers = await dbpubrole.getUsers()
+        const isexistinguser = _.find(dbexistingusers, (user) => { return user.id === userid })
+        if (isexistinguser) return utils.giveup(req, res, 'Already has that role')
 
         // Give user access to publication if need be
         const ispubuser = await req.dbpub.hasUser(dbuser)
         if (!ispubuser) await req.dbpub.addUser(dbuser)
-        // Give user owner role
-        await dbpubroleowner.addUser(dbuser) // Transaction ???
+        // Give user this role
+        await dbpubrole.addUser(dbuser) // Transaction ???
 
-        logger.log4req(req, 'Publication user added as Owner', userid)
+        logger.log4req(req, 'Publication user added as ' + dbpubrole.name, userid)
         somethingDone = true
       }
     }
