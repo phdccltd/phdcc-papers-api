@@ -129,7 +129,7 @@
       }
     },
     {
-      "name": "editPublication OK",
+      "name": "editPublication enabled OK",
       "method": "post",
       "uri": "/pubs/3",
       "data": {
@@ -163,6 +163,18 @@
       "name": "deletePublication OK",
       "method": "postdelete",
       "uri": "/pubs/3",
+      "return": {
+        "ret": 0
+      }
+    },
+    {
+      "name": "editPublication duplicate OK",
+      "method": "post",
+      "uri": "/pubs/1",
+      "data": {
+        "pubname": "New pub",
+        "pubdupusers":  true
+      },
       "return": {
         "ret": 0
       }

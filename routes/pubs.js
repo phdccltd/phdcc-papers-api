@@ -225,7 +225,9 @@ async function deletePublication (req, res, next) {
 
     const ta = await sequelize.transaction()
     try {
-      await models.pubroles.destroy({ where: { pubId: pubid } })
+      await models.pubroles.destroy({ where: { pubId: pubid } }, { transaction: ta })
+
+      await models.pubmailtemplates.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
       await dbpub.destroy({ transaction: ta }) // Cascades to userpubs, pubuserroles
       await ta.commit()
@@ -353,7 +355,6 @@ async function editPublication (req, res, next) {
 async function dupPublication (req, res, next) {
   const pubname = req.body.pubname.trim()
   if (pubname.length === 0) return utils.giveup(req, res, 'pubname empty')
-  console.log(pubname)
 
   if (typeof req.body.pubdupusers !== 'boolean') return utils.giveup(req, res, 'pubdupusers not boolean')
 
@@ -373,35 +374,43 @@ async function dupPublication (req, res, next) {
     newpub.title = pubname
     newpub.alias = req.site.url.split('.').reverse().join('.') // eg from 'papers.phdcc.com' to 'com.phdcc.papers'
     newpub.alias += '.' + pubname.toLowerCase().replace(/ /g, '-')
-    console.log(newpub)
+    console.log('newpub', newpub)
 
     const dbnewpub = await models.pubs.create(newpub, { transaction: ta }) // Transaction DONE
     if (!dbnewpub) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate publication') }
 
+    // Duplicate pubmailtemplates
+    const dbmailtemplates = await req.dbpub.getMailTemplates()
+    for (const dbmailtemplate of dbmailtemplates) {
+      const newmailtemplate = models.duplicate(models.pubmailtemplates, dbmailtemplate)
+      console.log('newmailtemplate', newmailtemplate)
+      const dbnewmailtemplate = await dbnewpub.createMailTemplate(newmailtemplate, { transaction: ta }) // Transaction DONE
+      ////const dbnewflow = await models.flows.create(newflow, { transaction: ta }) // Transaction DONE
+      if (!dbnewmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate mail template') }
+    }
+
     // Duplicate flows
-    const dbflows = await req.dbpub.getFlows()
+    /*const dbflows = await req.dbpub.getFlows()
     for (const dbflow of dbflows) {
       const newflow = models.duplicate(models.flows, dbflow)
-      newflow.pubId = dbnewpub.id
-      console.log(newflow)
-      const dbnewflow = await models.flows.create(newflow, { transaction: ta }) // Transaction DONE
+      delete newflow.pubId
+      console.log('newflow', newflow)
+      const dbnewflow = await dbnewpub.createFlow(newflow, { transaction: ta }) // Transaction DONE
+      //const dbnewflow = await models.flows.create(newflow, { transaction: ta }) // Transaction DONE
       if (!dbnewflow) { await ta.rollback();  return utils.giveup(req, res, 'Could not create duplicate flow') }
-    }
+    }*/
 
     // Duplicate pubroles
     const dbsuperpubroles = await req.dbpub.getPubroles()
     for (const dbpubrole of dbsuperpubroles) {
       const newpubrole = models.duplicate(models.pubroles, dbpubrole)
-      console.log('A', newpubrole)
       newpubrole.pubId = dbnewpub.id
-      console.log('B', newpubrole)
       const dbnewpubrole = await models.pubroles.create(newpubrole, { transaction: ta }) // Transaction DONE
       if (!dbnewpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate pubrole') }
       if (req.body.pubdupusers) {
         // If copying users, duplicate pubrole users
         const dbpubroleusers = await dbpubrole.getUsers()
         for (const dbpubroleuser of dbpubroleusers) {
-          console.log('ADD USER', dbpubroleuser.id)
           const dbuser = await models.users.findByPk(dbpubroleuser.id)
           if (!dbuser) { await ta.rollback(); return utils.giveup(req, res, 'Cannot find user ' + dbpubroleuser.id) }
           await dbnewpubrole.addUser(dbuser, { transaction: ta }) // Transaction DONE
