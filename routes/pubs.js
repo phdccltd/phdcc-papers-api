@@ -225,8 +225,7 @@ async function deletePublication (req, res, next) {
 
     const ta = await sequelize.transaction()
     try {
-      const numAffectedRows = await models.pubroles.destroy({ where: { pubId: pubid } })
-      console.log('pubroles.destroy', numAffectedRows)
+      await models.pubroles.destroy({ where: { pubId: pubid } })
 
       await dbpub.destroy({ transaction: ta }) // Cascades to userpubs, pubuserroles
       await ta.commit()
@@ -377,9 +376,16 @@ async function dupPublication (req, res, next) {
     console.log(newpub)
 
     const dbnewpub = await models.pubs.create(newpub, { transaction: ta }) // Transaction DONE
-    if (!dbnewpub) {
-      await ta.rollback()
-      return utils.giveup(req, res, 'Could not create duplicate publication')
+    if (!dbnewpub) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate publication') }
+
+    // Duplicate flows
+    const dbflows = await req.dbpub.getFlows()
+    for (const dbflow of dbflows) {
+      const newflow = models.duplicate(models.flows, dbflow)
+      newflow.pubId = dbnewpub.id
+      console.log(newflow)
+      const dbnewflow = await models.flows.create(newflow, { transaction: ta }) // Transaction DONE
+      if (!dbnewflow) { await ta.rollback();  return utils.giveup(req, res, 'Could not create duplicate flow') }
     }
 
     // Duplicate pubroles
@@ -390,10 +396,7 @@ async function dupPublication (req, res, next) {
       newpubrole.pubId = dbnewpub.id
       console.log('B', newpubrole)
       const dbnewpubrole = await models.pubroles.create(newpubrole, { transaction: ta }) // Transaction DONE
-      if (!dbnewpubrole) {
-        await ta.rollback()
-        return utils.giveup(req, res, 'Could not create duplicate pubrole')
-      }
+      if (!dbnewpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate pubrole') }
       if (req.body.pubdupusers) {
         // If copying users, duplicate pubrole users
         const dbpubroleusers = await dbpubrole.getUsers()
