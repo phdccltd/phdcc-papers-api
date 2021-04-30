@@ -2,6 +2,8 @@
 //    pubId:
 //      pub.getFlows
 //      flow.getPub
+//
+// Delete leftover contraint: ALTER TABLE flows DROP FOREIGN KEY flows_ibfk_1;
 
 const Sequelize = require('sequelize')
 

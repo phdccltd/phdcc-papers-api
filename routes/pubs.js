@@ -383,22 +383,18 @@ async function dupPublication (req, res, next) {
     const dbmailtemplates = await req.dbpub.getMailTemplates()
     for (const dbmailtemplate of dbmailtemplates) {
       const newmailtemplate = models.duplicate(models.pubmailtemplates, dbmailtemplate)
-      console.log('newmailtemplate', newmailtemplate)
       const dbnewmailtemplate = await dbnewpub.createMailTemplate(newmailtemplate, { transaction: ta }) // Transaction DONE
-      ////const dbnewflow = await models.flows.create(newflow, { transaction: ta }) // Transaction DONE
       if (!dbnewmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate mail template') }
+      // TODO: add in new flowstageId, flowstatusId, flowgradeId, pubroleId
     }
 
     // Duplicate flows
-    /*const dbflows = await req.dbpub.getFlows()
+    const dbflows = await req.dbpub.getFlows()
     for (const dbflow of dbflows) {
       const newflow = models.duplicate(models.flows, dbflow)
-      delete newflow.pubId
-      console.log('newflow', newflow)
       const dbnewflow = await dbnewpub.createFlow(newflow, { transaction: ta }) // Transaction DONE
-      //const dbnewflow = await models.flows.create(newflow, { transaction: ta }) // Transaction DONE
       if (!dbnewflow) { await ta.rollback();  return utils.giveup(req, res, 'Could not create duplicate flow') }
-    }*/
+    }
 
     // Duplicate pubroles
     const dbsuperpubroles = await req.dbpub.getPubroles()
