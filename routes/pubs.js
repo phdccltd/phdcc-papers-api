@@ -1,5 +1,5 @@
 const { Router } = require('express')
-//const Sequelize = require('sequelize')
+// const Sequelize = require('sequelize')
 const _ = require('lodash/core')
 const sequelize = require('../db')
 const models = require('../models')
@@ -213,7 +213,7 @@ router.post('/pubs/:pubid', async function (req, res, next) {
 /* ************************ */
 /* POST delete publication */
 /* ACCESS: SUPER-ONLY TO TEST */
-async function deletePublication(req, res, next) {
+async function deletePublication (req, res, next) {
   // console.log('DELETE /pubs')
   try {
     if (!req.dbuser.super) return utils.giveup(req, res, 'Not a super')
@@ -232,7 +232,7 @@ async function deletePublication(req, res, next) {
       await ta.commit()
       logger.log4req(req, 'DELETED publication', pubid)
     } catch (e) {
-      await ta.rollback();
+      await ta.rollback()
       return utils.giveup(req, res, e.message)
     }
 
@@ -351,7 +351,7 @@ async function editPublication (req, res, next) {
 /* POST edit publication: duplicate publication
  * */
 /* ACCESS: OWNER OR SUPER TO TEST */
-async function dupPublication(req, res, next){
+async function dupPublication (req, res, next) {
   const pubname = req.body.pubname.trim()
   if (pubname.length === 0) return utils.giveup(req, res, 'pubname empty')
   console.log(pubname)
@@ -369,7 +369,6 @@ async function dupPublication(req, res, next){
   const ta = await sequelize.transaction()
 
   try {
-
     const newpub = models.duplicate(models.pubs, req.dbpub)
     newpub.name = pubname
     newpub.title = pubname
@@ -379,7 +378,7 @@ async function dupPublication(req, res, next){
 
     const dbnewpub = await models.pubs.create(newpub, { transaction: ta }) // Transaction DONE
     if (!dbnewpub) {
-      await ta.rollback();
+      await ta.rollback()
       return utils.giveup(req, res, 'Could not create duplicate publication')
     }
 
@@ -389,10 +388,10 @@ async function dupPublication(req, res, next){
       const newpubrole = models.duplicate(models.pubroles, dbpubrole)
       console.log('A', newpubrole)
       newpubrole.pubId = dbnewpub.id
-      console.log('B',newpubrole)
+      console.log('B', newpubrole)
       const dbnewpubrole = await models.pubroles.create(newpubrole, { transaction: ta }) // Transaction DONE
       if (!dbnewpubrole) {
-        await ta.rollback();
+        await ta.rollback()
         return utils.giveup(req, res, 'Could not create duplicate pubrole')
       }
       if (req.body.pubdupusers) {
@@ -416,9 +415,8 @@ async function dupPublication(req, res, next){
 
     await ta.commit()
     logger.log4req(req, 'Publication duplicated to ' + pubname)
-
   } catch (e) {
-    await ta.rollback();
+    await ta.rollback()
     return utils.giveup(req, res, e.message)
   }
 
