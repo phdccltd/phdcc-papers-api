@@ -1,5 +1,7 @@
 const { Router } = require('express')
+//const Sequelize = require('sequelize')
 const _ = require('lodash/core')
+const sequelize = require('../db')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
@@ -211,7 +213,7 @@ router.post('/pubs/:pubid', async function (req, res, next) {
 /* ************************ */
 /* POST delete publication */
 /* ACCESS: SUPER-ONLY TO TEST */
-async function deletePublication (req, res, next) {
+async function deletePublication(req, res, next) {
   // console.log('DELETE /pubs')
   try {
     if (!req.dbuser.super) return utils.giveup(req, res, 'Not a super')
@@ -221,9 +223,18 @@ async function deletePublication (req, res, next) {
     const dbpub = await models.pubs.findByPk(pubid)
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pub ' + pubid)
 
-    await dbpub.destroy() // Transaction ???  // DO DELETES CASCADE???
+    const ta = await sequelize.transaction()
+    try {
+      const numAffectedRows = await models.pubroles.destroy({ where: { pubId: pubid } })
+      console.log('pubroles.destroy', numAffectedRows)
 
-    logger.log4req(req, 'DELETED publication', pubid)
+      await dbpub.destroy({ transaction: ta }) // Cascades to userpubs, pubuserroles
+      await ta.commit()
+      logger.log4req(req, 'DELETED publication', pubid)
+    } catch (e) {
+      await ta.rollback();
+      return utils.giveup(req, res, e.message)
+    }
 
     const ok = true
     utils.returnOK(req, res, ok, 'ok')
@@ -234,9 +245,10 @@ async function deletePublication (req, res, next) {
 
 /* ************************ */
 /* POST edit publication: different calls:
- * - enabled:
- * - addPubRoleOwner:
- * - addroleid:
+ * - enabled
+ * - addPubRoleOwner
+ * - addroleid+addroleuserid
+ * - pubname+pubdupusers
  * */
 /* ACCESS: OWNER OR SUPER TO TEST */
 async function editPublication (req, res, next) {
@@ -319,6 +331,12 @@ async function editPublication (req, res, next) {
         logger.log4req(req, 'Publication user added as ' + dbpubrole.name, userid)
         somethingDone = true
       }
+      // SUPER: ADD USER WITH ROLE IN PUB
+      if ('pubname' in req.body && 'pubdupusers' in req.body) {
+        const dupok = await dupPublication(req, res, next)
+        if (!dupok) return
+        somethingDone = true
+      }
     }
     if (!somethingDone) return utils.giveup(req, res, 'editPublication: invalid parameters')
 
@@ -327,6 +345,84 @@ async function editPublication (req, res, next) {
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
+}
+
+/* ************************ */
+/* POST edit publication: duplicate publication
+ * */
+/* ACCESS: OWNER OR SUPER TO TEST */
+async function dupPublication(req, res, next){
+  const pubname = req.body.pubname.trim()
+  if (pubname.length === 0) return utils.giveup(req, res, 'pubname empty')
+  console.log(pubname)
+
+  if (typeof req.body.pubdupusers !== 'boolean') return utils.giveup(req, res, 'pubdupusers not boolean')
+
+  // See if the name exists already, case insensitive
+  const matching = await models.pubs.findAll({
+    where: {
+      name: sequelize.where(sequelize.fn('LOWER', sequelize.col('name')), 'LIKE', pubname.toLowerCase())
+    }
+  })
+  if (matching.length > 0) return utils.giveup(req, res, 'name already exists')
+
+  const ta = await sequelize.transaction()
+
+  try {
+
+    const newpub = models.duplicate(models.pubs, req.dbpub)
+    newpub.name = pubname
+    newpub.title = pubname
+    newpub.alias = req.site.url.split('.').reverse().join('.') // eg from 'papers.phdcc.com' to 'com.phdcc.papers'
+    newpub.alias += '.' + pubname.toLowerCase().replace(/ /g, '-')
+    console.log(newpub)
+
+    const dbnewpub = await models.pubs.create(newpub, { transaction: ta }) // Transaction DONE
+    if (!dbnewpub) {
+      await ta.rollback();
+      return utils.giveup(req, res, 'Could not create duplicate publication')
+    }
+
+    // Duplicate pubroles
+    const dbsuperpubroles = await req.dbpub.getPubroles()
+    for (const dbpubrole of dbsuperpubroles) {
+      const newpubrole = models.duplicate(models.pubroles, dbpubrole)
+      console.log('A', newpubrole)
+      newpubrole.pubId = dbnewpub.id
+      console.log('B',newpubrole)
+      const dbnewpubrole = await models.pubroles.create(newpubrole, { transaction: ta }) // Transaction DONE
+      if (!dbnewpubrole) {
+        await ta.rollback();
+        return utils.giveup(req, res, 'Could not create duplicate pubrole')
+      }
+      if (req.body.pubdupusers) {
+        // If copying users, duplicate pubrole users
+        const dbpubroleusers = await dbpubrole.getUsers()
+        for (const dbpubroleuser of dbpubroleusers) {
+          console.log('ADD USER', dbpubroleuser.id)
+          const dbuser = await models.users.findByPk(dbpubroleuser.id)
+          if (!dbuser) { await ta.rollback(); return utils.giveup(req, res, 'Cannot find user ' + dbpubroleuser.id) }
+          await dbnewpubrole.addUser(dbuser, { transaction: ta }) // Transaction DONE
+        }
+      }
+    }
+
+    if (req.body.pubdupusers) {
+      const dbpubusers = await req.dbpub.getUsers()
+      for (const dbpubuser of dbpubusers) {
+        await dbnewpub.addUser(dbpubuser, { transaction: ta }) // Transaction DONE
+      }
+    }
+
+    await ta.commit()
+    logger.log4req(req, 'Publication duplicated to ' + pubname)
+
+  } catch (e) {
+    await ta.rollback();
+    return utils.giveup(req, res, e.message)
+  }
+
+  return true
 }
 
 module.exports = router

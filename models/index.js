@@ -53,4 +53,15 @@ dbs.sanitiselist = (dbthings, model) => {
   return sanitisedlist
 }
 
+dbs.duplicate = (model, dbobj) => {
+  if (!dbobj) return null
+  const dupobj = {}
+  if (model.fields) {
+    Object.keys(model.fields).forEach((field) => {
+      dupobj[field] = dbobj[field]
+    })
+  }
+  return dupobj
+}
+
 module.exports = dbs
