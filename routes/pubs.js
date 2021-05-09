@@ -393,7 +393,7 @@ async function dupPublication (req, res, next) {
     for (const dbflow of dbflows) {
       const newflow = models.duplicate(models.flows, dbflow)
       const dbnewflow = await dbnewpub.createFlow(newflow, { transaction: ta }) // Transaction DONE
-      if (!dbnewflow) { await ta.rollback();  return utils.giveup(req, res, 'Could not create duplicate flow') }
+      if (!dbnewflow) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flow') }
     }
 
     // Duplicate pubroles
