@@ -235,6 +235,7 @@ async function deletePublication (req, res, next) {
       for (const dbflow of dbflows) {
         await models.flowacceptings.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
         await models.flowstatuses.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
+        await models.flowstages.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
       }
       await models.flows.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
@@ -423,19 +424,52 @@ async function dupPublication (req, res, next) {
       const dbnewflow = await dbnewpub.createFlow(newflow, { transaction: ta }) // Transaction DONE
       if (!dbnewflow) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flow') }
 
-      // Duplicate flowacceptings - TODO refs
-      const dbflowacceptings = await dbflow.getFlowAcceptings()
-      for (const dbflowaccepting of dbflowacceptings) {
-        const newflowaccepting = models.duplicate(models.flowacceptings, dbflowaccepting)
-        const dbnewflowaccepting = await dbnewflow.createFlowAccepting(newflowaccepting, { transaction: ta }) // Transaction DONE
-        if (!dbnewflowaccepting) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowaccepting') }
+      // Duplicate flowstages
+      const dbflowstages = await dbflow.getFlowStages()
+      for (const dbflowstage of dbflowstages) {
+        const newflowstage = models.duplicate(models.flowstages, dbflowstage)
+        const dbnewflowstage = await dbnewflow.createFlowStage(newflowstage, { transaction: ta }) // Transaction DONE
+        if (!dbnewflowstage) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowstage') }
+        dbflowstage.newid = dbnewflowstage.id
       }
-      // Duplicate flowstatuses - TODO refs
+
+      // Duplicate flowstatuses
       const dbflowstatuses = await dbflow.getFlowStatuses()
       for (const dbflowstatus of dbflowstatuses) {
         const newflowstatus = models.duplicate(models.flowstatuses, dbflowstatus)
+
+        if (newflowstatus.submittedflowstageId) {
+          const dboldstage = _.find(dbflowstages, (fs) => { return fs.id === newflowstatus.submittedflowstageId })
+          if (!dboldstage) { await ta.rollback(); return utils.giveup(req, res, 'Could not find submitted stage referenced in flowstatus') }
+          newflowstatus.submittedflowstageId = dboldstage.newid
+        }
+        if (newflowstatus.cansubmitflowstageId ) {
+          const dboldstage = _.find(dbflowstages, (fs) => { return fs.id === newflowstatus.cansubmitflowstageId  })
+          if (!dboldstage) { await ta.rollback(); return utils.giveup(req, res, 'Could not find cansubmit stage referenced in flowstatus') }
+          newflowstatus.cansubmitflowstageId = dboldstage.newid
+        }
+
         const dbnewflowstatus = await dbnewflow.createFlowStatus(newflowstatus, { transaction: ta }) // Transaction DONE
         if (!dbnewflowstatus) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowstatus') }
+        dbflowstatus.newid = dbnewflowstatus.id
+      }
+
+      // Duplicate flowacceptings
+      const dbflowacceptings = await dbflow.getFlowAcceptings()
+      for (const dbflowaccepting of dbflowacceptings) {
+        const newflowaccepting = models.duplicate(models.flowacceptings, dbflowaccepting)
+        if (newflowaccepting.flowstageId) {
+          const dboldstage = _.find(dbflowstages, (fs) => { return fs.id === newflowaccepting.flowstageId })
+          if (!dboldstage) { await ta.rollback(); return utils.giveup(req, res, 'Could not find stage referenced in flowaccepting') }
+          newflowaccepting.flowstageId = dboldstage.newid
+        }
+        if (newflowaccepting.flowstatusId) {
+          const dboldstatus = _.find(dbflowstatuses, (fs) => { return fs.id === newflowaccepting.flowstatusId })
+          if (!dboldstatus) { await ta.rollback(); return utils.giveup(req, res, 'Could not find status referenced in flowaccepting') }
+          newflowaccepting.flowstatusId = dboldstatus.newid
+        }
+        const dbnewflowaccepting = await dbnewflow.createFlowAccepting(newflowaccepting, { transaction: ta }) // Transaction DONE
+        if (!dbnewflowaccepting) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowaccepting') }
       }
     }
 
