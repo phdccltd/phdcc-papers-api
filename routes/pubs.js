@@ -231,6 +231,11 @@ async function deletePublication (req, res, next) {
       }
       await models.publookups.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
+      const dbflows = await dbpub.getFlows()
+      for (const dbflow of dbflows) {
+        await models.flowacceptings.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
+        await models.flowstatuses.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
+      }
       await models.flows.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
       await models.pubroles.destroy({ where: { pubId: pubid } }, { transaction: ta })
@@ -396,7 +401,7 @@ async function dupPublication (req, res, next) {
       // TODO: add in new flowstageId, flowstatusId, flowgradeId, pubroleId
     }
 
-    // Duplicate publookups
+    // Duplicate publookups and publookupvalues
     const dbpublookups = await req.dbpub.getPubLookups()
     for (const dbpublookup of dbpublookups) {
       const newpublookup = models.duplicate(models.publookups, dbpublookup)
@@ -417,6 +422,21 @@ async function dupPublication (req, res, next) {
       const newflow = models.duplicate(models.flows, dbflow)
       const dbnewflow = await dbnewpub.createFlow(newflow, { transaction: ta }) // Transaction DONE
       if (!dbnewflow) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flow') }
+
+      // Duplicate flowacceptings - TODO refs
+      const dbflowacceptings = await dbflow.getFlowAcceptings()
+      for (const dbflowaccepting of dbflowacceptings) {
+        const newflowaccepting = models.duplicate(models.flowacceptings, dbflowaccepting)
+        const dbnewflowaccepting = await dbnewflow.createFlowAccepting(newflowaccepting, { transaction: ta }) // Transaction DONE
+        if (!dbnewflowaccepting) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowaccepting') }
+      }
+      // Duplicate flowstatuses - TODO refs
+      const dbflowstatuses = await dbflow.getFlowStatuses()
+      for (const dbflowstatus of dbflowstatuses) {
+        const newflowstatus = models.duplicate(models.flowstatuses, dbflowstatus)
+        const dbnewflowstatus = await dbnewflow.createFlowStatus(newflowstatus, { transaction: ta }) // Transaction DONE
+        if (!dbnewflowstatus) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowstatus') }
+      }
     }
 
     // Duplicate pubroles
