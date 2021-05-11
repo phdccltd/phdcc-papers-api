@@ -225,6 +225,8 @@ async function deletePublication (req, res, next) {
 
     const ta = await sequelize.transaction()
     try {
+      await models.flows.destroy({ where: { pubId: pubid } }, { transaction: ta })
+
       await models.pubroles.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
       await models.pubmailtemplates.destroy({ where: { pubId: pubid } }, { transaction: ta })
