@@ -225,6 +225,12 @@ async function deletePublication (req, res, next) {
 
     const ta = await sequelize.transaction()
     try {
+      const dbpublookups = await dbpub.getPubLookups()
+      for (const dbpublookup of dbpublookups) {
+        await models.publookupvalues.destroy({ where: { publookupId: dbpublookup.id } }, { transaction: ta })
+      }
+      await models.publookups.destroy({ where: { pubId: pubid } }, { transaction: ta })
+
       await models.flows.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
       await models.pubroles.destroy({ where: { pubId: pubid } }, { transaction: ta })
@@ -376,7 +382,7 @@ async function dupPublication (req, res, next) {
     newpub.title = pubname
     newpub.alias = req.site.url.split('.').reverse().join('.') // eg from 'papers.phdcc.com' to 'com.phdcc.papers'
     newpub.alias += '.' + pubname.toLowerCase().replace(/ /g, '-')
-    console.log('newpub', newpub)
+    // console.log('newpub', newpub)
 
     const dbnewpub = await models.pubs.create(newpub, { transaction: ta }) // Transaction DONE
     if (!dbnewpub) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate publication') }
@@ -388,6 +394,21 @@ async function dupPublication (req, res, next) {
       const dbnewmailtemplate = await dbnewpub.createMailTemplate(newmailtemplate, { transaction: ta }) // Transaction DONE
       if (!dbnewmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate mail template') }
       // TODO: add in new flowstageId, flowstatusId, flowgradeId, pubroleId
+    }
+
+    // Duplicate publookups
+    const dbpublookups = await req.dbpub.getPubLookups()
+    for (const dbpublookup of dbpublookups) {
+      const newpublookup = models.duplicate(models.publookups, dbpublookup)
+      const dbnewpublookup = await dbnewpub.createPubLookup(newpublookup, { transaction: ta }) // Transaction DONE
+      if (!dbnewpublookup) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate publookup') }
+
+      const dbpublookupvalues = await dbpublookup.getPubLookupValues()
+      for (const dbpublookupvalue of dbpublookupvalues) {
+        const newpublookupvalue = models.duplicate(models.publookupvalues, dbpublookupvalue)
+        const dbnewpublookupvalue = await dbnewpublookup.createPubLookupValue(newpublookupvalue, { transaction: ta }) // Transaction DONE
+        if (!dbnewpublookupvalue) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate publookupvalue') }
+      }      
     }
 
     // Duplicate flows
