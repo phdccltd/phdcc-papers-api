@@ -468,11 +468,28 @@ async function dupPublication (req, res, next) {
         for (const dbformfield of dbformfields) {
           const newformfield = models.duplicate(models.formfields, dbformfield)
           newformfield.formtypeid = dbnewflowstage.id
-        //  	publookupId
-        // pubroleId
-        // requiredif 
+        // publookupId TODO
+        // pubroleId TODO
+
           const dbnewformfield = await models.formfields.create(newformfield, { transaction: ta }) // Transaction DONE
           if (!dbnewformfield) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate formfield') }
+          dbformfield.newid = dbnewformfield.id
+        }
+        for (const dbformfield of dbformfields) { // Go through again for requiredif
+          if (dbformfield.requiredif) {
+            console.log('requiredif', dbformfield.requiredif, dbformfield.id, dbformfield.newid)
+            const dbnewformfield = await models.formfields.findByPk(dbformfield.newid, { transaction: ta })
+            if (!dbnewformfield) { await ta.rollback(); return utils.giveup(req, res, 'Could not find duplicated formfield for requiredif') }
+
+            const eqpos = dbformfield.requiredif.indexOf('=')
+            if (eqpos === -1) { await ta.rollback(); return utils.giveup(req, res, 'Badly formatted requiredif') }
+            const refdid = parseInt(dbformfield.requiredif.substring(0,eqpos))
+            console.log('refdid', refdid)
+            const dbrefdff = _.find(dbformfields, (fs) => { return fs.id === refdid })
+            if (!dbrefdff) { await ta.rollback(); return utils.giveup(req, res, 'Could not find refdid for requiredif') }
+            dbnewformfield.requiredif = dbrefdff.newid + dbformfield.requiredif.substring(eqpos)
+            dbnewformfield.save({ transaction: ta }) // Transaction DONE
+          }
         }
       }
 

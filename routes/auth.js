@@ -1,5 +1,7 @@
 // `user` is real, `ppuser' is the JWT user in token only with 'id'
 
+// TODO: Work out how to log out all instances
+
 const _lang = require('lodash/lang')
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
