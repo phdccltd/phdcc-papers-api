@@ -227,7 +227,6 @@ async function deletePublication (req, res, next) {
     try {
       const dbflows = await dbpub.getFlows()
       for (const dbflow of dbflows) {
-
         const dbflowgrades = await dbflow.getFlowgrades()
         for (const dbflowgrade of dbflowgrades) {
           await models.flowgradescores.destroy({ where: { flowgradeId: dbflowgrade.id } }, { transaction: ta })
@@ -494,7 +493,7 @@ async function dupPublication (req, res, next) {
 
             const eqpos = dbformfield.requiredif.indexOf('=')
             if (eqpos === -1) { await ta.rollback(); return utils.giveup(req, res, 'Badly formatted requiredif') }
-            const refdid = parseInt(dbformfield.requiredif.substring(0,eqpos))
+            const refdid = parseInt(dbformfield.requiredif.substring(0, eqpos))
             console.log('refdid', refdid)
             const dbrefdff = _.find(dbformfields, (fs) => { return fs.id === refdid })
             if (!dbrefdff) { await ta.rollback(); return utils.giveup(req, res, 'Could not find refdid for requiredif') }
@@ -514,8 +513,8 @@ async function dupPublication (req, res, next) {
           if (!dboldstage) { await ta.rollback(); return utils.giveup(req, res, 'Could not find submitted stage referenced in flowstatus') }
           newflowstatus.submittedflowstageId = dboldstage.newid
         }
-        if (newflowstatus.cansubmitflowstageId ) {
-          const dboldstage = _.find(dbflowstages, (fs) => { return fs.id === newflowstatus.cansubmitflowstageId  })
+        if (newflowstatus.cansubmitflowstageId) {
+          const dboldstage = _.find(dbflowstages, (fs) => { return fs.id === newflowstatus.cansubmitflowstageId })
           if (!dboldstage) { await ta.rollback(); return utils.giveup(req, res, 'Could not find cansubmit stage referenced in flowstatus') }
           newflowstatus.cansubmitflowstageId = dboldstage.newid
         }
