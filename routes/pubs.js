@@ -225,12 +225,6 @@ async function deletePublication (req, res, next) {
 
     const ta = await sequelize.transaction()
     try {
-      const dbpublookups = await dbpub.getPubLookups()
-      for (const dbpublookup of dbpublookups) {
-        await models.publookupvalues.destroy({ where: { publookupId: dbpublookup.id } }, { transaction: ta })
-      }
-      await models.publookups.destroy({ where: { pubId: pubid } }, { transaction: ta })
-
       const dbflows = await dbpub.getFlows()
       for (const dbflow of dbflows) {
 
@@ -251,6 +245,12 @@ async function deletePublication (req, res, next) {
         await models.flowstages.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
       }
       await models.flows.destroy({ where: { pubId: pubid } }, { transaction: ta })
+
+      const dbpublookups = await dbpub.getPubLookups()
+      for (const dbpublookup of dbpublookups) {
+        await models.publookupvalues.destroy({ where: { publookupId: dbpublookup.id } }, { transaction: ta })
+      }
+      await models.publookups.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
       await models.pubroles.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
@@ -427,7 +427,9 @@ async function dupPublication (req, res, next) {
         const newpublookupvalue = models.duplicate(models.publookupvalues, dbpublookupvalue)
         const dbnewpublookupvalue = await dbnewpublookup.createPubLookupValue(newpublookupvalue, { transaction: ta }) // Transaction DONE
         if (!dbnewpublookupvalue) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate publookupvalue') }
-      }      
+      }
+
+      dbpublookup.newid = dbnewpublookup.id
     }
 
     // Duplicate pubroles
@@ -468,8 +470,17 @@ async function dupPublication (req, res, next) {
         for (const dbformfield of dbformfields) {
           const newformfield = models.duplicate(models.formfields, dbformfield)
           newformfield.formtypeid = dbnewflowstage.id
-        // publookupId TODO
-        // pubroleId TODO
+
+          if (dbformfield.publookupId) {
+            const dboldpublookup = _.find(dbpublookups, (pl) => { return pl.id === dbformfield.publookupId })
+            if (!dboldpublookup) { await ta.rollback(); return utils.giveup(req, res, 'Could not find publookup referenced in formfield') }
+            newformfield.publookupId = dboldpublookup.newid
+          }
+          if (dbformfield.pubroleId) {
+            const dboldpubrole = _.find(dbsuperpubroles, (pr) => { return pr.id === dbformfield.pubroleId })
+            if (!dboldpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not find pubrole referenced in formfield') }
+            newformfield.pubroleId = dboldpubrole.newid
+          }
 
           const dbnewformfield = await models.formfields.create(newformfield, { transaction: ta }) // Transaction DONE
           if (!dbnewformfield) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate formfield') }
