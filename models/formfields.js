@@ -25,10 +25,10 @@ module.exports = (sequelize, DataTypes) => {
 
   formfields.associate = function (dbs) {
     // Adds formfields.publookupid Sequelize.INTEGER allowNull:true
-    dbs.publookups.hasMany(dbs.formfields, { foreignKey: { allowNull: true }, onDelete: 'RESTRICT' }) // Cannot delete pub while publookups exist
+    dbs.publookups.hasMany(dbs.formfields, { foreignKey: { allowNull: true }, onDelete: 'RESTRICT' }) // Cannot delete publookup while formfields exist
     dbs.formfields.belongsTo(dbs.publookups, { foreignKey: { allowNull: true } })
 
-    dbs.formfields.belongsTo(dbs.pubroles, { foreignKey: { allowNull: true } })
+    dbs.formfields.belongsTo(dbs.pubroles, { foreignKey: { allowNull: true } }) // pubroleId: Not actually used so far
 
     dbs.formfields.fields.publookupId = true
     dbs.formfields.fields.pubroleId = true

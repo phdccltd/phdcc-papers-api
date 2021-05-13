@@ -239,9 +239,15 @@ async function deletePublication (req, res, next) {
           await models.flowgradescores.destroy({ where: { flowgradeId: dbflowgrade.id } }, { transaction: ta })
         }
 
-        await models.flowacceptings.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
         await models.flowgrades.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
+        await models.flowacceptings.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
         await models.flowstatuses.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
+
+        const dbflowstages = await dbflow.getFlowStages()
+        for (const dbflowstage of dbflowstages) {
+          await models.formfields.destroy({ where: { formtypeid: dbflowstage.id } }, { transaction: ta })
+        }
+
         await models.flowstages.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
       }
       await models.flows.destroy({ where: { pubId: pubid } }, { transaction: ta })
@@ -457,6 +463,17 @@ async function dupPublication (req, res, next) {
         const dbnewflowstage = await dbnewflow.createFlowStage(newflowstage, { transaction: ta }) // Transaction DONE
         if (!dbnewflowstage) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowstage') }
         dbflowstage.newid = dbnewflowstage.id
+
+        const dbformfields = await models.formfields.findAll({ where: { formtypeid: dbflowstage.id } })
+        for (const dbformfield of dbformfields) {
+          const newformfield = models.duplicate(models.formfields, dbformfield)
+          newformfield.formtypeid = dbnewflowstage.id
+        //  	publookupId
+        // pubroleId
+        // requiredif 
+          const dbnewformfield = await models.formfields.create(newformfield, { transaction: ta }) // Transaction DONE
+          if (!dbnewformfield) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate formfield') }
+        }
       }
 
       // Duplicate flowstatuses
