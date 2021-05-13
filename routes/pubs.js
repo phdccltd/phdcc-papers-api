@@ -233,7 +233,14 @@ async function deletePublication (req, res, next) {
 
       const dbflows = await dbpub.getFlows()
       for (const dbflow of dbflows) {
+
+        const dbflowgrades = await dbflow.getFlowgrades()
+        for (const dbflowgrade of dbflowgrades) {
+          await models.flowgradescores.destroy({ where: { flowgradeId: dbflowgrade.id } }, { transaction: ta })
+        }
+
         await models.flowacceptings.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
+        await models.flowgrades.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
         await models.flowstatuses.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
         await models.flowstages.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
       }
@@ -417,6 +424,25 @@ async function dupPublication (req, res, next) {
       }      
     }
 
+    // Duplicate pubroles
+    const dbsuperpubroles = await req.dbpub.getPubroles()
+    for (const dbpubrole of dbsuperpubroles) {
+      const newpubrole = models.duplicate(models.pubroles, dbpubrole)
+      newpubrole.pubId = dbnewpub.id
+      const dbnewpubrole = await models.pubroles.create(newpubrole, { transaction: ta }) // Transaction DONE
+      if (!dbnewpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate pubrole') }
+      if (req.body.pubdupusers) {
+        // If copying users, duplicate pubrole users
+        const dbpubroleusers = await dbpubrole.getUsers()
+        for (const dbpubroleuser of dbpubroleusers) {
+          const dbuser = await models.users.findByPk(dbpubroleuser.id)
+          if (!dbuser) { await ta.rollback(); return utils.giveup(req, res, 'Cannot find user ' + dbpubroleuser.id) }
+          await dbnewpubrole.addUser(dbuser, { transaction: ta }) // Transaction DONE
+        }
+      }
+      dbpubrole.newid = dbnewpubrole.id
+    }
+
     // Duplicate flows
     const dbflows = await req.dbpub.getFlows()
     for (const dbflow of dbflows) {
@@ -454,6 +480,48 @@ async function dupPublication (req, res, next) {
         dbflowstatus.newid = dbnewflowstatus.id
       }
 
+      // Duplicate flowgrades
+      const dbflowgrades = await dbflow.getFlowgrades()
+      for (const dbflowgrade of dbflowgrades) {
+        const newflowgrade = models.duplicate(models.flowgrades, dbflowgrade)
+
+        if (newflowgrade.flowstatusId) {
+          const dboldstatus = _.find(dbflowstatuses, (fs) => { return fs.id === newflowgrade.flowstatusId })
+          if (!dboldstatus) { await ta.rollback(); return utils.giveup(req, res, 'Could not find status referenced in flowgrade') }
+          newflowgrade.flowstatusId = dboldstatus.newid
+        }
+        if (newflowgrade.displayflowstageId) {
+          const dboldstage = _.find(dbflowstages, (fs) => { return fs.id === newflowgrade.displayflowstageId })
+          if (!dboldstage) { await ta.rollback(); return utils.giveup(req, res, 'Could not find display stage referenced in flowgrade') }
+          newflowgrade.displayflowstageId = dboldstage.newid
+        }
+        if (newflowgrade.visibletorole) {
+          const dboldpubrole = _.find(dbsuperpubroles, (pr) => { return pr.id === newflowgrade.visibletorole })
+          if (!dboldpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not find visibletorole referenced in flowgrade') }
+          newflowgrade.visibletorole = dboldpubrole.newid
+        }
+        if (newflowgrade.authorcanseeatthesestatuses) {
+          const newcanseeats = []
+          const canseeats = newflowgrade.authorcanseeatthesestatuses.split(',')
+          for (const canseeat of canseeats) {
+            const dboldstatus = _.find(dbflowstatuses, (fs) => { return fs.id === parseInt(canseeat) })
+            if (!dboldstatus) { await ta.rollback(); return utils.giveup(req, res, 'Could not find authorcanseeatstatus referenced in flowgrade') }
+            newcanseeats.push(dboldstatus.newid)
+          }
+          newflowgrade.authorcanseeatthesestatuses = newcanseeats.join()
+        }
+
+        const dbnewflowgrade = await dbnewflow.createFlowgrade(newflowgrade, { transaction: ta }) // Transaction DONE
+        if (!dbnewflowgrade) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowgrade') }
+
+        const dbflowgradescores = await dbflowgrade.getFlowgradescores()
+        for (const dbflowgradescore of dbflowgradescores) {
+          const newflowgradescore = models.duplicate(models.flowgradescores, dbflowgradescore)
+          const dbnewflowgradescore = await dbnewflowgrade.createFlowgradescore(newflowgradescore, { transaction: ta }) // Transaction DONE
+          if (!dbnewflowgradescore) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowgradescore') }
+        }
+      }
+
       // Duplicate flowacceptings
       const dbflowacceptings = await dbflow.getFlowAcceptings()
       for (const dbflowaccepting of dbflowacceptings) {
@@ -470,24 +538,6 @@ async function dupPublication (req, res, next) {
         }
         const dbnewflowaccepting = await dbnewflow.createFlowAccepting(newflowaccepting, { transaction: ta }) // Transaction DONE
         if (!dbnewflowaccepting) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowaccepting') }
-      }
-    }
-
-    // Duplicate pubroles
-    const dbsuperpubroles = await req.dbpub.getPubroles()
-    for (const dbpubrole of dbsuperpubroles) {
-      const newpubrole = models.duplicate(models.pubroles, dbpubrole)
-      newpubrole.pubId = dbnewpub.id
-      const dbnewpubrole = await models.pubroles.create(newpubrole, { transaction: ta }) // Transaction DONE
-      if (!dbnewpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate pubrole') }
-      if (req.body.pubdupusers) {
-        // If copying users, duplicate pubrole users
-        const dbpubroleusers = await dbpubrole.getUsers()
-        for (const dbpubroleuser of dbpubroleusers) {
-          const dbuser = await models.users.findByPk(dbpubroleuser.id)
-          if (!dbuser) { await ta.rollback(); return utils.giveup(req, res, 'Cannot find user ' + dbpubroleuser.id) }
-          await dbnewpubrole.addUser(dbuser, { transaction: ta }) // Transaction DONE
-        }
       }
     }
 
