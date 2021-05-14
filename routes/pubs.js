@@ -469,6 +469,18 @@ async function dupPublication (req, res, next) {
       const dbflowstages = await dbflow.getFlowStages()
       for (const dbflowstage of dbflowstages) {
         const newflowstage = models.duplicate(models.flowstages, dbflowstage)
+
+        if (dbflowstage.pubroleId) {
+          const dboldpubrole = _.find(dbpubroles, (pr) => { return pr.id === dbflowstage.pubroleId })
+          if (!dboldpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not find pubrole referenced in flowstage') }
+          newflowstage.pubroleId = dboldpubrole.newid
+        }
+        if (dbflowstage.rolecanadd) {
+          const dboldpubrole = _.find(dbpubroles, (pr) => { return pr.id === dbflowstage.rolecanadd })
+          if (!dboldpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not find pubrole referenced in flowstage') }
+          newflowstage.rolecanadd = dboldpubrole.newid
+        }
+
         const dbnewflowstage = await dbnewflow.createFlowStage(newflowstage, { transaction: ta }) // Transaction DONE
         if (!dbnewflowstage) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowstage') }
         dbflowstage.newid = dbnewflowstage.id
