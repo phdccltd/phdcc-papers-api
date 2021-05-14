@@ -1,3 +1,4 @@
+// Note: NOT cleared if a User, Publication, etc is deleted
 // Question: could values (eg submitId) be reused if last one deleted
 const Sequelize = require('sequelize')
 

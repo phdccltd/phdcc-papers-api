@@ -450,6 +450,11 @@ async function dupPublication (req, res, next) {
         if (!dboldpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not find pubrole referenced in mail template') }
         newmailtemplate.pubroleId = dboldpubrole.newid
       }
+      if (newmailtemplate.sendOnRoleGiven) {
+        const dboldpubrole = _.find(dbpubroles, (pr) => { return pr.id === newmailtemplate.sendOnRoleGiven })
+        if (!dboldpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not find sendOnRoleGiven referenced in mail template') }
+        newmailtemplate.sendOnRoleGiven = dboldpubrole.newid
+      }
 
       // update these later: flowstageId, flowstatusId, flowgradeId
 
