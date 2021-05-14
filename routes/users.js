@@ -191,6 +191,8 @@ async function getPubUsers (req, res, next) {
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
     // console.log('isowner', isowner.id, isowner.name)
 
+    const dbflows = await dbpub.getFlows()
+
     // Get all roles available for publication
     const pubroles = models.sanitiselist(await dbpub.getPubroles(), models.pubroles)
 
@@ -206,7 +208,13 @@ async function getPubUsers (req, res, next) {
         if (pubrole) user.roles.push(pubrole)
       }
 
-      user.submits = models.sanitiselist(await dbuser.getSubmits(), models.submits)
+      let userpubsubmits = 0
+      for (const dbflow of dbflows) {
+        const userflowsubmits = await dbuser.getSubmits({ where: { flowId: dbflow.id } })
+        userpubsubmits += userflowsubmits.length
+      }
+      //user.submits = models.sanitiselist(userpubsubmits, models.submits)
+      user.submitcount = userpubsubmits
 
       users.push(user)
     }
