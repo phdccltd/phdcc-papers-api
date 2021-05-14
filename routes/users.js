@@ -208,13 +208,12 @@ async function getPubUsers (req, res, next) {
         if (pubrole) user.roles.push(pubrole)
       }
 
-      let userpubsubmits = 0
+      let userpubsubmitcount = 0
       for (const dbflow of dbflows) {
         const userflowsubmits = await dbuser.getSubmits({ where: { flowId: dbflow.id } })
-        userpubsubmits += userflowsubmits.length
+        userpubsubmitcount += userflowsubmits.length
       }
-      //user.submits = models.sanitiselist(userpubsubmits, models.submits)
-      user.submitcount = userpubsubmits
+      user.submitcount = userpubsubmitcount
 
       users.push(user)
     }
