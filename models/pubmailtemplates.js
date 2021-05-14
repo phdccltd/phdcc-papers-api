@@ -43,6 +43,11 @@ module.exports = (sequelize, DataTypes) => {
     dbs.pubmailtemplates.belongsTo(dbs.flowgrades, { foreignKey: { allowNull: true } }) // flowgradeId (Trigger)
 
     dbs.pubmailtemplates.belongsTo(dbs.pubroles, { foreignKey: { allowNull: true } }) // pubroleId (Recipients)
+
+    dbs.pubmailtemplates.fields.flowstageId = true
+    dbs.pubmailtemplates.fields.flowstatusId = true
+    dbs.pubmailtemplates.fields.flowgradeId = true
+    dbs.pubmailtemplates.fields.pubroleId = true
   }
 
   pubmailtemplates.consts = { // sendOnSiteAction constants

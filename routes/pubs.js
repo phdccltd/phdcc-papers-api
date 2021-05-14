@@ -225,6 +225,8 @@ async function deletePublication (req, res, next) {
 
     const ta = await sequelize.transaction()
     try {
+      await models.pubmailtemplates.destroy({ where: { pubId: pubid } }, { transaction: ta })
+
       const dbflows = await dbpub.getFlows()
       for (const dbflow of dbflows) {
         const dbflowgrades = await dbflow.getFlowgrades()
@@ -240,7 +242,6 @@ async function deletePublication (req, res, next) {
         for (const dbflowstage of dbflowstages) {
           await models.formfields.destroy({ where: { formtypeid: dbflowstage.id } }, { transaction: ta })
         }
-
         await models.flowstages.destroy({ where: { flowId: dbflow.id } }, { transaction: ta })
       }
       await models.flows.destroy({ where: { pubId: pubid } }, { transaction: ta })
@@ -252,8 +253,6 @@ async function deletePublication (req, res, next) {
       await models.publookups.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
       await models.pubroles.destroy({ where: { pubId: pubid } }, { transaction: ta })
-
-      await models.pubmailtemplates.destroy({ where: { pubId: pubid } }, { transaction: ta })
 
       await dbpub.destroy({ transaction: ta }) // Cascades to userpubs, pubuserroles
       await ta.commit()
@@ -405,15 +404,6 @@ async function dupPublication (req, res, next) {
     const dbnewpub = await models.pubs.create(newpub, { transaction: ta }) // Transaction DONE
     if (!dbnewpub) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate publication') }
 
-    // Duplicate pubmailtemplates
-    const dbmailtemplates = await req.dbpub.getMailTemplates()
-    for (const dbmailtemplate of dbmailtemplates) {
-      const newmailtemplate = models.duplicate(models.pubmailtemplates, dbmailtemplate)
-      const dbnewmailtemplate = await dbnewpub.createMailTemplate(newmailtemplate, { transaction: ta }) // Transaction DONE
-      if (!dbnewmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate mail template') }
-      // TODO: add in new flowstageId, flowstatusId, flowgradeId, pubroleId
-    }
-
     // Duplicate publookups and publookupvalues
     const dbpublookups = await req.dbpub.getPubLookups()
     for (const dbpublookup of dbpublookups) {
@@ -432,8 +422,8 @@ async function dupPublication (req, res, next) {
     }
 
     // Duplicate pubroles
-    const dbsuperpubroles = await req.dbpub.getPubroles()
-    for (const dbpubrole of dbsuperpubroles) {
+    const dbpubroles = await req.dbpub.getPubroles()
+    for (const dbpubrole of dbpubroles) {
       const newpubrole = models.duplicate(models.pubroles, dbpubrole)
       newpubrole.pubId = dbnewpub.id
       const dbnewpubrole = await models.pubroles.create(newpubrole, { transaction: ta }) // Transaction DONE
@@ -448,6 +438,24 @@ async function dupPublication (req, res, next) {
         }
       }
       dbpubrole.newid = dbnewpubrole.id
+    }
+
+    // Duplicate pubmailtemplates
+    const dbmailtemplates = await req.dbpub.getMailTemplates()
+    for (const dbmailtemplate of dbmailtemplates) {
+      const newmailtemplate = models.duplicate(models.pubmailtemplates, dbmailtemplate)
+
+      if (newmailtemplate.pubroleId) {
+        const dboldpubrole = _.find(dbpubroles, (pr) => { return pr.id === newmailtemplate.pubroleId })
+        if (!dboldpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not find pubrole referenced in mail template') }
+        newmailtemplate.pubroleId = dboldpubrole.newid
+      }
+
+      // update these later: flowstageId, flowstatusId, flowgradeId
+
+      const dbnewmailtemplate = await dbnewpub.createMailTemplate(newmailtemplate, { transaction: ta }) // Transaction DONE
+      if (!dbnewmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate mail template') }
+      dbmailtemplate.newid = dbnewmailtemplate.id
     }
 
     // Duplicate flows
@@ -476,7 +484,7 @@ async function dupPublication (req, res, next) {
             newformfield.publookupId = dboldpublookup.newid
           }
           if (dbformfield.pubroleId) {
-            const dboldpubrole = _.find(dbsuperpubroles, (pr) => { return pr.id === dbformfield.pubroleId })
+            const dboldpubrole = _.find(dbpubroles, (pr) => { return pr.id === dbformfield.pubroleId })
             if (!dboldpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not find pubrole referenced in formfield') }
             newformfield.pubroleId = dboldpubrole.newid
           }
@@ -487,18 +495,26 @@ async function dupPublication (req, res, next) {
         }
         for (const dbformfield of dbformfields) { // Go through again for requiredif
           if (dbformfield.requiredif) {
-            console.log('requiredif', dbformfield.requiredif, dbformfield.id, dbformfield.newid)
             const dbnewformfield = await models.formfields.findByPk(dbformfield.newid, { transaction: ta })
             if (!dbnewformfield) { await ta.rollback(); return utils.giveup(req, res, 'Could not find duplicated formfield for requiredif') }
 
             const eqpos = dbformfield.requiredif.indexOf('=')
             if (eqpos === -1) { await ta.rollback(); return utils.giveup(req, res, 'Badly formatted requiredif') }
             const refdid = parseInt(dbformfield.requiredif.substring(0, eqpos))
-            console.log('refdid', refdid)
             const dbrefdff = _.find(dbformfields, (fs) => { return fs.id === refdid })
             if (!dbrefdff) { await ta.rollback(); return utils.giveup(req, res, 'Could not find refdid for requiredif') }
             dbnewformfield.requiredif = dbrefdff.newid + dbformfield.requiredif.substring(eqpos)
             dbnewformfield.save({ transaction: ta }) // Transaction DONE
+          }
+        }
+
+        // Update any flowstage references in mailtemplates
+        for (const dbmailtemplate of dbmailtemplates) {
+          if (dbmailtemplate.flowstageId && (dbmailtemplate.flowstageId === dbflowstage.id)) {
+            const dbnewpubmailtemplate = await models.pubmailtemplates.findByPk(dbmailtemplate.newid, { transaction: ta })
+            if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create new mailtemplate') }
+            dbnewpubmailtemplate.flowstageId = dbflowstage.newid
+            dbnewpubmailtemplate.save({ transaction: ta }) // Transaction DONE
           }
         }
       }
@@ -522,6 +538,16 @@ async function dupPublication (req, res, next) {
         const dbnewflowstatus = await dbnewflow.createFlowStatus(newflowstatus, { transaction: ta }) // Transaction DONE
         if (!dbnewflowstatus) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowstatus') }
         dbflowstatus.newid = dbnewflowstatus.id
+
+        // Update any flowstatusId references in mailtemplates
+        for (const dbmailtemplate of dbmailtemplates) {
+          if (dbmailtemplate.flowstatusId && (dbmailtemplate.flowstatusId === dbflowstatus.id)) {
+            const dbnewpubmailtemplate = await models.pubmailtemplates.findByPk(dbmailtemplate.newid, { transaction: ta })
+            if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create new mailtemplate') }
+            dbnewpubmailtemplate.flowstatusId = dbflowstatus.newid
+            dbnewpubmailtemplate.save({ transaction: ta }) // Transaction DONE
+          }
+        }
       }
 
       // Duplicate flowgrades
@@ -540,7 +566,7 @@ async function dupPublication (req, res, next) {
           newflowgrade.displayflowstageId = dboldstage.newid
         }
         if (newflowgrade.visibletorole) {
-          const dboldpubrole = _.find(dbsuperpubroles, (pr) => { return pr.id === newflowgrade.visibletorole })
+          const dboldpubrole = _.find(dbpubroles, (pr) => { return pr.id === newflowgrade.visibletorole })
           if (!dboldpubrole) { await ta.rollback(); return utils.giveup(req, res, 'Could not find visibletorole referenced in flowgrade') }
           newflowgrade.visibletorole = dboldpubrole.newid
         }
@@ -557,12 +583,23 @@ async function dupPublication (req, res, next) {
 
         const dbnewflowgrade = await dbnewflow.createFlowgrade(newflowgrade, { transaction: ta }) // Transaction DONE
         if (!dbnewflowgrade) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowgrade') }
+        dbflowgrade.newid = dbnewflowgrade.id
 
         const dbflowgradescores = await dbflowgrade.getFlowgradescores()
         for (const dbflowgradescore of dbflowgradescores) {
           const newflowgradescore = models.duplicate(models.flowgradescores, dbflowgradescore)
           const dbnewflowgradescore = await dbnewflowgrade.createFlowgradescore(newflowgradescore, { transaction: ta }) // Transaction DONE
           if (!dbnewflowgradescore) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowgradescore') }
+        }
+
+        // Update any flowgradeId references in mailtemplates
+        for (const dbmailtemplate of dbmailtemplates) {
+          if (dbmailtemplate.flowgradeId && (dbmailtemplate.flowgradeId === dbflowgrade.id)) {
+            const dbnewpubmailtemplate = await models.pubmailtemplates.findByPk(dbmailtemplate.newid, { transaction: ta })
+            if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create new mailtemplate') }
+            dbnewpubmailtemplate.flowgradeId = dbflowgrade.newid
+            dbnewpubmailtemplate.save({ transaction: ta }) // Transaction DONE
+          }
         }
       }
 
