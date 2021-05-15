@@ -456,12 +456,16 @@ async function dupPublication (req, res, next) {
         newmailtemplate.sendOnRoleGiven = dboldpubrole.newid
       }
 
-      // update these later: flowstageId, flowstatusId, flowgradeId
+      // update these later:
+      //  * flowstageId, flowstatusId, flowgradeId
+      //  * body tokens eg {{entry.field_1}} etc
 
       const dbnewmailtemplate = await dbnewpub.createMailTemplate(newmailtemplate, { transaction: ta }) // Transaction DONE
       if (!dbnewmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate mail template') }
       dbmailtemplate.newid = dbnewmailtemplate.id
     }
+
+    const formfieldchanges = []
 
     // Duplicate flows
     const dbflows = await req.dbpub.getFlows()
@@ -509,6 +513,7 @@ async function dupPublication (req, res, next) {
           const dbnewformfield = await models.formfields.create(newformfield, { transaction: ta }) // Transaction DONE
           if (!dbnewformfield) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate formfield') }
           dbformfield.newid = dbnewformfield.id
+          formfieldchanges.push([dbformfield.id, dbnewformfield.id])
         }
         for (const dbformfield of dbformfields) { // Go through again for requiredif
           if (dbformfield.requiredif) {
@@ -529,7 +534,7 @@ async function dupPublication (req, res, next) {
         for (const dbmailtemplate of dbmailtemplates) {
           if (dbmailtemplate.flowstageId && (dbmailtemplate.flowstageId === dbflowstage.id)) {
             const dbnewpubmailtemplate = await models.pubmailtemplates.findByPk(dbmailtemplate.newid, { transaction: ta })
-            if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create new mailtemplate') }
+            if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not find refd mailtemplate') }
             dbnewpubmailtemplate.flowstageId = dbflowstage.newid
             dbnewpubmailtemplate.save({ transaction: ta }) // Transaction DONE
           }
@@ -560,7 +565,7 @@ async function dupPublication (req, res, next) {
         for (const dbmailtemplate of dbmailtemplates) {
           if (dbmailtemplate.flowstatusId && (dbmailtemplate.flowstatusId === dbflowstatus.id)) {
             const dbnewpubmailtemplate = await models.pubmailtemplates.findByPk(dbmailtemplate.newid, { transaction: ta })
-            if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create new mailtemplate') }
+            if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not find refd mailtemplate') }
             dbnewpubmailtemplate.flowstatusId = dbflowstatus.newid
             dbnewpubmailtemplate.save({ transaction: ta }) // Transaction DONE
           }
@@ -613,7 +618,7 @@ async function dupPublication (req, res, next) {
         for (const dbmailtemplate of dbmailtemplates) {
           if (dbmailtemplate.flowgradeId && (dbmailtemplate.flowgradeId === dbflowgrade.id)) {
             const dbnewpubmailtemplate = await models.pubmailtemplates.findByPk(dbmailtemplate.newid, { transaction: ta })
-            if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not create new mailtemplate') }
+            if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not find refd mailtemplate') }
             dbnewpubmailtemplate.flowgradeId = dbflowgrade.newid
             dbnewpubmailtemplate.save({ transaction: ta }) // Transaction DONE
           }
@@ -636,6 +641,34 @@ async function dupPublication (req, res, next) {
         }
         const dbnewflowaccepting = await dbnewflow.createFlowAccepting(newflowaccepting, { transaction: ta }) // Transaction DONE
         if (!dbnewflowaccepting) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate flowaccepting') }
+      }
+    }
+
+    // Go through mailtemplates again to update entry.field tokens
+    for (const dbmailtemplate of dbmailtemplates) {
+      const tokenstart = '{{entry.field_'
+      const tokenstartlength = tokenstart.length
+      let body = dbmailtemplate.body
+      let bodychanged = false
+      let tokenpos = 0
+      while (true) {
+        tokenpos = body.indexOf(tokenstart, tokenpos)
+        if (tokenpos === -1) break
+        tokenpos += tokenstartlength
+        const endtoken = body.indexOf('}}', tokenpos)
+        if (endtoken !== -1) {
+          const fieldno = parseInt(body.substring(tokenpos, endtoken))
+          const formfieldchange = _.find(formfieldchanges, (ffc) => { return ffc[0] === fieldno })
+          if (!formfieldchange) { await ta.rollback(); return utils.giveup(req, res, 'Could not find mailtemplate token entry_field_' + fieldno) }
+          body = body.substring(0, tokenpos) + formfieldchange[1] + body.substring(endtoken)
+          bodychanged = true
+        }
+      }
+      if (bodychanged) {
+        const dbnewpubmailtemplate = await models.pubmailtemplates.findByPk(dbmailtemplate.newid, { transaction: ta })
+        if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not find refd mailtemplate') }
+        dbnewpubmailtemplate.body = body
+        dbnewpubmailtemplate.save({ transaction: ta }) // Transaction DONE
       }
     }
 
