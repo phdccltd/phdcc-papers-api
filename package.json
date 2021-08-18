@@ -47,6 +47,6 @@
   "devDependencies": {
     "patch-package": "6.4.7",
     "sqlite3": "5.0.2",
-    "supertest": "6.1.5"
+    "supertest": "6.1.6"
   }
 }
