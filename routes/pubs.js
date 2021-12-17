@@ -466,6 +466,7 @@ async function dupPublication (req, res, next) {
     }
 
     const formfieldchanges = []
+    const formfieldhideatgradings = []
 
     // Duplicate flows
     const dbflows = await req.dbpub.getFlows()
@@ -514,6 +515,10 @@ async function dupPublication (req, res, next) {
           if (!dbnewformfield) { await ta.rollback(); return utils.giveup(req, res, 'Could not create duplicate formfield') }
           dbformfield.newid = dbnewformfield.id
           formfieldchanges.push([dbformfield.id, dbnewformfield.id])
+
+          if (dbformfield.hideatgrading) {
+            formfieldhideatgradings.push(dbnewformfield)
+          }
         }
         for (const dbformfield of dbformfields) { // Go through again for requiredif
           if (dbformfield.requiredif) {
@@ -575,6 +580,7 @@ async function dupPublication (req, res, next) {
       // Duplicate flowgrades
       const dbflowgrades = await dbflow.getFlowgrades()
       for (const dbflowgrade of dbflowgrades) {
+
         const newflowgrade = models.duplicate(models.flowgrades, dbflowgrade)
 
         if (newflowgrade.flowstatusId) {
@@ -621,6 +627,16 @@ async function dupPublication (req, res, next) {
             if (!dbnewpubmailtemplate) { await ta.rollback(); return utils.giveup(req, res, 'Could not find refd mailtemplate') }
             dbnewpubmailtemplate.flowgradeId = dbflowgrade.newid
             dbnewpubmailtemplate.save({ transaction: ta }) // Transaction DONE
+          }
+        }
+
+        // Update any hideatgrading references in new formfields
+        for (const newformfield of formfieldhideatgradings) {
+          if (newformfield.hideatgrading === dbflowgrade.id) {
+            const dbnewformfield = await models.formfields.findByPk(newformfield.id, { transaction: ta })
+            if (!dbnewformfield) { await ta.rollback(); return utils.giveup(req, res, 'Could not find refd hideatgrading formfield') }
+            dbnewformfield.hideatgrading = dbflowgrade.newid
+            dbnewformfield.save({ transaction: ta }) // Transaction DONE
           }
         }
       }
