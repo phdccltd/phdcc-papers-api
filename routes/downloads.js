@@ -196,7 +196,7 @@ async function downloadFull (req, res, next, all) {
       let comments = ''
       const dbsubmitgradings = await dbsubmit.getGradings()
       for (const dbsubmitgrading of dbsubmitgradings) {
-        if (dbsubmitgrading.flowgradeId !== dbflowgrade.displayflowstageId) continue
+        if (dbsubmitgrading.flowgradeId !== dbflowgrade.id) continue
 
         for (const dbflowgradescore of dbflowgradescores) {
           if (dbsubmitgrading.flowgradescoreId === dbflowgradescore.id) {
