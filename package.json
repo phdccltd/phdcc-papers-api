@@ -21,6 +21,10 @@
     "comment4": "Keep at rotating-file-stream@2.1.6 and passport@0.5.0"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phdccltd/phdcc-papers-api.git"
+  },
   "dependencies": {
     "archiver": "5.3.0",
     "bcrypt": "5.0.1",
