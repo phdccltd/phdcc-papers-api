@@ -1,6 +1,6 @@
 {
   "name": "phdcc-papers-api",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "description": "API for Papers journal/conference abstract and paper submission and review system",
   "author": "Chris Cant",
   "private": true,
@@ -48,12 +48,12 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "rotating-file-stream": "2.1.6",
-    "sequelize": "6.12.4",
+    "sequelize": "6.16.1",
     "validator": "13.7.0"
   },
   "devDependencies": {
     "patch-package": "6.4.7",
     "sqlite3": "git+https://github.com/mapbox/node-sqlite3.git#593c9d",
-    "supertest": "6.1.6"
+    "supertest": "6.2.2"
   }
 }
