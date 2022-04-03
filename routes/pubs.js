@@ -580,7 +580,6 @@ async function dupPublication (req, res, next) {
       // Duplicate flowgrades
       const dbflowgrades = await dbflow.getFlowgrades()
       for (const dbflowgrade of dbflowgrades) {
-
         const newflowgrade = models.duplicate(models.flowgrades, dbflowgrade)
 
         if (newflowgrade.flowstatusId) {
