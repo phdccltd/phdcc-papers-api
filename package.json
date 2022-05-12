@@ -1,6 +1,6 @@
 {
   "name": "phdcc-papers-api",
-  "version": "1.4.11",
+  "version": "1.4.12",
   "description": "API for Papers journal/conference abstract and paper submission and review system",
   "author": "Chris Cant",
   "private": true,
@@ -26,15 +26,15 @@
     "url": "https://github.com/phdccltd/phdcc-papers-api.git"
   },
   "dependencies": {
-    "archiver": "5.3.0",
+    "archiver": "5.3.1",
     "bcrypt": "5.0.1",
     "body-parser": "1.20.0",
     "cors": "^2.8.5",
     "cross-env": "7.0.3",
-    "dotenv": "16.0.0",
-    "express": "4.17.3",
-    "express-mysql-session": "2.1.7",
-    "express-session": "1.17.2",
+    "dotenv": "16.0.1",
+    "express": "4.18.1",
+    "express-mysql-session": "2.1.8",
+    "express-session": "1.17.3",
     "handlebars": "4.7.7",
     "http-errors": "2.0.0",
     "jsonwebtoken": "^8.5.1",
@@ -43,7 +43,7 @@
     "multer": "1.4.4",
     "mysql2": "2.3.3",
     "needle": "3.1.0",
-    "nodemailer": "6.7.3",
+    "nodemailer": "6.7.5",
     "passport": "0.5.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
@@ -54,6 +54,6 @@
   "devDependencies": {
     "patch-package": "6.4.7",
     "sqlite3": "git+https://github.com/mapbox/node-sqlite3.git#593c9d",
-    "supertest": "6.2.2"
+    "supertest": "6.2.3"
   }
 }
