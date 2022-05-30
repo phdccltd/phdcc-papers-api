@@ -17,14 +17,14 @@
       }
     },
     {
-      "name": "addEditAccepting: edit paper closed #4",
+      "name": "addEditAccepting: edit paper closed #5",
       "method": "post",
       "uri": "/acceptings/1",
       "data": {
         "chosenstage": 2, // Paper
         "chosenopen": false,
         "chosenstatus": 4, // Proposal accepted
-        "acceptingid": 4
+        "acceptingid": 5
       },
       "return": {
         "ret": 0

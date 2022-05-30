@@ -78,7 +78,7 @@
       }
     },
     {
-      "name": "addEditAccepting: add another paper closed #4again",
+      "name": "addEditAccepting: add another paper closed #5",
       "method": "post",
       "uri": "/acceptings/1",
       "data": {
