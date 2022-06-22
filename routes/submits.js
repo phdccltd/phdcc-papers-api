@@ -922,11 +922,11 @@ async function getPubSubmits (req, res, next) {
           ihaveactions = true
         }
 
-        /// /////// We'll need the entries (ordered by flowstage weight) so we can get action links
+        /// /////// We'll need the entries so we can get action links (ordered by date - used to be flowstage weight)
         const dbentries = await dbsubmit.getEntries({
           include: { model: models.flowstages },
           order: [
-            [models.flowstages, 'weight', 'ASC']
+            ['dt', 'ASC'] //[models.flowstages, 'weight', 'ASC']
           ]
         })
         submit.entries = models.sanitiselist(dbentries, models.entries)
@@ -1033,7 +1033,7 @@ async function getPubSubmits (req, res, next) {
           submit.actions.push({ name: 'See reviews', route, show: 1, dograde: 0 })
         }
         for (const og of ownergradingsummary) {
-          submit.actionsdone.push({ id: -og.id, name: og.name + ': ' + og.count + ' done' })
+          submit.actionsdone.push({ id: -og.id, name: og.name + ': ' + og.count + ' done' }) // eg "Review Stage 1: 3 done"
         }
 
         submit.actionable = submit.actions.length > 0
