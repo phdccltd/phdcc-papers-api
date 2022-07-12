@@ -29,7 +29,7 @@ passport.use('login', new LocalStrategy({
 async (username, password, done) => {
   try {
     // console.log('verify', username)
-    const user = await models.users.findOne({ where: { username: username } })
+    const user = await models.users.findOne({ where: { username } })
     if (!user) throw new Error('Incorrect username')
     const match = await bcrypt.compare(password, user.password)
     if (!match) throw new Error('Incorrect password')
@@ -74,7 +74,7 @@ async function doResetLogin (req, res, next) {
 
     const dbusers = await models.users.findAll({
       where: {
-        resettoken: resettoken
+        resettoken
       }
     })
     console.log('dbusers.length', dbusers.length)
@@ -223,14 +223,14 @@ async function register (req, res, next) {
 
   async function createuser () {
     const params = {
-      name: name,
-      username: username,
+      name,
+      username,
       password: await bcrypt.hash(req.body.password.trim(), saltRounds),
-      email: email
+      email
     }
     try {
       // Although username must be unique, explicitly check first
-      const existingusername = await models.users.findOne({ where: { username: username } })
+      const existingusername = await models.users.findOne({ where: { username } })
       if (existingusername) {
         return utils.giveup(req, res, 'username already in use')
       }
@@ -439,7 +439,7 @@ async function forgotpwd (req, res, next) {
     logger.log4req(req, 'forgotpwd request', email)
 
     async function doforgotpwd () {
-      const dbuser = await models.users.findOne({ where: { email: email } })
+      const dbuser = await models.users.findOne({ where: { email } })
       const forgotten = { err: false, msg: false }
       if (!dbuser) {
         forgotten.err = 'Email not found'
@@ -498,12 +498,12 @@ async function forgotpwd (req, res, next) {
 }
 
 module.exports = {
-  passport: passport,
-  login: login,
-  register: register,
-  logout: logout,
-  getuser: getuser,
-  saveuser: saveuser,
-  loaduser: loaduser,
-  forgotpwd: forgotpwd
+  passport,
+  login,
+  register,
+  logout,
+  getuser,
+  saveuser,
+  loaduser,
+  forgotpwd
 }

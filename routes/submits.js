@@ -926,7 +926,7 @@ async function getPubSubmits (req, res, next) {
         const dbentries = await dbsubmit.getEntries({
           include: { model: models.flowstages },
           order: [
-            ['dt', 'ASC'] //[models.flowstages, 'weight', 'ASC']
+            ['dt', 'ASC'] // [models.flowstages, 'weight', 'ASC']
           ]
         })
         submit.entries = models.sanitiselist(dbentries, models.entries)

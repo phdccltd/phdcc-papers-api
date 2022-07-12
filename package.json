@@ -15,7 +15,7 @@
   },
   "comments": {
     "create_patch": "npx patch-package sequelize",
-    "comment4": "Keep at rotating-file-stream@2.1.6 and passport@0.5.0"
+    "comment4": "Keep at rotating-file-stream@2.1.6"
   },
   "license": "MIT",
   "repository": {

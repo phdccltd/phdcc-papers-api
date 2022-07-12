@@ -53,7 +53,7 @@ function asyncMail (toEmail, subject, message, bccEmail) {
   const params = {
     from: fromEmail,
     to: toEmail,
-    subject: subject,
+    subject,
     text: message
   }
   params.replyTo = fromEmail

@@ -160,7 +160,7 @@ async function run (models, configfilename, existingconfig, app, resBody, resCal
           for (const score of grade.score) {
             const newscore = {
               flowgradeId: grade.db.id,
-              weight: weight,
+              weight,
               name: score.name
             }
             score.db = await models.flowgradescores.create(newscore)
