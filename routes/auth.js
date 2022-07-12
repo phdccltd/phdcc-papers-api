@@ -372,8 +372,9 @@ async function logout (req, res) {
   }
 
   logger.log4req(req, 'Logging out ', req.ppuser.id, req.dbuser.username)
-  req.logout()
-  utils.returnOK(req, res, 'Logged out')
+  req.logout(function () {
+    utils.returnOK(req, res, 'Logged out')
+  })
 }
 
 /* GET: GETUSER */
