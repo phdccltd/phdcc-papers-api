@@ -43,17 +43,17 @@
     "multer": "1.4.5-lts.1",
     "mysql2": "2.3.3",
     "needle": "3.1.0",
-    "nodemailer": "6.7.5",
+    "nodemailer": "6.7.7",
     "passport": "0.5.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "rotating-file-stream": "2.1.6",
-    "sequelize": "6.21.0",
+    "sequelize": "6.21.3",
     "validator": "13.7.0"
   },
   "devDependencies": {
     "patch-package": "6.4.7",
     "sqlite3": "git+https://github.com/mapbox/node-sqlite3.git#593c9d",
-    "supertest": "6.2.3"
+    "supertest": "6.2.4"
   }
 }
