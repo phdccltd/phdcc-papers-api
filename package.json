@@ -1,6 +1,6 @@
 {
   "name": "phdcc-papers-api",
-  "version": "1.4.15",
+  "version": "1.4.16",
   "description": "API for Papers journal/conference abstract and paper submission and review system",
   "author": "Chris Cant",
   "private": true,
@@ -15,7 +15,7 @@
   },
   "comments": {
     "create_patch": "npx patch-package sequelize",
-    "comment4": "Keep at rotating-file-stream@2.1.6"
+    "comment4": "Keep at rotating-file-stream@2.1.6 in node 12"
   },
   "license": "MIT",
   "repository": {
@@ -44,9 +44,9 @@
     "passport": "0.6.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
-    "rotating-file-stream": "2.1.6",
+    "rotating-file-stream": "^3.0.4",
     "sequelize": "6.21.3",
-    "sqlite3": "5.0.8",
+    "sqlite3": "^5.0.10",
     "validator": "13.7.0"
   },
   "devDependencies": {
