@@ -14,9 +14,9 @@
     "postinstall": "patch-package"
   },
   "comments": {
-    "comment0": "Keep at node 14",
-    "create_patch": "npx patch-package sequelize",
-    "comment4": "Keep at rotating-file-stream@2.1.6 in node 12"
+    "comment0": "Tests run OK in node 14, 16, 18",
+    "comment4": "Use rotating-file-stream@2.1.6 in node 12",
+    "create_patch": "npx patch-package sequelize"
   },
   "license": "MIT",
   "repository": {
