@@ -65,6 +65,16 @@ passport.use(new JWTstrategy({
 
 /// ///////////////////
 
+function getRecaptchaResponse(req) {
+  console.log('g-recaptcha-response', req.body['g-recaptcha-response'])
+  console.log('grecaptcharesponse', req.body.grecaptcharesponse)
+  const gotgrr1 = ('g-recaptcha-response' in req.body) && (req.body['g-recaptcha-response'].trim().length > 0)
+  const gotgrr2 = ('grecaptcharesponse' in req.body) && (req.body.grecaptcharesponse.trim().length > 0)
+  if (!gotgrr1 && !gotgrr2) return false
+  return gotgrr1 ? req.body['g-recaptcha-response'].trim() : req.body.grecaptcharesponse.trim()
+}
+
+/// ///////////////////
 async function doResetLogin (req, res, next) {
   const resettoken = req.body.reset.trim()
   if (resettoken.length === 0) return utils.giveup(req, res, 'No reset')
@@ -100,7 +110,8 @@ async function doResetLogin (req, res, next) {
     })
   }
 
-  const recaptchaResponseToken = req.body['g-recaptcha-response']
+  const recaptchaResponseToken = getRecaptchaResponse(req)
+  //const recaptchaResponseToken = req.body['g-recaptcha-response']
   if (recaptchaResponseToken === process.env.RECAPTCHA_BYPASS) {
     resetlogin()
     return
@@ -122,8 +133,9 @@ async function doResetLogin (req, res, next) {
 /// ///////////////////
 /* POST: HANDLE LOGIN ATTEMPT, using given passport */
 async function login (req, res, next) {
-  console.log('g-recaptcha-response', req.body['g-recaptcha-response'])
-  if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+  const recaptchaResponseToken = getRecaptchaResponse(req)
+  if (!recaptchaResponseToken) return utils.giveup(req, res, 'recaptcha not given')
+  //if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
 
   if ('reset' in req.body) return await doResetLogin(req, res, next)
 
@@ -180,7 +192,6 @@ async function login (req, res, next) {
     }
   }
 
-  const recaptchaResponseToken = req.body['g-recaptcha-response']
   if (postRegisterId || (recaptchaResponseToken === process.env.RECAPTCHA_BYPASS)) {
     authenticate(postRegisterId)
     return
@@ -214,7 +225,9 @@ async function register (req, res, next) {
 
   if (!('password' in req.body) || (req.body.password.trim().length === 0)) return utils.giveup(req, res, 'password not given')
   if (!('email' in req.body) || (req.body.email.trim().length === 0)) return utils.giveup(req, res, 'email not given')
-  if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+  const recaptchaResponseToken = getRecaptchaResponse(req)
+  if (!recaptchaResponseToken) return utils.giveup(req, res, 'recaptcha not given')
+  //if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
 
   const email = req.body.email.trim()
   if (!isEmail(email)) return utils.giveup(req, res, 'Not a valid email address')
@@ -293,10 +306,10 @@ async function register (req, res, next) {
     }
   }
 
-  const recaptchaResponseToken = req.body['g-recaptcha-response']
-  if (recaptchaResponseToken === undefined || recaptchaResponseToken === '' || recaptchaResponseToken === null) {
-    return utils.giveup(req, res, 'Please select captcha first')
-  }
+  //const recaptchaResponseToken = req.body['g-recaptcha-response']
+  //if (recaptchaResponseToken === undefined || recaptchaResponseToken === '' || recaptchaResponseToken === null) {
+  //  return utils.giveup(req, res, 'Please select captcha first')
+  //}
 
   if (recaptchaResponseToken === process.env.RECAPTCHA_BYPASS) {
     createuser()
@@ -433,7 +446,9 @@ async function saveuser (req, res, next) {
 async function forgotpwd (req, res, next) {
   try {
     if (!('email' in req.body)) return utils.giveup(req, res, 'No email given')
-    if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
+    const recaptchaResponseToken = getRecaptchaResponse(req)
+    if (!recaptchaResponseToken) return utils.giveup(req, res, 'recaptcha not given')
+    //if (!('g-recaptcha-response' in req.body) || (req.body['g-recaptcha-response'].trim().length === 0)) return utils.giveup(req, res, 'recaptcha not given')
 
     const email = req.body.email.trim()
     logger.log4req(req, 'forgotpwd request', email)
@@ -474,7 +489,7 @@ async function forgotpwd (req, res, next) {
       utils.returnOK(req, res, forgotten, 'forgotten')
     }
 
-    const recaptchaResponseToken = req.body['g-recaptcha-response']
+    //const recaptchaResponseToken = req.body['g-recaptcha-response']
     if (recaptchaResponseToken === process.env.RECAPTCHA_BYPASS) {
       doforgotpwd()
       return
