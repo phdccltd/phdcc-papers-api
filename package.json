@@ -46,12 +46,12 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "rotating-file-stream": "^3.0.4",
-    "sequelize": "^6.26.0",
-    "sqlite3": "^5.1.2",
+    "sequelize": "^6.27.0",
+    "sqlite3": "^5.1.4",
     "validator": "13.7.0"
   },
   "devDependencies": {
     "patch-package": "^6.5.0",
-    "supertest": "^6.3.2"
+    "supertest": "^6.3.3"
   }
 }
