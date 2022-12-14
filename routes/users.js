@@ -48,7 +48,8 @@ async function removePubUser (req, res, next) {
     if (!dbuser) return utils.giveup(req, res, 'Cannot find userid ' + userid)
 
     const dbuserpubroles = await dbuser.getRoles()
-    if (dbuserpubroles.length > 0) return utils.giveup(req, res, 'Roles need to be deleted first')
+    const hasanyroles = _.find(dbuserpubroles, userpubrole => { return userpubrole.pubId === pubid})
+    if (hasanyroles) return utils.giveup(req, res, 'Roles need to be deleted first')
 
     let present = await dbpub.hasUser(dbuser)
     if (!present) return utils.giveup(req, res, 'That user does not have access currently')
