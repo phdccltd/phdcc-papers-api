@@ -593,7 +593,7 @@ async function deleteEntry (req, res, next, ta) {
         // Delete any empty directories, down through hieracrhy
         while (base !== '/') {
           try {
-            fs.rmdirSync(filesdir + base)
+            fs.rmSync(filesdir + base)
             logger.log4req(req, 'Removed directory', filesdir + base)
           } catch (e) {
             break

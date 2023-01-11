@@ -630,7 +630,7 @@ function deleteFolderRecursivelySync (dirpath) {
       fs.unlinkSync(_path)
     }
   })
-  fs.rmdirSync(dirpath)
+  fs.rmSync(dirpath)
 }
 
 /* ************************ */
