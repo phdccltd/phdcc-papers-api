@@ -1,12 +1,13 @@
 {
   "name": "phdcc-papers-api",
-  "version": "1.4.24",
+  "version": "1.4.25",
   "description": "API for Papers journal/conference abstract and paper submission and review system",
   "author": "Chris Cant",
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=development LOGMODE=console node ./server.js",
     "start": "cross-env NODE_ENV=production node ./server.js",
+    "forclient": "cross-env NODE_ENV=development TESTING=forclient LOGMODE=console node ./server.js",
     "comment": "Must run tests with --runInBand to run sequentially so working directories not overwritten",
     "test": "jest --runInBand 2>tests1.txt",
     "testci": "jest --runInBand",

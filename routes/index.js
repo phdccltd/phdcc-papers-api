@@ -38,7 +38,13 @@ router.use(function (req, res, next) {
   // }
 
   // req.baseUrl is eg /user/login for call at /api/user/login
+  if (process.env.TESTING === 'forclient') {
+    if (req.url.indexOf('/api') === 0) {
+      req.url = req.url.substr(4)
+    }
+  }
   req.fullurl = req.baseUrl + req.url // eg /user
+  // console.log("req.url", req.url)
 
   // Load site (from list cached at startup)
   const host = req.get('host')
