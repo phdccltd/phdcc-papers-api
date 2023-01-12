@@ -39,6 +39,9 @@ describe('SITE', () => {
       error = await runscript.run(app.models, 'tests/api-site-test.json', false, app)
       if (error) throw new Error(error)
 
+      error = await runscript.run(app.models, 'tests/api-resetdbfortest-test.json', false, app)
+      if (error) throw new Error(error)
+
       // process.env.TESTING = false
       // error = await runscript.run(app.models, 'tests/api-site-fail-test.json', false, app)
       // if (error) throw new Error(error)

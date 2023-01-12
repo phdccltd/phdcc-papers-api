@@ -12,7 +12,6 @@ const models = require('./models')
 const logger = require('./logger')
 const utils = require('./utils')
 const backgroundRunner = require('./task')
-const maketestsite = require('./tests/maketestsite')
 
 let now = new Date()
 global.starttime = now.toISOString()
@@ -139,7 +138,6 @@ if (!process.env.TESTING) {
 }
 if (process.env.TESTING === 'forclient') {
   console.log('TESTING FOR CLIENT')
-  app.checkDatabases(maketestsite)
 }
 
 app.use(bodyParser.urlencoded({ extended: false }))

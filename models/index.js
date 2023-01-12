@@ -64,4 +64,46 @@ dbs.duplicate = (model, dbobj) => {
   return dupobj
 }
 
+dbs.deleteall = async () => { // sqlite_sequence
+  console.log('====dbs.deleteall START')
+  const { QueryTypes } = require('sequelize')
+  const sqliteTables = await sequelize.query("SELECT name FROM `sqlite_schema` WHERE type = 'table' AND name LIKE 'sqlite_%'; ", { type: QueryTypes.SELECT })
+  if (sqliteTables.length > 0) { // sqlite_sequence wll exist in Sqlite3
+    console.log('====dbs.deleteall SQLITE3')
+    await dbs.userpubs.destroy({ truncate: true })
+    await dbs.users.destroy({ truncate: true })
+    await dbs.actionlogs.destroy({ truncate: true })
+    await dbs.sitepages.destroy({ truncate: true })
+    await dbs.pubmailtemplates.destroy({ truncate: true })
+    await dbs.submitstatuses.destroy({ truncate: true })
+    await dbs.submitreviewers.destroy({ truncate: true })
+    await dbs.submitgradings.destroy({ truncate: true })
+    await dbs.formfields.destroy({ truncate: true })
+    await dbs.flowacceptings.destroy({ truncate: true })
+    await dbs.flowstatuses.destroy({ truncate: true })
+    await dbs.flowstages.destroy({ truncate: true })
+    await dbs.flowgradescores.destroy({ truncate: true })
+    await dbs.flowgrades.destroy({ truncate: true })
+    await dbs.flows.destroy({ truncate: true })
+    await dbs.entryvalues.destroy({ truncate: true })
+    await dbs.entries.destroy({ truncate: true })
+    await dbs.publookupvalues.destroy({ truncate: true })
+    await dbs.publookups.destroy({ truncate: true })
+    await dbs.pubuserroles.destroy({ truncate: true })
+    await dbs.pubroles.destroy({ truncate: true })
+    await dbs.pubs.destroy({ truncate: true })
+    await dbs.sites.destroy({ truncate: true })
+    await dbs.logs.destroy({ truncate: true })
+    const tables = await sequelize.query("SELECT name FROM `sqlite_schema` WHERE type = 'table' AND name NOT LIKE 'sqlite_%'; ", { type: QueryTypes.SELECT })
+    for (const table of tables) {
+      const count = await sequelize.query('SELECT COUNT(*) as count FROM `' + table.name + '`; ', { type: QueryTypes.SELECT })
+      if (count[0].count > 0) {
+        console.log('TABLE NOT RESET', table.name, count[0].count)
+        throw new Error('TABLE NOT RESET: ' + table.name + ' ' + count[0].count + ' rows')
+      }
+    }
+  }
+  console.log('====dbs.deleteall END')
+}
+
 module.exports = dbs

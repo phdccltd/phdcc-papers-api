@@ -61,7 +61,7 @@ router.use(function (req, res, next) {
   next()
 })
 
-/* ALL: just give up if path ends / */
+/* ALL: just give up if path ends in slash */
 router.use(function (req, res, next) {
   if (req.path.substr(-1) === '/' && req.path.length > 1) {
     return utils.giveup(req, res, 'Invalid path')
@@ -77,6 +77,33 @@ router.use(function (req, res, next) {
     next()
   }
 })
+
+if (process.env.TESTING) {
+  router.delete('/resetdbfortest', async function (req, res, next) {
+    console.log('====resetdbfortest')
+    try {
+      const app = require('../app')
+      const maketestsite = require('../tests/maketestsite')
+      const runscript = require('../tests/runscript')
+      const models = require('../models')
+
+      await models.deleteall()
+
+      await app.checkDatabases(maketestsite)
+
+      const config = {}
+      let error = await runscript.run(app.models, 'addpubsimpleflow.json', config)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/addusers.json', config)
+      if (error) throw new Error(error)
+      return utils.returnOK(req, res, 'database reset OK')
+    } catch (error) {
+      console.log(error)
+      return utils.exterminate(req, res, error)
+    }
+  })
+}
 
 /* GET: SITEPAGES */
 router.use(sitepagesRouter)
