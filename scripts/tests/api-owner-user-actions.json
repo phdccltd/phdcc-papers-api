@@ -186,13 +186,13 @@
     {
       "name": "deleteUserRole: wrong userid",
       "method": "postdelete",
-      "uri": "/users/pub/1/10/5",
+      "uri": "/users/pub/1/15/5",
       "data": {
       },
       "return": {
         "ret": 1,
         "prop": "status",
-        "value": "Cannot find userid 10"
+        "value": "Cannot find userid 15"
       }
     },
     {

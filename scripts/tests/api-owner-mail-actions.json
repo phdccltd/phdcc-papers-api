@@ -347,7 +347,7 @@
       "method": "post",
       "uri": "/mail/1",
       "data": {
-        "selecteduser": 10,
+        "selecteduser": 15,
         "selectedrole": 0,
         "mailsubject": "hello",
         "mailtext": "there"
@@ -355,7 +355,7 @@
       "return": {
         "ret": 1,
         "prop": "status",
-        "value": "Invalid selecteduser 10"
+        "value": "Invalid selecteduser 15"
       }
     },
     {
