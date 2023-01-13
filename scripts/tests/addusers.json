@@ -58,6 +58,13 @@
       "email": "editor@example.com",
       "password": "editorpwd",
       "roles": "Editor"
+    },
+    {
+      "name": "Recapturer", // 9
+      "username": "recapturer",
+      "email": "recapturer@example.com",
+      "password": "userecapture",
+      "roles": "Author"
     }
   ]
 }
