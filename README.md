@@ -87,13 +87,20 @@ two Papers components are up and running.
 An [ecosystem file](https://pm2.keymetrics.io/docs/usage/application-declaration/) is the best solution. Alternatively, as described here,
 you can start individual processes  and then save the configuration so the processes are restarted after a reboot.
 
+In the papers directory create a `runpapers.sh` file:
+
+```
+./node_modules/.bin/cross-env PORT=1234 node .output/server/index.mjs
+```
+
+
 ```
 cd /var/www/papersapi
 pm2 start server.js --name papersapi
 
 cd /var/www/papers
 npm run build
-pm2 start ./node_modules/nuxt/bin/nuxt.js --name papers -- start
+pm2 start runpapers.sh --name papers -- start
 
 pm2 save
 ```
@@ -113,6 +120,8 @@ This crontab line restarts all PM2 processes at 03:17 every day, server-time:
 ```
 
 Check that the command actually works first, ie do `/usr/bin/node /usr/local/bin/pm2 restart all`. Use `whereis pm2` to find its location.
+
+Note that papers can be run as a static website instead of being served by pm2 and node - [phdcc-papers](https://github.com/phdccltd/phdcc-papers#user-content-run-as-static-website).
 
 ## Code updates
 
