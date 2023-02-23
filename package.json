@@ -47,7 +47,7 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "rotating-file-stream": "^3.0.4",
-    "sequelize": "^6.28.0",
+    "sequelize": "^6.28.2",
     "sqlite3": "^5.1.4",
     "validator": "^13.9.0"
   },
