@@ -161,7 +161,7 @@ app.use(apiRouter.router)
 // catch everything else
 app.use(function (req, res, next) {
   console.log('UNROUTED', req.url, req.method, req.headers)
-  logger.error4req('Unrouted request:', req.url)
+  logger.error4req(req, 'Unrouted request:', req.url)
   next(createError(404, 'Unrecognised request'))
 })
 
