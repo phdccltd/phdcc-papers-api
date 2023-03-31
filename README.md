@@ -10,6 +10,8 @@
 API for the **Papers** [PHDCC journal/conference abstract and paper submission and review system](https://www.phdcc.com/papers/).
 
 JCchange to JCtwigA
+JCchange to JCtwigA offline at 13:04
+
 
 This API is intended for use in conjunction with [phdcc-papers](https://github.com/phdccltd/phdcc-papers).
 
