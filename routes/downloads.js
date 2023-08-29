@@ -620,7 +620,7 @@ async function downloadReviewerPerformance (req, res, next) {
 }
 /* ************************ */
 
-function deleteFolderRecursivelySync (dirpath) {
+function deleteFolderRecursivelySync(dirpath) {
   const files = fs.readdirSync(dirpath)
   files.forEach(file => {
     const _path = dirpath + '/' + file
@@ -630,7 +630,7 @@ function deleteFolderRecursivelySync (dirpath) {
       fs.unlinkSync(_path)
     }
   })
-  fs.rmSync(dirpath)
+  fs.rmSync(dirpath, { recursive: true, force: true }) // force needed even though directory should be empty
 }
 
 /* ************************ */
