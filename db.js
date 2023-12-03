@@ -8,7 +8,9 @@ require('dotenv').config()
 let sequelize = null
 
 if (process.env.TESTING) {
-  sequelize = new Sequelize('sqlite::memory:', {
+  sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: ':memory:',
     logging: logger.logdb1, // Only logs first parameter to avoid error
     define: {
       timestamps: false, // Having as true weirdly causes test errors in Seqelize 5.22+
