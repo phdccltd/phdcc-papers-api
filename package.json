@@ -1,6 +1,6 @@
 {
   "name": "phdcc-papers-api",
-  "version": "1.4.41",
+  "version": "1.4.42",
   "description": "API for Papers journal/conference abstract and paper submission and review system",
   "author": "Chris Cant",
   "private": true,
