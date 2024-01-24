@@ -620,7 +620,7 @@ async function downloadReviewerPerformance (req, res, next) {
 }
 /* ************************ */
 
-function deleteFolderRecursivelySync(dirpath) {
+function deleteFolderRecursivelySync (dirpath) {
   const files = fs.readdirSync(dirpath)
   files.forEach(file => {
     const _path = dirpath + '/' + file

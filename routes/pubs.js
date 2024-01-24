@@ -29,6 +29,15 @@ router.get('/pubs', async function (req, res, next) {
     // Get my roles in all publications
     const dbmypubroles = await req.dbuser.getRoles()
 
+    const dbpubrolemessages = await models.pubrolemessages.findAll()
+    for (const dbpubrolemessage of dbpubrolemessages) {
+      const aroleids = dbpubrolemessage.roleids.split(',')
+      dbpubrolemessage.roleids = []
+      for (const aroleid of aroleids) {
+        dbpubrolemessage.roleids.push(parseInt(aroleid))
+      }
+    }
+
     // Sanitise and get associated publookups/publookupvalues
     const pubs = []
     for (const dbpub of dbpubs) {
@@ -36,14 +45,22 @@ router.get('/pubs', async function (req, res, next) {
       pub.apiversion = process.env.version // Bit naff
       delete pub.email
 
-      // Set isowner and myroles for this publication
+      // Set isowner, myroles and pubrolemessages for this publication
       pub.isowner = false
       pub.myroles = []
+      pub.pubrolemessages = []
       for (const dbmypubrole of dbmypubroles) {
         if (dbmypubrole.pubId === pub.id) {
           const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
           pub.myroles.push(mypubrole)
           if (mypubrole.isowner) pub.isowner = true
+          for (const dbpubrolemessage of dbpubrolemessages) {
+            for (const roleid of dbpubrolemessage.roleids) {
+              if (roleid === dbmypubrole.id) {
+                pub.pubrolemessages.push(dbpubrolemessage.text)
+              }
+            }
+          }
         }
       }
       // pub.isowner = true // When testing add this fake ownership so subsequent tests fail
