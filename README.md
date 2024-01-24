@@ -4,7 +4,6 @@
 [![CircleCI](https://circleci.com/gh/phdccltd/phdcc-papers-api.svg?style=shield)](https://circleci.com/gh/phdccltd/phdcc-papers-api)
 [![Coverage Status](https://coveralls.io/repos/github/phdccltd/phdcc-papers-api/badge.svg?branch=main)](https://coveralls.io/github/phdccltd/phdcc-papers-api?branch=main)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-[![Dependencies](https://david-dm.org/phdccltd/phdcc-papers-api.svg)](https://david-dm.org/phdccltd/phdcc-papers-api)
 <a href="https://sonarcloud.io/dashboard?id=phdccltd_phdcc-papers-api"><img src="https://sonarcloud.io/images/project_badges/sonarcloud-white.svg" height="20" alt="SonarCloud" ></a>
 
 API for the **Papers** [PHDCC journal/conference abstract and paper submission and review system](https://www.phdcc.com/papers/).
