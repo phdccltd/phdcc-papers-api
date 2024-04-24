@@ -53,6 +53,6 @@
   },
   "devDependencies": {
     "patch-package": "^8.0.0",
-    "supertest": "^6.3.3"
+    "supertest": "^7.0.0"
   }
 }
