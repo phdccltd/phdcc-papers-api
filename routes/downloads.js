@@ -508,6 +508,7 @@ async function downloadReviewerPerformance (req, res, next) {
       const gradename = dbflowgrade.name
       summaryHeader.push(gradename + ' sent')
       summaryHeader.push(gradename + ' reviewed')
+      summaryHeader.push(gradename + ' decision')
       summaryHeader.push(gradename + ' duration')
       summaryHeader.push(gradename + ' length')
 
@@ -565,6 +566,7 @@ async function downloadReviewerPerformance (req, res, next) {
             let dtReviewed = ''
             let review = ''
             let elapsed = ''
+            let length = ''
 
             if (dbflowgrade.sentpubmailtemplateId) {
               const firstTold = _.find(submitactionlogs, (sal) => { return sal.sentPubMailTemplateId === dbflowgrade.sentpubmailtemplateId && sal.onUserId === dbreviewer.userId })
@@ -580,6 +582,8 @@ async function downloadReviewerPerformance (req, res, next) {
               if (score) {
                 review = score.name
                 dtReviewed = dbusergrading.dt
+                length = dbusergrading.comment.length
+
                 if (dtFirstTold) {
                   const timeDiff = dtReviewed.getTime() - dtFirstTold.getTime()
                   let elapsedmins = Math.floor(timeDiff / 1000 / 60)
@@ -603,6 +607,7 @@ async function downloadReviewerPerformance (req, res, next) {
             reviewerLine.push(dtReviewed)
             reviewerLine.push(review)
             reviewerLine.push(elapsed)
+            reviewerLine.push(length)
           }
           writeCSVline(outStream, reviewerLine)
         }
