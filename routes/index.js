@@ -58,6 +58,8 @@ router.use(function (req, res, next) {
     }
   }
 
+  if (typeof req.body === 'undefined') req.body = {}
+
   next()
 })
 
