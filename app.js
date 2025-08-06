@@ -24,7 +24,7 @@ app.disable('x-powered-by')
 app.set('sites', [])
 
 // More secure if this used: cors({ origin: 'trustedwebsite.com' })
-app.options('*', cors()) // include before other routes
+// E5-remove app.options('*', cors()) // include before other routes
 app.use(cors())
 
 app.set('init', false)
