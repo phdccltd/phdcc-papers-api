@@ -1,6 +1,6 @@
 {
   "name": "phdcc-papers-api",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "API for Papers journal/conference abstract and paper submission and review system",
   "author": "Chris Cant",
   "private": true,
@@ -11,8 +11,7 @@
     "comment": "Must run tests with --runInBand to run sequentially so working directories not overwritten",
     "test": "jest --runInBand 2>tests1.txt",
     "testci": "jest --runInBand",
-    "standard": "standard app.js db.js logger.js server.js task.js utils.js models/*.js routes/*.js tests/*.js",
-    "postinstall": "patch-package"
+    "standard": "standard app.js db.js logger.js server.js task.js utils.js models/*.js routes/*.js tests/*.js"
   },
   "comments": {
     "comment0": "Tests run OK in node 14, 16, 18",
