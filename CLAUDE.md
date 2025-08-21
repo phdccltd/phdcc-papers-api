@@ -1,7 +1,8 @@
 # PHDCC Papers API - Claude Code Context
 
-## Project Context
-@@CLAUDE-architecture.md
+## Architecture
+For detailed technical architecture information, see [CLAUDE-architecture.md](./CLAUDE-architecture.md).
+Imported to Claude memory via @CLAUDE-architecture.md
 
 ## Development Commands
 
