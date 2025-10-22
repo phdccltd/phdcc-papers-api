@@ -729,23 +729,55 @@ async function getEntryFile (req, res, next) {
     if (dbentryvalue.file === null) return utils.giveup(req, res, 'No file for that entry')
 
     const ContentType = mime.lookup(dbentryvalue.file)
-    let filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
-    if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
 
-    const filepath = path.join(filesdir, dbentryvalue.file)
-    if (!fs.existsSync(filepath)) {
-      return utils.giveup(req, res, 'Sorry: file not available ' + dbentryvalue.file)
-    }
-    const options = {
-      root: filesdir,
-      dotfiles: 'deny',
-      headers: {
-        'Content-Type': ContentType
+    if (process.env.TESTING) {
+      // Testing: Use local filesystem
+      let filesdir = req.site.privatesettings.files
+      if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
+
+      const filepath = path.join(filesdir, dbentryvalue.file)
+      if (!fs.existsSync(filepath)) {
+        return utils.giveup(req, res, 'Sorry: file not available ' + dbentryvalue.file)
+      }
+      const options = {
+        root: filesdir,
+        dotfiles: 'deny',
+        headers: {
+          'Content-Type': ContentType
+        }
+      }
+      console.log('Content-Type', ContentType)
+      res.sendFile(dbentryvalue.file, options)
+      logger.log4req(req, 'Sending file', dbentryvalue.file)
+    } else {
+      // Production: Stream from GCS
+      try {
+        const gcsPath = dbentryvalue.file.substring(1) // Remove leading slash
+
+        // Check if file exists in GCS
+        const exists = await gcs.fileExists(gcsPath)
+        if (!exists) {
+          return utils.giveup(req, res, 'Sorry: file not available in storage ' + dbentryvalue.file)
+        }
+
+        // Set headers and stream file from GCS
+        res.setHeader('Content-Type', ContentType)
+        const fileStream = gcs.createReadStream(gcsPath)
+
+        fileStream.on('error', (error) => {
+          logger.warn4req(req, 'Error streaming file from GCS', gcsPath, error.message)
+          if (!res.headersSent) {
+            utils.giveup(req, res, 'Error retrieving file')
+          }
+        })
+
+        fileStream.pipe(res)
+        logger.log4req(req, 'Streaming file from GCS', gcsPath)
+      } catch (error) {
+        logger.warn4req(req, 'Could not retrieve file from GCS', error.message)
+        return utils.giveup(req, res, 'Sorry: file not available ' + dbentryvalue.file)
       }
     }
-    console.log('Content-Type', ContentType)
-    res.sendFile(dbentryvalue.file, options)
-    logger.log4req(req, 'Sending file', dbentryvalue.file)
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
@@ -919,10 +951,35 @@ async function getPubSubmits (req, res, next) {
       // Find all possible submits ie just user's or all of them
       flow.submits = []
       let dbsubmits = false
+      const submitInclude = {
+        include: [
+          { model: models.users },
+          {
+            model: models.submitgradings,
+            as: 'Gradings',
+            include: [
+              {
+                model: models.users,
+                include: [{ model: models.pubuserroles, as: 'Roles' }]
+              }
+            ]
+          },
+          {
+            model: models.entries,
+            as: 'Entries',
+            include: { model: models.flowstages }
+          },
+          {
+            model: models.submitreviewers,
+            as: 'Reviewers',
+            include: [{ model: models.users }]
+          }
+        ]
+      }
       if (req.onlyanauthor) { // Just get mine
-        dbsubmits = await dbflow.getSubmits({ where: { userId: req.dbuser.id } })
+        dbsubmits = await dbflow.getSubmits({ where: { userId: req.dbuser.id }, ...submitInclude })
       } else { // Otherwise: get all submits and filter
-        dbsubmits = await dbflow.getSubmits()
+        dbsubmits = await dbflow.getSubmits(submitInclude)
       }
 
       // Get all possible flow statuses
@@ -955,15 +1012,15 @@ async function getPubSubmits (req, res, next) {
         req.dbsubmit = dbsubmit
         const submit = models.sanitise(models.submits, dbsubmit)
 
-        req.dbsubmitgradings = await dbsubmit.getGradings()
+        req.dbsubmitgradings = dbsubmit.Gradings || []
 
         submit.actionsdone = [] // Actions done
 
         submit.user = ''
         submit.ismine = true
         if (dbsubmit.userId !== req.dbuser.id) {
-          const dbauthor = await dbsubmit.getUser()
-          if (req.isowner) submit.user = dbauthor.name
+          const dbauthor = dbsubmit.user
+          if (req.isowner && dbauthor) submit.user = dbauthor.name
           submit.ismine = false
         }
 
@@ -981,12 +1038,7 @@ async function getPubSubmits (req, res, next) {
         }
 
         /// /////// We'll need the entries so we can get action links (ordered by date - used to be flowstage weight)
-        const dbentries = await dbsubmit.getEntries({
-          include: { model: models.flowstages },
-          order: [
-            ['dt', 'ASC'] // [models.flowstages, 'weight', 'ASC']
-          ]
-        })
+        const dbentries = (dbsubmit.Entries || []).sort((a, b) => new Date(a.dt) - new Date(b.dt))
         submit.entries = models.sanitiselist(dbentries, models.entries)
 
         /// /////// Filter submits
@@ -997,20 +1049,24 @@ async function getPubSubmits (req, res, next) {
           if (!includethissubmit) continue
         }
 
+        // Batch load all action logs for all reviewers at once
+        const reviewerUserIds = (req.dbsubmit.Reviewers || []).map(r => r.userId)
+        const allActionLogs = reviewerUserIds.length > 0 ? await models.actionlogs.findAll({
+          where: {
+            onUserId: { [Sequelize.Op.in]: reviewerUserIds },
+            submitId: req.dbsubmit.id,
+            sentReminderPubMailTemplateId: { [Sequelize.Op.ne]: null }
+          }
+        }) : []
+
         const reviewers = []
-        for (const dbreviewer of await req.dbsubmit.getReviewers()) {
+        for (const dbreviewer of (req.dbsubmit.Reviewers || [])) {
           const reviewer = models.sanitise(models.submitreviewers, dbreviewer)
-          const dbuser = await dbreviewer.getUser()
+          const dbuser = dbreviewer.user || dbreviewer.User
           reviewer.username = dbuser ? dbuser.name : ''
 
           reviewer.sentreminders = []
-          const dbsentreminders = await models.actionlogs.findAll({
-            where: {
-              onUserId: dbreviewer.userId,
-              submitId: req.dbsubmit.id,
-              sentReminderPubMailTemplateId: { [Sequelize.Op.ne]: null }
-            }
-          })
+          const dbsentreminders = allActionLogs.filter(log => log.onUserId === dbreviewer.userId)
           for (const dbsentreminder of dbsentreminders) {
             reviewer.sentreminders.push({ id: dbsentreminder.id, dt: dbsentreminder.dt })
           }
@@ -1064,12 +1120,12 @@ async function getPubSubmits (req, res, next) {
               if (!req.onlyanauthor) {
                 const reviewer = _.find(reviewers, _reviewer => { return _reviewer.userId === grading.userId })
                 grading.lead = reviewer ? reviewer.lead : false
-                const dbgrader = await dbgrading.getUser()
+                const dbgrader = dbgrading.user || dbgrading.User
                 grading.username = ''
                 grading.hasReviewerRole = false
                 if (dbgrader) {
                   grading.username = dbgrader.name
-                  const dbgraderpubroles = await dbgrader.getRoles()
+                  const dbgraderpubroles = dbgrader.Roles || []
                   const isreviewerrole = _.find(dbgraderpubroles, (grader) => { return grader.isreviewer })
                   if (isreviewerrole) grading.hasReviewerRole = true
                 }
