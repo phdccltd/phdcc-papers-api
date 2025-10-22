@@ -15,6 +15,7 @@ const reviewersRouter = require('./reviewers')
 const sitepagesRouter = require('./sitepages')
 const sitepagessuperRouter = require('./sitepagessuper')
 const submitsRouter = require('./submits')
+const tasksRouter = require('./tasks')
 const users = require('./users')
 
 const router = Router()
@@ -54,6 +55,8 @@ router.use(function (req, res, next) {
   } else {
     req.site = sites.find(site => site.url === host)
     if (!req.site) {
+      const logger = require('../logger')
+      logger.log(`Site not found for host: "${host}", available sites:`, sites.map(s => s.url).join(', '))
       return utils.giveup(req, res, 'Not running on valid site')
     }
   }
@@ -182,6 +185,10 @@ router.use(gradingsRouter)
 /// ///////////////////
 // /submits/*
 router.use(submitsRouter)
+
+/// ///////////////////
+// /tasks/* (Background tasks for Cloud Scheduler)
+router.use(tasksRouter)
 
 /// ///////////////////
 module.exports = {

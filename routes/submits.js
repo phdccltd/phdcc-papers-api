@@ -35,11 +35,18 @@ const logger = require('../logger')
 const sequelize = require('../db')
 const dbutils = require('./dbutils')
 const mailutils = require('./mailutils')
+const gcs = require('../lib/gcs')
 
 const TMPDIR = process.env.TESTTMPDIR ? process.env.TESTTMPDIR : '/tmp/papers/'
 const TMPDIRARCHIVE = TMPDIR + 'archive' // Without final slash.  Deleted files go here (to be deleted on server reboot)
 
-const upload = multer({ dest: TMPDIR })
+// Use memory storage for Cloud Run, or disk for testing
+const upload = multer({
+  storage: process.env.TESTING ? multer.diskStorage({ destination: TMPDIR }) : multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  }
+})
 
 const router = Router()
 
@@ -127,16 +134,32 @@ async function addEntry (req, res, next, ta) {
       file.formfieldid = parseInt(file.originalname.substring(0, hyphenpos))
       file.originalname = file.originalname.substring(hyphenpos + 1)
 
-      // Move file to filesdir/<siteid>/<pubid>/<flowid>/<submitid>/<entryid>/
+      // Upload to GCS or local filesystem (for tests)
       let filepath = '/' + req.site.id + '/' + req.dbpub.id + '/' + req.dbflow.id + '/' + req.dbsubmit.id + '/' + dbentry.id
-      console.log('filesdir + filepath', filesdir + filepath)
-      fs.mkdirSync(filesdir + filepath, { recursive: true })
       filepath += '/' + file.originalname
-      console.log('file.path', file.path)
-      console.log('filepath', filepath)
-      fs.renameSync(file.path, filesdir + filepath)
+
+      if (process.env.TESTING) {
+        // Testing: Use local filesystem
+        console.log('filesdir + filepath', filesdir + filepath)
+        const dir = path.dirname(filesdir + filepath)
+        fs.mkdirSync(dir, { recursive: true })
+        console.log('file.path', file.path)
+        console.log('filepath', filepath)
+        fs.renameSync(file.path, filesdir + filepath)
+        logger.log4req(req, 'Uploaded file to filesystem', filesdir + filepath)
+      } else {
+        // Production: Upload to GCS
+        try {
+          const gcsPath = filepath.substring(1) // Remove leading slash for GCS
+          await gcs.uploadFile(file.buffer, gcsPath, file.mimetype)
+          logger.log4req(req, 'Uploaded file to GCS', gcsPath)
+        } catch (error) {
+          logger.error4req(req, 'GCS upload failed', error)
+          return utils.giveup(req, res, 'File upload failed: ' + error.message)
+        }
+      }
+
       file.filepath = filepath
-      logger.log4req(req, 'Uploaded file', filesdir + filepath)
     }
 
     const svalues = (typeof req.body.values === 'string') ? [req.body.values] : req.body.values // Single value comes in as string; otherwise array
@@ -474,27 +497,50 @@ async function editEntry (req, res, next, ta) {
         }
       }
       if (existingfile) {
-        const existingpath = filesdir + existingfile
-        if (fs.existsSync(existingpath)) {
-          const archivepath = TMPDIRARCHIVE + existingfile
-          if (fs.existsSync(archivepath)) {
-            // Do we need to delete?
-            console.log('editEntry archivepath exists')
+        if (process.env.TESTING) {
+          // Testing: Archive to local filesystem
+          const existingpath = filesdir + existingfile
+          if (fs.existsSync(existingpath)) {
+            const archivepath = TMPDIRARCHIVE + existingfile
+            const archivedir = path.dirname(archivepath)
+            fs.mkdirSync(archivedir, { recursive: true })
+            fs.renameSync(existingpath, archivepath)
           }
-          const archivedir = path.dirname(archivepath)
-          // Make archive dir
-          fs.mkdirSync(archivedir, { recursive: true })
-          // Move existing file to archive
-          fs.renameSync(existingpath, archivepath)
+        } else {
+          // Production: Archive in GCS
+          try {
+            const gcsPath = existingfile.substring(1) // Remove leading slash
+            await gcs.archiveFile(gcsPath)
+            logger.log4req(req, 'Archived existing file in GCS', gcsPath)
+          } catch (error) {
+            logger.warn4req(req, 'Could not archive existing file', error.message)
+            // Continue anyway - don't fail the upload
+          }
         }
       }
 
       let filepath = '/' + req.site.id + '/' + parseInt(req.body.pubid) + '/' + parseInt(req.body.flowid) + '/' + req.dbsubmit.id + '/' + dbentry.id
-      fs.mkdirSync(filesdir + filepath, { recursive: true })
       filepath += '/' + file.originalname
-      fs.renameSync(file.path, filesdir + filepath)
+
+      if (process.env.TESTING) {
+        // Testing: Use local filesystem
+        const dir = path.dirname(filesdir + filepath)
+        fs.mkdirSync(dir, { recursive: true })
+        fs.renameSync(file.path, filesdir + filepath)
+        logger.log4req(req, 'Uploaded file to filesystem', filesdir + filepath)
+      } else {
+        // Production: Upload to GCS
+        try {
+          const gcsPath = filepath.substring(1) // Remove leading slash for GCS
+          await gcs.uploadFile(file.buffer, gcsPath, file.mimetype)
+          logger.log4req(req, 'Uploaded file to GCS', gcsPath)
+        } catch (error) {
+          logger.error4req(req, 'GCS upload failed', error)
+          return utils.giveup(req, res, 'File upload failed: ' + error.message)
+        }
+      }
+
       file.filepath = filepath
-      logger.log4req(req, 'Uploaded file', filesdir + filepath)
     }
 
     // OK: Now delete any existing entryvalues
@@ -572,34 +618,46 @@ async function deleteEntry (req, res, next, ta) {
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
-    // Find entryvalues; move any files to TMPDIRARCHIVE
+    // Find entryvalues; archive any files
     const dbentryvalues = await dbentry.getEntryValues()
     for (const dbentryvalue of dbentryvalues) {
       if (dbentryvalue.file !== null) {
-        let base = path.dirname(dbentryvalue.file)
-        // const filename = path.basename(dbentryvalue.file)
-        fs.mkdirSync(TMPDIRARCHIVE + base, { recursive: true })
-        const frompath = filesdir + dbentryvalue.file
-        if (!fs.existsSync(frompath)) {
-          logger.warn4req(req, 'FILE DOES NOT EXIST', frompath)
+        if (process.env.TESTING) {
+          // Testing: Move to local archive directory
+          let base = path.dirname(dbentryvalue.file)
+          fs.mkdirSync(TMPDIRARCHIVE + base, { recursive: true })
+          const frompath = filesdir + dbentryvalue.file
+          if (!fs.existsSync(frompath)) {
+            logger.warn4req(req, 'FILE DOES NOT EXIST', frompath)
+          } else {
+            try {
+              fs.renameSync(frompath, TMPDIRARCHIVE + dbentryvalue.file)
+              logger.log4req(req, 'Archived file', frompath, TMPDIRARCHIVE + dbentryvalue.file)
+            } catch (e) {
+              logger.warn4req(req, 'COULD NOT MOVE', frompath, 'TO', TMPDIRARCHIVE + dbentryvalue.file)
+            }
+          }
+          // Delete any empty directories, down through hierarchy
+          while (base !== '/') {
+            try {
+              fs.rmSync(filesdir + base)
+              logger.log4req(req, 'Removed directory', filesdir + base)
+            } catch (e) {
+              break
+            }
+            // const dirname = path.basename(base)
+            base = path.dirname(base)
+          }
         } else {
+          // Production: Archive in GCS
           try {
-            fs.renameSync(frompath, TMPDIRARCHIVE + dbentryvalue.file)
-            logger.log4req(req, 'Archived file', frompath, TMPDIRARCHIVE + dbentryvalue.file)
-          } catch (e) {
-            logger.warn4req(req, 'COULD NOT MOVE', frompath, 'TO', TMPDIRARCHIVE + dbentryvalue.file)
+            const gcsPath = dbentryvalue.file.substring(1) // Remove leading slash
+            await gcs.archiveFile(gcsPath)
+            logger.log4req(req, 'Archived file in GCS', gcsPath)
+          } catch (error) {
+            logger.warn4req(req, 'Could not archive file in GCS', error.message)
+            // Continue anyway - don't fail the deletion
           }
-        }
-        // Delete any empty directories, down through hieracrhy
-        while (base !== '/') {
-          try {
-            fs.rmSync(filesdir + base)
-            logger.log4req(req, 'Removed directory', filesdir + base)
-          } catch (e) {
-            break
-          }
-          // const dirname = path.basename(base)
-          base = path.dirname(base)
         }
       }
     }

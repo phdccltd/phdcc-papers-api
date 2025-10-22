@@ -12,9 +12,13 @@ const models = require('./models')
 const logger = require('./logger')
 const utils = require('./utils')
 const backgroundRunner = require('./task')
+const gcs = require('./lib/gcs')
 
 let now = new Date()
 global.starttime = now.toISOString()
+
+// Initialize Google Cloud Storage
+gcs.initialize()
 
 logger.log('PAPERS STARTING: ', global.starttime, process.pid, 'LOGMODE', process.env.LOGMODE)
 
@@ -30,14 +34,22 @@ app.use(cors())
 app.set('init', false)
 app.checkDatabases = async function (setupdb) {
   try {
+    logger.log('Authenticating database connection...')
     await sequelize.authenticate()
     console.log('Connection has been established successfully.')
+    logger.log('Database authenticated successfully')
 
     // TODO??: Replace with migrations https://sequelize.org/master/manual/migrations.html
+    logger.log('Syncing models...')
+    const syncStart = Date.now()
     await sequelize.sync({ alter: true })
+    const syncDuration = ((Date.now() - syncStart) / 1000).toFixed(2)
     console.log('All models were synchronized successfully')
+    logger.log(`Models synchronized successfully in ${syncDuration} seconds`)
+
     await models.logs.create({ msg: 'Started' })
     console.log('Logged start')
+    logger.log('Logged start to database')
 
     // Get rid of any excess INDEXES
     try {
@@ -57,12 +69,16 @@ app.checkDatabases = async function (setupdb) {
 
     // Make clean site info available to router
     const sites = []
-    for (const sitedb of await models.sites.findAll()) {
+    const allSites = await models.sites.findAll()
+    logger.log(`Found ${allSites.length} sites in database`)
+    for (const sitedb of allSites) {
       try {
+        logger.log(`Loading site: ${sitedb.id} - ${sitedb.url}`)
         const _privatesettings = JSON.parse(sitedb.privatesettings)
         const _publicsettings = JSON.parse(sitedb.publicsettings)
         const _site = { id: sitedb.id, url: sitedb.url, name: sitedb.name, privatesettings: _privatesettings || {}, publicsettings: _publicsettings || {} }
         sites.push(_site)
+        logger.log(`Loaded site: ${_site.id} - ${_site.url}`)
       } catch (e) {
         console.error('SYNTAX ERROR IN settings for site', sitedb.id, sitedb.privatesettings, sitedb.publicsettings)
         if (!process.env.TESTING) {
@@ -76,6 +92,7 @@ app.checkDatabases = async function (setupdb) {
         process.exit(2)
       }
     }
+    logger.log(`Successfully loaded ${sites.length} sites`)
     app.set('sites', sites)
 
     // Use first site to set mail transport
@@ -133,7 +150,8 @@ app.checkDatabases = async function (setupdb) {
     return 2
   }
 }
-if (!process.env.TESTING) {
+// Don't auto-initialize in production - server.js will call checkDatabases() and await it
+if (process.env.TESTING) {
   app.checkDatabases()
 }
 if (process.env.TESTING === 'forclient') {

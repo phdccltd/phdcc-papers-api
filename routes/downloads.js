@@ -9,6 +9,7 @@ const archiver = require('archiver')
 const models = require('../models')
 const utils = require('../utils')
 const dbutils = require('./dbutils')
+const gcs = require('../lib/gcs')
 
 const router = Router()
 
@@ -310,12 +311,25 @@ async function downloadFull (req, res, next, all) {
 
               if (all && entryvalue.file && formfield.type === 'file') { // /1/2/2/78/175/Evening sunshine.docx
                 const entrydir = TMPDIR + dirName + '/papers/' + dbsubmit.id + '/' + dbentry.id
-                const filepath = path.join(filesdir, entryvalue.file)
-                if (fs.existsSync(filepath)) {
-                  const topath = path.join(entrydir, path.basename(filepath))
-                  fs.mkdirSync(entrydir, { recursive: true })
-                  fs.copyFileSync(filepath, topath)
-                } // else console.log('FILE NOT FOUND')
+                const topath = path.join(entrydir, path.basename(entryvalue.file))
+                fs.mkdirSync(entrydir, { recursive: true })
+
+                if (process.env.TESTING) {
+                  // Testing: Copy from local filesystem
+                  const filepath = path.join(filesdir, entryvalue.file)
+                  if (fs.existsSync(filepath)) {
+                    fs.copyFileSync(filepath, topath)
+                  }
+                } else {
+                  // Production: Download from GCS
+                  try {
+                    const gcsPath = entryvalue.file.substring(1) // Remove leading slash
+                    const fileBuffer = await gcs.downloadFile(gcsPath)
+                    fs.writeFileSync(topath, fileBuffer)
+                  } catch (error) {
+                    console.log('Could not download file from GCS:', error.message)
+                  }
+                }
               }
             }
             // else console.log('field not found', entryvalue.id)

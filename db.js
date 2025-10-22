@@ -22,8 +22,7 @@ if (process.env.TESTING) {
   const dbuser = process.env.DBUSER
   const dbpass = process.env.DBPASS
 
-  sequelize = new Sequelize(database, dbuser, dbpass, {
-    host: 'localhost',
+  const dbConfig = {
     dialect: 'mysql',
     operatorsAliases: '0',
 
@@ -41,7 +40,25 @@ if (process.env.TESTING) {
       acquire: 30000,
       idle: 10000
     }
-  })
+  }
+
+  // Cloud Run: Connect via Unix socket if CLOUD_SQL_CONNECTION_NAME is set
+  if (process.env.CLOUD_SQL_CONNECTION_NAME) {
+    const socketPath = `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}`
+    dbConfig.dialectOptions = {
+      socketPath: socketPath
+    }
+    logger.log(`Database: Connecting to Cloud SQL via Unix socket: ${socketPath}`)
+  } else {
+    // Local development or traditional server: Connect via host/port
+    dbConfig.host = process.env.DB_HOST || process.env.DBHOST || 'localhost'
+    if (process.env.DB_PORT) {
+      dbConfig.port = process.env.DB_PORT
+    }
+    logger.log(`Database: Connecting to MySQL at ${dbConfig.host}:${dbConfig.port || 3306}`)
+  }
+
+  sequelize = new Sequelize(database, dbuser, dbpass, dbConfig)
 }
 
 module.exports = sequelize
