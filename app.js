@@ -40,12 +40,17 @@ app.checkDatabases = async function (setupdb) {
     logger.log('Database authenticated successfully')
 
     // TODO??: Replace with migrations https://sequelize.org/master/manual/migrations.html
-    logger.log('Syncing models...')
-    const syncStart = Date.now()
-    await sequelize.sync({ alter: true })
-    const syncDuration = ((Date.now() - syncStart) / 1000).toFixed(2)
-    console.log('All models were synchronized successfully')
-    logger.log(`Models synchronized successfully in ${syncDuration} seconds`)
+    // Skip expensive sync in production - schema is already established
+    if (process.env.TESTING || process.env.NODE_ENV === 'development' || process.env.FORCE_SYNC === 'true') {
+      logger.log('Syncing models...')
+      const syncStart = Date.now()
+      await sequelize.sync({ alter: true })
+      const syncDuration = ((Date.now() - syncStart) / 1000).toFixed(2)
+      console.log('All models were synchronized successfully')
+      logger.log(`Models synchronized successfully in ${syncDuration} seconds`)
+    } else {
+      logger.log('Skipping model sync in production (set FORCE_SYNC=true to override)')
+    }
 
     await models.logs.create({ msg: 'Started' })
     console.log('Logged start')

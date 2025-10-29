@@ -951,36 +951,102 @@ async function getPubSubmits (req, res, next) {
       // Find all possible submits ie just user's or all of them
       flow.submits = []
       let dbsubmits = false
-      const submitInclude = {
-        include: [
-          { model: models.users },
-          {
-            model: models.submitgradings,
-            as: 'Gradings',
-            include: [
-              {
-                model: models.users,
-                include: [{ model: models.pubuserroles, as: 'Roles' }]
-              }
-            ]
-          },
-          {
-            model: models.entries,
-            as: 'Entries',
-            include: { model: models.flowstages }
-          },
-          {
-            model: models.submitreviewers,
-            as: 'Reviewers',
-            include: [{ model: models.users }]
-          }
-        ]
-      }
       if (req.onlyanauthor) { // Just get mine
-        dbsubmits = await dbflow.getSubmits({ where: { userId: req.dbuser.id }, ...submitInclude })
+        dbsubmits = await dbflow.getSubmits({ where: { userId: req.dbuser.id } })
       } else { // Otherwise: get all submits and filter
-        dbsubmits = await dbflow.getSubmits(submitInclude)
+        dbsubmits = await dbflow.getSubmits()
       }
+
+      // OPTIMIZATION: Batch load all related data to avoid N+1 queries
+      // Extract all submit IDs
+      const submitIds = dbsubmits.map(s => s.id)
+
+      // Batch load gradings, entries, and reviewers (but not deep nested data yet)
+      const [allGradings, allEntries, allReviewers] = await Promise.all([
+        submitIds.length > 0 ? models.submitgradings.findAll({
+          where: { submitId: { [Sequelize.Op.in]: submitIds } }
+        }) : [],
+        submitIds.length > 0 ? models.entries.findAll({
+          where: { submitId: { [Sequelize.Op.in]: submitIds } },
+          include: [{ model: models.flowstages }],
+          order: [['dt', 'ASC']]
+        }) : [],
+        submitIds.length > 0 ? models.submitreviewers.findAll({
+          where: { submitId: { [Sequelize.Op.in]: submitIds } }
+        }) : []
+      ])
+
+      // Extract unique user IDs from submissions, gradings, and reviewers
+      const authorUserIds = [...new Set(dbsubmits.map(s => s.userId))]
+      const gradingUserIds = [...new Set(allGradings.map(g => g.userId))]
+      const reviewerUserIds = [...new Set(allReviewers.map(r => r.userId))]
+
+      // Only load users we need (authors for owners, grading users for permission checks)
+      const userIdsToLoad = req.isowner
+        ? [...new Set([...authorUserIds, ...gradingUserIds, ...reviewerUserIds])]
+        : [...new Set([...gradingUserIds])]
+
+      const allUsers = userIdsToLoad.length > 0 ? await models.users.findAll({
+        where: { id: { [Sequelize.Op.in]: userIdsToLoad } },
+        include: req.isowner ? [] : [{ model: models.pubroles, as: 'Roles' }]
+      }) : []
+
+      // Build lookup maps for O(1) access
+      const gradingsBySubmit = {}
+      const entriesBySubmit = {}
+      const reviewersBySubmit = {}
+      const usersById = {}
+
+      allGradings.forEach(g => {
+        if (!gradingsBySubmit[g.submitId]) gradingsBySubmit[g.submitId] = []
+        gradingsBySubmit[g.submitId].push(g)
+      })
+      allEntries.forEach(e => {
+        if (!entriesBySubmit[e.submitId]) entriesBySubmit[e.submitId] = []
+        entriesBySubmit[e.submitId].push(e)
+      })
+      allReviewers.forEach(r => {
+        if (!reviewersBySubmit[r.submitId]) reviewersBySubmit[r.submitId] = []
+        reviewersBySubmit[r.submitId].push(r)
+      })
+      allUsers.forEach(u => { usersById[u.id] = u })
+
+      // Batch load action logs for all reviewers
+      const allActionLogs = submitIds.length > 0 ? await models.actionlogs.findAll({
+        where: {
+          submitId: { [Sequelize.Op.in]: submitIds },
+          sentReminderPubMailTemplateId: { [Sequelize.Op.ne]: null }
+        }
+      }) : []
+
+      // Group action logs by submit ID and user ID
+      const actionLogsBySubmitAndUser = {}
+      allActionLogs.forEach(log => {
+        const key = `${log.submitId}_${log.onUserId}`
+        if (!actionLogsBySubmitAndUser[key]) actionLogsBySubmitAndUser[key] = []
+        actionLogsBySubmitAndUser[key].push(log)
+      })
+
+      // Attach preloaded data to submissions and gradings
+      dbsubmits.forEach(submit => {
+        submit.Gradings = gradingsBySubmit[submit.id] || []
+        submit.Entries = entriesBySubmit[submit.id] || []
+        submit.Reviewers = reviewersBySubmit[submit.id] || []
+        submit.user = usersById[submit.userId]
+        // Attach users to gradings for later use
+        submit.Gradings.forEach(grading => {
+          grading.user = usersById[grading.userId]
+          grading.User = usersById[grading.userId]
+        })
+        // Attach users and action logs to reviewers
+        submit.Reviewers.forEach(reviewer => {
+          reviewer.user = usersById[reviewer.userId]
+          reviewer.User = usersById[reviewer.userId]
+          // Pre-attach action logs
+          const key = `${submit.id}_${reviewer.userId}`
+          reviewer._actionLogs = actionLogsBySubmitAndUser[key] || []
+        })
+      })
 
       // Get all possible flow statuses
       const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
@@ -1049,24 +1115,15 @@ async function getPubSubmits (req, res, next) {
           if (!includethissubmit) continue
         }
 
-        // Batch load all action logs for all reviewers at once
-        const reviewerUserIds = (req.dbsubmit.Reviewers || []).map(r => r.userId)
-        const allActionLogs = reviewerUserIds.length > 0 ? await models.actionlogs.findAll({
-          where: {
-            onUserId: { [Sequelize.Op.in]: reviewerUserIds },
-            submitId: req.dbsubmit.id,
-            sentReminderPubMailTemplateId: { [Sequelize.Op.ne]: null }
-          }
-        }) : []
-
         const reviewers = []
         for (const dbreviewer of (req.dbsubmit.Reviewers || [])) {
           const reviewer = models.sanitise(models.submitreviewers, dbreviewer)
           const dbuser = dbreviewer.user || dbreviewer.User
           reviewer.username = dbuser ? dbuser.name : ''
 
+          // Use pre-loaded action logs
           reviewer.sentreminders = []
-          const dbsentreminders = allActionLogs.filter(log => log.onUserId === dbreviewer.userId)
+          const dbsentreminders = dbreviewer._actionLogs || []
           for (const dbsentreminder of dbsentreminders) {
             reviewer.sentreminders.push({ id: dbsentreminder.id, dt: dbsentreminder.dt })
           }

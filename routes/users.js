@@ -1,4 +1,5 @@
 const _ = require('lodash/core')
+const Sequelize = require('sequelize')
 const models = require('../models')
 const utils = require('../utils')
 const logger = require('../logger')
@@ -199,23 +200,52 @@ async function getPubUsers (req, res, next) {
 
     // Get all users of this publication, and their roles
     const dbusers = await dbpub.getUsers()
+
+    // OPTIMIZATION: Batch load all user roles and submits to avoid N+1 queries
+    const userIds = dbusers.map(u => u.id)
+    const flowIds = dbflows.map(f => f.id)
+
+    // Batch load all pubuserroles for these users (just the join table data)
+    const allUserRoles = userIds.length > 0 ? await models.pubuserroles.findAll({
+      where: { userid: { [Sequelize.Op.in]: userIds } }
+    }) : []
+
+    // Batch load all submits for these users and flows
+    const allSubmits = (userIds.length > 0 && flowIds.length > 0) ? await models.submits.findAll({
+      where: {
+        userId: { [Sequelize.Op.in]: userIds },
+        flowId: { [Sequelize.Op.in]: flowIds }
+      },
+      attributes: ['id', 'userId', 'flowId']
+    }) : []
+
+    // Build lookup maps
+    const rolesByUserId = {}
+    const submitCountByUserId = {}
+
+    // Group pubuserroles by user ID
+    allUserRoles.forEach(userRole => {
+      if (!rolesByUserId[userRole.userid]) rolesByUserId[userRole.userid] = []
+      rolesByUserId[userRole.userid].push(userRole)
+    })
+
+    allSubmits.forEach(submit => {
+      if (!submitCountByUserId[submit.userId]) submitCountByUserId[submit.userId] = 0
+      submitCountByUserId[submit.userId]++
+    })
+
+    // Build users array with preloaded data
     const users = []
     for (const dbuser of dbusers) {
       const user = models.sanitise(models.users, dbuser)
       user.roles = []
-      const dbuserpubroles = await dbuser.getRoles()
+      const dbuserpubroles = rolesByUserId[dbuser.id] || []
       for (const dbuserpubrole of dbuserpubroles) {
-        const pubrole = _.find(pubroles, _pubrole => { return _pubrole.id === dbuserpubrole.id })
+        const pubrole = _.find(pubroles, _pubrole => { return _pubrole.id === dbuserpubrole.pubroleid })
         if (pubrole) user.roles.push(pubrole)
       }
 
-      let userpubsubmitcount = 0
-      for (const dbflow of dbflows) {
-        const userflowsubmits = await dbuser.getSubmits({ where: { flowId: dbflow.id } })
-        userpubsubmitcount += userflowsubmits.length
-      }
-      user.submitcount = userpubsubmitcount
-
+      user.submitcount = submitCountByUserId[dbuser.id] || 0
       users.push(user)
     }
 

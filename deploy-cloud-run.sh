@@ -32,11 +32,11 @@ $GCLOUD run deploy $SERVICE_NAME \
   --allow-unauthenticated \
   --max-instances 1 \
   --min-instances 0 \
-  --memory 512Mi \
+  --memory 1Gi \
   --cpu 1 \
   --timeout 300 \
   --concurrency 80 \
-  --set-env-vars "NODE_ENV=production,BASEURL=/api,LOGMODE=console,GCP_PROJECT_ID=ircobi-papers-api,CLOUD_SQL_CONNECTION_NAME=ircobi-papers-api:europe-west2:ircobi-papers-db" \
+  --set-env-vars "NODE_ENV=production,BASEURL=/api,LOGMODE=console,GCP_PROJECT_ID=ircobi-papers-api,CLOUD_SQL_CONNECTION_NAME=ircobi-papers-api:europe-west2:ircobi-papers-db,NODE_OPTIONS=--max-old-space-size=768" \
   --set-secrets "DATABASE=DATABASE:latest,DBUSER=DBUSER:latest,DBPASS=DBPASS:latest,DB_HOST=DB_HOST:latest,JWT_SECRET=JWT_SECRET:latest,RECAPTCHA_SECRET_KEY=RECAPTCHA_SECRET_KEY:latest,RECAPTCHA_BYPASS=RECAPTCHA_BYPASS:latest,SCHEDULER_SECRET=SCHEDULER_SECRET:latest,GCS_BUCKET_NAME=GCS_BUCKET_NAME:latest" \
   --project=$PROJECT_ID
 
