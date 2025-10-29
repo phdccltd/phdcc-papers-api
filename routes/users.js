@@ -183,41 +183,67 @@ async function getPubUsers (req, res, next) {
     console.log('GET /users/pub/', pubid, req.dbuser.id)
     if (isNaN(pubid)) return utils.giveup(req, res, 'Duff pubid')
 
-    // Get publication
-    const dbpub = await models.pubs.findByPk(pubid)
+    // OPTIMIZATION: Reduce database round trips by using parallel queries and eager loading
+    // Run auth check and main data fetch in parallel
+    const [dbmypubroles, dbpub] = await Promise.all([
+      // Check ownership (auth - cannot be combined due to security)
+      req.dbuser.getRoles({ where: { pubId: pubid } }),
+      // Get pub with all related data in ONE query using eager loading
+      models.pubs.findByPk(pubid, {
+        include: [
+          {
+            model: models.flows,
+            as: 'Flows',
+            attributes: ['id']
+          },
+          {
+            model: models.pubroles,
+            as: 'Pubroles'
+          },
+          {
+            model: models.users,
+            as: 'Users',
+            attributes: ['id', 'username', 'name', 'email', 'super', 'lastlogin', 'createdAt'],
+            through: { attributes: [] } // Exclude join table attributes
+          }
+        ]
+      })
+    ])
+
+    // Check publication exists
     if (!dbpub) return utils.giveup(req, res, 'Cannot find pubid ' + pubid)
 
-    // Get MY roles in all publications - check isowner
-    const dbmypubroles = await req.dbuser.getRoles()
-    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.pubId === pubid && mypubrole.isowner }) || req.dbuser.super
+    // Check ownership
+    const isowner = _.find(dbmypubroles, mypubrole => { return mypubrole.isowner }) || req.dbuser.super
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
-    // console.log('isowner', isowner.id, isowner.name)
 
-    const dbflows = await dbpub.getFlows()
+    // Extract data from eager-loaded results
+    const dbflows = dbpub.Flows || []
+    const pubroles = models.sanitiselist(dbpub.Pubroles || [], models.pubroles)
+    const dbusers = dbpub.Users || []
 
-    // Get all roles available for publication
-    const pubroles = models.sanitiselist(await dbpub.getPubroles(), models.pubroles)
-
-    // Get all users of this publication, and their roles
-    const dbusers = await dbpub.getUsers()
-
-    // OPTIMIZATION: Batch load all user roles and submits to avoid N+1 queries
+    // OPTIMIZATION: Batch load all user roles and submits in PARALLEL
     const userIds = dbusers.map(u => u.id)
     const flowIds = dbflows.map(f => f.id)
 
-    // Batch load all pubuserroles for these users (just the join table data)
-    const allUserRoles = userIds.length > 0 ? await models.pubuserroles.findAll({
-      where: { userid: { [Sequelize.Op.in]: userIds } }
-    }) : []
-
-    // Batch load all submits for these users and flows
-    const allSubmits = (userIds.length > 0 && flowIds.length > 0) ? await models.submits.findAll({
-      where: {
-        userId: { [Sequelize.Op.in]: userIds },
-        flowId: { [Sequelize.Op.in]: flowIds }
-      },
-      attributes: ['id', 'userId', 'flowId']
-    }) : []
+    const [allUserRoles, allSubmits] = await Promise.all([
+      // Batch load all pubuserroles for these users
+      userIds.length > 0
+        ? models.pubuserroles.findAll({
+          where: { userid: { [Sequelize.Op.in]: userIds } }
+        })
+        : Promise.resolve([]),
+      // Batch load all submits for these users and flows
+      (userIds.length > 0 && flowIds.length > 0)
+        ? models.submits.findAll({
+          where: {
+            userId: { [Sequelize.Op.in]: userIds },
+            flowId: { [Sequelize.Op.in]: flowIds }
+          },
+          attributes: ['id', 'userId', 'flowId']
+        })
+        : Promise.resolve([])
+    ])
 
     // Build lookup maps
     const rolesByUserId = {}
