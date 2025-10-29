@@ -193,16 +193,16 @@ async function getPubUsers (req, res, next) {
         include: [
           {
             model: models.flows,
-            as: 'Flows',
+            // No alias - defaults to 'flows' (lowercase)
             attributes: ['id']
           },
           {
-            model: models.pubroles,
-            as: 'Pubroles'
+            model: models.pubroles
+            // No alias - defaults to 'pubroles' (lowercase)
           },
           {
             model: models.users,
-            as: 'Users',
+            as: 'Users', // Explicit alias defined in userpubs.js
             attributes: ['id', 'username', 'name', 'email', 'super', 'lastlogin', 'createdAt'],
             through: { attributes: [] } // Exclude join table attributes
           }
@@ -218,9 +218,9 @@ async function getPubUsers (req, res, next) {
     if (!isowner) return utils.giveup(req, res, 'Not an owner')
 
     // Extract data from eager-loaded results
-    const dbflows = dbpub.Flows || []
-    const pubroles = models.sanitiselist(dbpub.Pubroles || [], models.pubroles)
-    const dbusers = dbpub.Users || []
+    const dbflows = dbpub.flows || []
+    const pubroles = models.sanitiselist(dbpub.pubroles || [], models.pubroles)
+    const dbusers = dbpub.Users || [] // Users has explicit alias
 
     // OPTIMIZATION: Batch load all user roles and submits in PARALLEL
     const userIds = dbusers.map(u => u.id)
