@@ -58,6 +58,7 @@ mysql -h CLOUD_SQL_IP -u ircobiusr -p ircobi < migrations/001-add-submits-compos
 | File | Date | Description |
 |------|------|-------------|
 | `001-add-submits-composite-index.sql` | 2025-10-29 | Adds composite index on `submits(userId, flowId)` for admin-users page performance |
+| `002-increase-pubs-alias-length.sql` | 2025-11-12 | Increases `pubs.alias` from VARCHAR(50) to VARCHAR(150) to fix duplication error |
 
 ## Creating New Migrations
 

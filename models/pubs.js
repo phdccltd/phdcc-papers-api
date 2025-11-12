@@ -13,7 +13,7 @@ const Sequelize = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
   const fields = {
     // id, createdAt and updatedAt: added automatically
-    alias: { type: Sequelize.STRING(50), allowNull: false },
+    alias: { type: Sequelize.STRING(150), allowNull: false },
     name: { type: Sequelize.STRING(50), allowNull: false },
     title: { type: Sequelize.STRING, allowNull: false },
     description: { type: Sequelize.TEXT, allowNull: false },
