@@ -203,7 +203,7 @@ async function getPubUsers (req, res, next) {
           {
             model: models.users,
             as: 'Users', // Explicit alias defined in userpubs.js
-            attributes: ['id', 'username', 'name', 'email', 'super', 'lastlogin', 'createdAt'],
+            attributes: ['id', 'username', 'name', 'email', 'super', 'lastlogin'],
             through: { attributes: [] } // Exclude join table attributes
           }
         ]
