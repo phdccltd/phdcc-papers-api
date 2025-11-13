@@ -178,7 +178,9 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 // Require API routes
 const apiRouter = require('./routes')
-app.use(apiRouter.router)
+// Mount at both /api (for Firebase proxy) and root (for direct access)
+app.use('/api', apiRouter.router)
+app.use('/', apiRouter.router)
 
 // app.use('/', indexRouter)
 
