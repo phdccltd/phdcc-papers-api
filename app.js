@@ -144,7 +144,8 @@ app.checkDatabases = async function (setupdb) {
     const transport = app.get('transport')
     if (transport && privatesettings['admin-email']) {
       utils.setMailTransport(transport, privatesettings['email-from'], privatesettings['admin-email'], site.name)
-      utils.asyncMail(false, site.name + ' - API RESTARTED ' + process.env.version, 'Server time: ' + global.starttime)
+      // Startup email disabled - normal behavior on GCP Cloud Run
+      // utils.asyncMail(false, site.name + ' - API RESTARTED ' + process.env.version, 'Server time: ' + global.starttime)
     }
     return 1
   } catch (error) {
