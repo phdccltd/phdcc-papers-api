@@ -48,7 +48,8 @@ router.use(function (req, res, next) {
   // console.log("req.url", req.url)
 
   // Load site (from list cached at startup)
-  const host = req.get('host')
+  // Check X-Forwarded-Host first (used by Firebase Hosting proxy)
+  const host = req.get('x-forwarded-host') || req.get('host')
   const sites = req.app.get('sites')
   if (process.env.TESTING) {
     req.site = sites[0]
