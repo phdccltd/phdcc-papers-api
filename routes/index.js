@@ -49,22 +49,6 @@ router.use(function (req, res, next) {
 
   // Load site (from list cached at startup)
   // Check X-Forwarded-Host first (used by Firebase Hosting proxy)
-  const logger = require('../logger')
-
-  // DEBUG: Log all headers to see what Firebase sends
-  logger.log('DEBUG - All request headers:', JSON.stringify({
-    host: req.get('host'),
-    'x-forwarded-host': req.get('x-forwarded-host'),
-    'x-forwarded-for': req.get('x-forwarded-for'),
-    'x-forwarded-proto': req.get('x-forwarded-proto'),
-    'x-appengine-user-ip': req.get('x-appengine-user-ip'),
-    'x-cloud-trace-context': req.get('x-cloud-trace-context'),
-    'forwarded': req.get('forwarded'),
-    origin: req.get('origin'),
-    referer: req.get('referer'),
-    'user-agent': req.get('user-agent')
-  }, null, 2))
-
   const host = req.get('x-forwarded-host') || req.get('host')
   const sites = req.app.get('sites')
   if (process.env.TESTING) {
@@ -72,6 +56,7 @@ router.use(function (req, res, next) {
   } else {
     req.site = sites.find(site => site.url === host)
     if (!req.site) {
+      const logger = require('../logger')
       logger.log(`Site not found for host: "${host}", available sites:`, sites.map(s => s.url).join(', '))
       return utils.giveup(req, res, 'Not running on valid site')
     }
