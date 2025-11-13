@@ -71,3 +71,5 @@ Required .env variables (see README.md:203-218 for full list):
 - **New models**: Create in models/, define associations in `associate()`, auto-synced on server start
 - **Email templates**: Stored in `pubmailtemplates` table, use Handlebars syntax
 - **Logging**: Use `logger.js` functions - logs to both files (log/) and database (logs table)
+- The live domain is conference.ircobi.org
+- Remember to run npm run generate when deploying

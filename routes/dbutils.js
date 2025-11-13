@@ -59,20 +59,24 @@ async function getMyRoles (req) {
 
   req.dbmypubroles = await req.dbuser.getRoles()
   req.myroles = []
+  console.log('DEBUG getMyRoles: user=', req.dbuser.id, req.dbuser.name, 'pub=', req.dbpub.id, 'total roles=', req.dbmypubroles.length)
   for (const dbmypubrole of req.dbmypubroles) {
     if (dbmypubrole.pubId === req.dbpub.id) {
       // console.log('GETMYROLES', dbmypubrole)
       const mypubrole = models.sanitise(models.pubroles, dbmypubrole)
       req.myroles.push(mypubrole)
+      console.log('DEBUG getMyRoles: Found role for pub', req.dbpub.id, ':', mypubrole.name, 'defaultrole=', mypubrole.defaultrole, 'isowner=', mypubrole.isowner)
       if (mypubrole.isowner) req.isowner = true
       if (mypubrole.canviewall) req.canviewall = true
       if (mypubrole.defaultrole) { // ie author
         req.onlyanauthor = true
         req.isauthor = true
+        console.log('DEBUG getMyRoles: Set isauthor=true for user', req.dbuser.id)
       }
     }
   }
   if (req.myroles.length >= 2) req.onlyanauthor = false
+  console.log('DEBUG getMyRoles: Final - isauthor=', req.isauthor, 'isowner=', req.isowner, 'roles count=', req.myroles.length)
 
   return true
 }

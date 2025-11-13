@@ -1061,14 +1061,17 @@ async function getPubSubmits (req, res, next) {
 
       /// /////// Set up flow-level actions that are possible
       flow.actions = [] // Allowable actions
+      console.log('DEBUG: Setting up flow actions for user', req.dbuser.id, req.dbuser.name, 'isauthor=', req.isauthor, 'acceptings=', flow.acceptings.length)
       for (const accepting of flow.acceptings) {
         if (_.isNull(accepting.flowstatusId) && accepting.open) {
           const addstage = _.find(flow.stages, stage => { return stage.id === accepting.flowstageId })
+          console.log('DEBUG: Checking accepting - stage=', addstage?.name, 'isauthor=', req.isauthor)
           if (addstage && req.isauthor) {
             flow.actions.push({
               name: 'Add new ' + addstage.name,
               route: '/panel/' + pubid + '/' + flow.id + '/add/' + addstage.id
             })
+            console.log('DEBUG: Added action:', 'Add new ' + addstage.name)
           }
         }
       }
