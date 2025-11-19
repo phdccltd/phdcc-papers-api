@@ -174,6 +174,15 @@ app.use(function (req, res, next) {
   next()
 })
 
+// Disable caching for all API responses
+// Must be set before any routes to prevent CDN/proxy caching
+app.use(function (req, res, next) {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, private, max-age=0')
+  res.setHeader('Pragma', 'no-cache')
+  res.setHeader('Expires', '0')
+  next()
+})
+
 app.use(express.static(path.join(__dirname, 'public')))
 
 // Require API routes
