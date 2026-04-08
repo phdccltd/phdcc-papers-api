@@ -982,9 +982,13 @@ async function getPubSubmits (req, res, next) {
       const reviewerUserIds = [...new Set(allReviewers.map(r => r.userId))]
 
       // Only load users we need (authors for owners, grading users for permission checks)
+      // Also load reviewer users if current user is a lead reviewer on any submission
+      const iamLeadOnAny = allReviewers.some(r => r.userId === req.dbuser.id && r.lead)
       const userIdsToLoad = req.isowner
         ? [...new Set([...authorUserIds, ...gradingUserIds, ...reviewerUserIds])]
-        : [...new Set([...gradingUserIds])]
+        : iamLeadOnAny
+          ? [...new Set([...gradingUserIds, ...reviewerUserIds])]
+          : [...new Set([...gradingUserIds])]
 
       const allUsers = userIdsToLoad.length > 0 ? await models.users.findAll({
         where: { id: { [Sequelize.Op.in]: userIdsToLoad } },

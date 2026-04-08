@@ -178,6 +178,7 @@ async function isReviewableSubmit (req, flow, submit) {
   for (const dbreviewer of dbreviewers) {
     if (dbreviewer.userId === req.dbuser.id) {
       includethissubmit = true
+      if (dbreviewer.lead) req.iamleadgrader = true
     }
   }
 
