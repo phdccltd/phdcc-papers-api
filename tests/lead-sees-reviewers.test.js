@@ -10,7 +10,7 @@ const spycerror = jest.spyOn(console, 'error').mockImplementation(testhelper.acc
 process.env.RECAPTCHA_BYPASS = 'BypassingRecaptchaTest'
 
 describe('LEAD REVIEWER VISIBILITY', () => {
-  it('Lead reviewer sees all reviewers on a submission', async () => {
+  it('Lead reviewer sees all reviewers including when they have role-based actions', async () => {
     let testSucceeded = false
     try {
       testhelper.initThisTest()
@@ -75,7 +75,7 @@ describe('LEAD REVIEWER VISIBILITY', () => {
       error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
       if (error) throw new Error(error)
 
-      // Log in as lead reviewer (reviewer1) and check they see all reviewers
+      // --- Scenario 1: Lead reviewer sees all reviewers at non-grading status ---
       error = await runscript.run(app.models, 'tests/api-login-reviewer1.json', false, app)
       if (error) throw new Error(error)
 
@@ -101,7 +101,7 @@ describe('LEAD REVIEWER VISIBILITY', () => {
       error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
       if (error) throw new Error(error)
 
-      // Log in as non-lead reviewer (author2) and check they do NOT see all reviewers
+      // --- Scenario 2: Non-lead reviewer does NOT see other reviewers ---
       error = await runscript.run(app.models, 'tests/api-login-author2.json', false, app)
       if (error) throw new Error(error)
 
@@ -114,6 +114,48 @@ describe('LEAD REVIEWER VISIBILITY', () => {
           return false
         } catch (e) {
           return 'Non-lead reviewer check exception: ' + e.message
+        }
+      })
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
+      if (error) throw new Error(error)
+
+      // --- Scenario 3: Lead reviewer with Editor role (role-based actions) still sees all reviewers ---
+      // Owner gives reviewer1 the Editor role, which triggers addRoleStageActions
+      error = await runscript.run(app.models, 'tests/api-login-owner1.json', false, app)
+      if (error) throw new Error(error)
+
+      // Move back to "Paper with reviewers" so the submission is active
+      error = await runscript.run(app.models, 'tests/api-status-with-reviewers.json', false, app)
+      if (error) throw new Error(error)
+
+      // Give reviewer1 (user 6) the Editor role (role 4) - this gives rolecanadd actions
+      error = await runscript.run(app.models, 'tests/api-add-editor-role-to-reviewer1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-logout.json', false, app)
+      if (error) throw new Error(error)
+
+      // Log in as lead reviewer who now also has Editor role
+      error = await runscript.run(app.models, 'tests/api-login-reviewer1.json', false, app)
+      if (error) throw new Error(error)
+
+      error = await runscript.run(app.models, 'tests/api-get-submits.json', false, app, false, function (res) {
+        try {
+          const submits = res.body.flows[0].submits
+          if (submits.length !== 1) return 'LeadEditor: expected 1 submit, got ' + submits.length
+          const reviewers = submits[0].reviewers
+          if (reviewers.length !== 2) return 'LeadEditor: expected 2 reviewers, got ' + reviewers.length
+          const leadReviewer = reviewers.find(r => r.lead === true)
+          if (!leadReviewer) return 'LeadEditor: no lead reviewer found in list'
+          const nonLeadReviewer = reviewers.find(r => r.lead === false)
+          if (!nonLeadReviewer) return 'LeadEditor: no non-lead reviewer found in list'
+          if (!leadReviewer.username) return 'LeadEditor: lead reviewer has empty username'
+          if (!nonLeadReviewer.username) return 'LeadEditor: non-lead reviewer has empty username'
+          return false
+        } catch (e) {
+          return 'LeadEditor check exception: ' + e.message
         }
       })
       if (error) throw new Error(error)

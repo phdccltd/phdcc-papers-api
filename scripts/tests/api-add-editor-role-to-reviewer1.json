@@ -1,0 +1,15 @@
+{
+  "name": "Owner: Add Editor role to reviewer1",
+  "pubname": "TestPubName",
+  "api": [
+    {
+      "name": "addEditorRoleToReviewer1",
+      "method": "post",
+      "uri": "/users/pub/1/6/4",
+      "data": {},
+      "return": {
+        "ret": 0
+      }
+    }
+  ]
+}

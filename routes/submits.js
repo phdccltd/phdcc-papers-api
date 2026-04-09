@@ -1118,6 +1118,13 @@ async function getPubSubmits (req, res, next) {
         /// /////// Filter submits
         req.iamgrading = false
         req.iamleadgrader = false
+        // Set lead grader flag from pre-loaded reviewer data regardless of actions
+        for (const dbreviewer of (req.dbsubmit.Reviewers || [])) {
+          if (dbreviewer.userId === req.dbuser.id && dbreviewer.lead) {
+            req.iamleadgrader = true
+            break
+          }
+        }
         if (!ihaveactions && !req.onlyanauthor && !req.isowner) {
           const includethissubmit = await dbutils.isReviewableSubmit(req, flow, submit)
           if (!includethissubmit) continue
