@@ -17,9 +17,18 @@ app.set('port', port)
 
 const server = http.createServer(app)
 
-server.listen(port)
-server.on('error', onError)
-server.on('listening', onListening)
+// Initialize database before accepting requests
+;(async () => {
+  if (!process.env.TESTING) {
+    console.log('Initializing database...')
+    await app.checkDatabases()
+    console.log('Database initialization complete')
+  }
+
+  server.listen(port)
+  server.on('error', onError)
+  server.on('listening', onListening)
+})()
 
 function normalizePort (val) {
   const _port = parseInt(val, 10)

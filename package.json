@@ -24,6 +24,7 @@
     "url": "https://github.com/phdccltd/phdcc-papers-api.git"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.17.2",
     "archiver": "^7.0.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
@@ -50,6 +51,11 @@
     "validator": "^13.9.0"
   },
   "devDependencies": {
+    "jest": "^30.2.0",
     "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0 <23.0.0",
+    "npm": ">=10.0.0"
   }
 }

@@ -1,4 +1,28 @@
 node_modules
 .env
+.env.local
+.env.*.local
 coverage
 log
+
+# Test output
+tests1.txt
+test*.txt
+test*.log
+single-test.log
+testfilesdir/
+testtmpdir/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Confidential data
+datadump/

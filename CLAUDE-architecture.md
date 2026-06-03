@@ -3,15 +3,19 @@
 ## Project Overview
 The PHDCC Papers API is a Node.js/Express.js RESTful API server for managing journal and conference paper submissions and reviews. It handles user authentication, paper submissions, reviewer assignments, grading workflows, and email notifications in an academic publishing context.
 
+**🚀 Target Deployment: Google Cloud Run** (containerized serverless deployment)
+
 ## Technology Stack
-- **Runtime**: Node.js
+- **Runtime**: Node.js 22.x LTS
 - **Framework**: Express.js 5.x
-- **Database**: MySQL (production) / SQLite (testing)
+- **Database**: Cloud SQL MySQL 8.0 (production) / SQLite (testing)
 - **ORM**: Sequelize 6.x
 - **Authentication**: Passport.js with JWT
 - **Email**: Nodemailer
 - **Testing**: Jest
-- **Process Management**: PM2 (recommended for production)
+- **File Storage**: Google Cloud Storage (production) / Mock (testing)
+- **Deployment**: Google Cloud Run (Docker containers)
+- ~~**Process Management**: PM2~~ **DEPRECATED** - Legacy traditional server deployment only
 
 ## Directory Structure
 
@@ -155,9 +159,11 @@ The codebase follows a functional programming style with:
 - **jest.setup.js** - Test environment setup
 - **jest.once.js** - Global test setup
 
-### Process Management
-- **Web.config** - IIS configuration (if deployed on Windows/IIS)
-- PM2 ecosystem files (created by deployer)
+### Deployment Configuration
+- **Dockerfile** - Container definition for Cloud Run deployment
+- **.dockerignore** - Files excluded from container image
+- ~~**Web.config**~~ - **DEPRECATED** - IIS configuration (legacy Windows deployment)
+- ~~**PM2 ecosystem files**~~ - **DEPRECATED** - Legacy traditional server deployment
 
 ## Documentation & Testing
 
@@ -220,13 +226,50 @@ The codebase follows a functional programming style with:
 
 ## Deployment Architecture
 
-### Production Requirements
-- Node.js runtime environment
-- MySQL database server
-- Process manager (PM2 recommended)
-- Reverse proxy (Apache/Nginx)
-- SSL certificate management
-- File storage for uploaded documents
+### Current Production Deployment: Google Cloud Run
+
+**Target Architecture (Active Development):**
+- **Platform**: Google Cloud Run (fully managed serverless containers)
+- **Runtime**: Node.js 22 LTS in Docker container
+- **Database**: Cloud SQL for MySQL 8.0
+- **File Storage**: Google Cloud Storage (GCS)
+- **Background Tasks**: Cloud Scheduler → HTTP endpoint
+- **Logging**: Google Cloud Logging (stdout/stderr capture)
+- **Scaling**: Automatic horizontal scaling (0 to N instances)
+- **SSL/HTTPS**: Automatic via Cloud Run managed certificates
+- **Cost**: ~$55-80/month (see CLOUD-RUN-README.md for details)
+
+**Migration Documentation:**
+- See **CLOUD-RUN-README.md** for migration overview
+- See **CLOUD-RUN-MIGRATION-GUIDE.md** for complete technical guide
+- See **ENVIRONMENT-PARITY-PLAN.md** for local/CI/production parity
+
+### ~~Legacy: Traditional Server Deployment~~ **DEPRECATED**
+
+The following deployment model is **no longer used** and maintained for historical reference only:
+
+<details>
+<summary>Click to expand legacy PM2 deployment details</summary>
+
+**Legacy Requirements (No Longer Used):**
+- Node.js runtime environment on physical/virtual server
+- MySQL database server on localhost
+- Process manager (PM2) for process lifecycle
+- Reverse proxy (Apache/Nginx) for SSL and routing
+- Manual SSL certificate management (Let's Encrypt)
+- Local filesystem storage for uploaded documents
+- Cron jobs or PM2 cron for background tasks
+
+**Why Deprecated:**
+- Manual server maintenance required
+- No automatic scaling
+- Single point of failure
+- File storage not replicated
+- Requires SSH access for deployments
+- PM2 log management complexity
+
+**Migration Status:** Completed migration to Cloud Run (see CLOUD-RUN-README.md)
+</details>
 
 ### Multi-Tenant Support
 - Site-based configuration in database

@@ -255,7 +255,7 @@ async function register (req, res, next) {
 
       // Tell owner that new user needs roles added
       const dbsite = await models.sites.findByPk(req.site.id)
-      const dbpubs = await dbsite.getPubs()
+      const dbpubs = await dbsite.getPubs({ where: { enabled: true } })
       for (const dbpub of dbpubs) {
         let anyRoleRequested = false
         const dbuserRequestedRoles = await dbpub.getPubroles({ where: { userRequested: true } })

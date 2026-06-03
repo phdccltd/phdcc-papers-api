@@ -10,6 +10,21 @@ API for the **Papers** [PHDCC journal/conference abstract and paper submission a
 
 This API is intended for use in conjunction with [phdcc-papers](https://github.com/phdccltd/phdcc-papers).
 
+---
+
+## 🚀 Current Deployment: Google Cloud Run
+
+This project has **migrated from traditional server deployment (PM2/Apache) to Google Cloud Run** (containerized serverless deployment).
+
+**For deployment instructions, see:**
+- **[CLOUD-RUN-README.md](./CLOUD-RUN-README.md)** - Migration overview and navigation guide
+- **[CLOUD-RUN-MIGRATION-GUIDE.md](./CLOUD-RUN-MIGRATION-GUIDE.md)** - Complete technical implementation
+- **[ENVIRONMENT-PARITY-PLAN.md](./ENVIRONMENT-PARITY-PLAN.md)** - Local dev/CI/production setup
+
+**Legacy PM2/traditional server instructions below are DEPRECATED** and maintained for historical reference only.
+
+---
+
 ## State of Play
 
 The Papers system is in production use. However there is currently no admin interface to set up the system. This will be created in due course. 

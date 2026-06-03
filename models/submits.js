@@ -14,7 +14,14 @@ module.exports = (sequelize, DataTypes) => {
     name: { type: Sequelize.STRING, allowNull: false },
     startdt: { type: Sequelize.DATE, allowNull: false }
   }
-  const submits = sequelize.define('submits', fields)
+  const submits = sequelize.define('submits', fields, {
+    indexes: [
+      {
+        name: 'user_flow_idx',
+        fields: ['userId', 'flowId']
+      }
+    ]
+  })
   submits.fields = fields
 
   submits.associate = function (dbs) {

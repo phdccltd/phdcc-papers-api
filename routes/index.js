@@ -15,6 +15,7 @@ const reviewersRouter = require('./reviewers')
 const sitepagesRouter = require('./sitepages')
 const sitepagessuperRouter = require('./sitepagessuper')
 const submitsRouter = require('./submits')
+const tasksRouter = require('./tasks')
 const users = require('./users')
 
 const router = Router()
@@ -47,13 +48,16 @@ router.use(function (req, res, next) {
   // console.log("req.url", req.url)
 
   // Load site (from list cached at startup)
-  const host = req.get('host')
+  // Check X-Forwarded-Host first (used by Firebase Hosting proxy)
+  const host = req.get('x-forwarded-host') || req.get('host')
   const sites = req.app.get('sites')
   if (process.env.TESTING) {
     req.site = sites[0]
   } else {
     req.site = sites.find(site => site.url === host)
     if (!req.site) {
+      const logger = require('../logger')
+      logger.log(`Site not found for host: "${host}", available sites:`, sites.map(s => s.url).join(', '))
       return utils.giveup(req, res, 'Not running on valid site')
     }
   }
@@ -182,6 +186,10 @@ router.use(gradingsRouter)
 /// ///////////////////
 // /submits/*
 router.use(submitsRouter)
+
+/// ///////////////////
+// /tasks/* (Background tasks for Cloud Scheduler)
+router.use(tasksRouter)
 
 /// ///////////////////
 module.exports = {

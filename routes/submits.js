@@ -35,11 +35,18 @@ const logger = require('../logger')
 const sequelize = require('../db')
 const dbutils = require('./dbutils')
 const mailutils = require('./mailutils')
+const gcs = require('../lib/gcs')
 
 const TMPDIR = process.env.TESTTMPDIR ? process.env.TESTTMPDIR : '/tmp/papers/'
 const TMPDIRARCHIVE = TMPDIR + 'archive' // Without final slash.  Deleted files go here (to be deleted on server reboot)
 
-const upload = multer({ dest: TMPDIR })
+// Use memory storage for Cloud Run, or disk for testing
+const upload = multer({
+  storage: process.env.TESTING ? multer.diskStorage({ destination: TMPDIR }) : multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  }
+})
 
 const router = Router()
 
@@ -127,16 +134,32 @@ async function addEntry (req, res, next, ta) {
       file.formfieldid = parseInt(file.originalname.substring(0, hyphenpos))
       file.originalname = file.originalname.substring(hyphenpos + 1)
 
-      // Move file to filesdir/<siteid>/<pubid>/<flowid>/<submitid>/<entryid>/
+      // Upload to GCS or local filesystem (for tests)
       let filepath = '/' + req.site.id + '/' + req.dbpub.id + '/' + req.dbflow.id + '/' + req.dbsubmit.id + '/' + dbentry.id
-      console.log('filesdir + filepath', filesdir + filepath)
-      fs.mkdirSync(filesdir + filepath, { recursive: true })
       filepath += '/' + file.originalname
-      console.log('file.path', file.path)
-      console.log('filepath', filepath)
-      fs.renameSync(file.path, filesdir + filepath)
+
+      if (process.env.TESTING) {
+        // Testing: Use local filesystem
+        console.log('filesdir + filepath', filesdir + filepath)
+        const dir = path.dirname(filesdir + filepath)
+        fs.mkdirSync(dir, { recursive: true })
+        console.log('file.path', file.path)
+        console.log('filepath', filepath)
+        fs.renameSync(file.path, filesdir + filepath)
+        logger.log4req(req, 'Uploaded file to filesystem', filesdir + filepath)
+      } else {
+        // Production: Upload to GCS
+        try {
+          const gcsPath = filepath.substring(1) // Remove leading slash for GCS
+          await gcs.uploadFile(file.buffer, gcsPath, file.mimetype)
+          logger.log4req(req, 'Uploaded file to GCS', gcsPath)
+        } catch (error) {
+          logger.error4req(req, 'GCS upload failed', error)
+          return utils.giveup(req, res, 'File upload failed: ' + error.message)
+        }
+      }
+
       file.filepath = filepath
-      logger.log4req(req, 'Uploaded file', filesdir + filepath)
     }
 
     const svalues = (typeof req.body.values === 'string') ? [req.body.values] : req.body.values // Single value comes in as string; otherwise array
@@ -474,27 +497,50 @@ async function editEntry (req, res, next, ta) {
         }
       }
       if (existingfile) {
-        const existingpath = filesdir + existingfile
-        if (fs.existsSync(existingpath)) {
-          const archivepath = TMPDIRARCHIVE + existingfile
-          if (fs.existsSync(archivepath)) {
-            // Do we need to delete?
-            console.log('editEntry archivepath exists')
+        if (process.env.TESTING) {
+          // Testing: Archive to local filesystem
+          const existingpath = filesdir + existingfile
+          if (fs.existsSync(existingpath)) {
+            const archivepath = TMPDIRARCHIVE + existingfile
+            const archivedir = path.dirname(archivepath)
+            fs.mkdirSync(archivedir, { recursive: true })
+            fs.renameSync(existingpath, archivepath)
           }
-          const archivedir = path.dirname(archivepath)
-          // Make archive dir
-          fs.mkdirSync(archivedir, { recursive: true })
-          // Move existing file to archive
-          fs.renameSync(existingpath, archivepath)
+        } else {
+          // Production: Archive in GCS
+          try {
+            const gcsPath = existingfile.substring(1) // Remove leading slash
+            await gcs.archiveFile(gcsPath)
+            logger.log4req(req, 'Archived existing file in GCS', gcsPath)
+          } catch (error) {
+            logger.warn4req(req, 'Could not archive existing file', error.message)
+            // Continue anyway - don't fail the upload
+          }
         }
       }
 
       let filepath = '/' + req.site.id + '/' + parseInt(req.body.pubid) + '/' + parseInt(req.body.flowid) + '/' + req.dbsubmit.id + '/' + dbentry.id
-      fs.mkdirSync(filesdir + filepath, { recursive: true })
       filepath += '/' + file.originalname
-      fs.renameSync(file.path, filesdir + filepath)
+
+      if (process.env.TESTING) {
+        // Testing: Use local filesystem
+        const dir = path.dirname(filesdir + filepath)
+        fs.mkdirSync(dir, { recursive: true })
+        fs.renameSync(file.path, filesdir + filepath)
+        logger.log4req(req, 'Uploaded file to filesystem', filesdir + filepath)
+      } else {
+        // Production: Upload to GCS
+        try {
+          const gcsPath = filepath.substring(1) // Remove leading slash for GCS
+          await gcs.uploadFile(file.buffer, gcsPath, file.mimetype)
+          logger.log4req(req, 'Uploaded file to GCS', gcsPath)
+        } catch (error) {
+          logger.error4req(req, 'GCS upload failed', error)
+          return utils.giveup(req, res, 'File upload failed: ' + error.message)
+        }
+      }
+
       file.filepath = filepath
-      logger.log4req(req, 'Uploaded file', filesdir + filepath)
     }
 
     // OK: Now delete any existing entryvalues
@@ -572,34 +618,46 @@ async function deleteEntry (req, res, next, ta) {
 
     if (!req.isowner) return utils.giveup(req, res, 'Not an owner')
 
-    // Find entryvalues; move any files to TMPDIRARCHIVE
+    // Find entryvalues; archive any files
     const dbentryvalues = await dbentry.getEntryValues()
     for (const dbentryvalue of dbentryvalues) {
       if (dbentryvalue.file !== null) {
-        let base = path.dirname(dbentryvalue.file)
-        // const filename = path.basename(dbentryvalue.file)
-        fs.mkdirSync(TMPDIRARCHIVE + base, { recursive: true })
-        const frompath = filesdir + dbentryvalue.file
-        if (!fs.existsSync(frompath)) {
-          logger.warn4req(req, 'FILE DOES NOT EXIST', frompath)
+        if (process.env.TESTING) {
+          // Testing: Move to local archive directory
+          let base = path.dirname(dbentryvalue.file)
+          fs.mkdirSync(TMPDIRARCHIVE + base, { recursive: true })
+          const frompath = filesdir + dbentryvalue.file
+          if (!fs.existsSync(frompath)) {
+            logger.warn4req(req, 'FILE DOES NOT EXIST', frompath)
+          } else {
+            try {
+              fs.renameSync(frompath, TMPDIRARCHIVE + dbentryvalue.file)
+              logger.log4req(req, 'Archived file', frompath, TMPDIRARCHIVE + dbentryvalue.file)
+            } catch (e) {
+              logger.warn4req(req, 'COULD NOT MOVE', frompath, 'TO', TMPDIRARCHIVE + dbentryvalue.file)
+            }
+          }
+          // Delete any empty directories, down through hierarchy
+          while (base !== '/') {
+            try {
+              fs.rmSync(filesdir + base)
+              logger.log4req(req, 'Removed directory', filesdir + base)
+            } catch (e) {
+              break
+            }
+            // const dirname = path.basename(base)
+            base = path.dirname(base)
+          }
         } else {
+          // Production: Archive in GCS
           try {
-            fs.renameSync(frompath, TMPDIRARCHIVE + dbentryvalue.file)
-            logger.log4req(req, 'Archived file', frompath, TMPDIRARCHIVE + dbentryvalue.file)
-          } catch (e) {
-            logger.warn4req(req, 'COULD NOT MOVE', frompath, 'TO', TMPDIRARCHIVE + dbentryvalue.file)
+            const gcsPath = dbentryvalue.file.substring(1) // Remove leading slash
+            await gcs.archiveFile(gcsPath)
+            logger.log4req(req, 'Archived file in GCS', gcsPath)
+          } catch (error) {
+            logger.warn4req(req, 'Could not archive file in GCS', error.message)
+            // Continue anyway - don't fail the deletion
           }
-        }
-        // Delete any empty directories, down through hieracrhy
-        while (base !== '/') {
-          try {
-            fs.rmSync(filesdir + base)
-            logger.log4req(req, 'Removed directory', filesdir + base)
-          } catch (e) {
-            break
-          }
-          // const dirname = path.basename(base)
-          base = path.dirname(base)
         }
       }
     }
@@ -671,23 +729,55 @@ async function getEntryFile (req, res, next) {
     if (dbentryvalue.file === null) return utils.giveup(req, res, 'No file for that entry')
 
     const ContentType = mime.lookup(dbentryvalue.file)
-    let filesdir = req.site.privatesettings.files // /var/sites/papersdevfiles NO FINAL SLASH
-    if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
 
-    const filepath = path.join(filesdir, dbentryvalue.file)
-    if (!fs.existsSync(filepath)) {
-      return utils.giveup(req, res, 'Sorry: file not available ' + dbentryvalue.file)
-    }
-    const options = {
-      root: filesdir,
-      dotfiles: 'deny',
-      headers: {
-        'Content-Type': ContentType
+    if (process.env.TESTING) {
+      // Testing: Use local filesystem
+      let filesdir = req.site.privatesettings.files
+      if (process.env.TESTFILESDIR) filesdir = process.env.TESTFILESDIR
+
+      const filepath = path.join(filesdir, dbentryvalue.file)
+      if (!fs.existsSync(filepath)) {
+        return utils.giveup(req, res, 'Sorry: file not available ' + dbentryvalue.file)
+      }
+      const options = {
+        root: filesdir,
+        dotfiles: 'deny',
+        headers: {
+          'Content-Type': ContentType
+        }
+      }
+      console.log('Content-Type', ContentType)
+      res.sendFile(dbentryvalue.file, options)
+      logger.log4req(req, 'Sending file', dbentryvalue.file)
+    } else {
+      // Production: Stream from GCS
+      try {
+        const gcsPath = dbentryvalue.file.substring(1) // Remove leading slash
+
+        // Check if file exists in GCS
+        const exists = await gcs.fileExists(gcsPath)
+        if (!exists) {
+          return utils.giveup(req, res, 'Sorry: file not available in storage ' + dbentryvalue.file)
+        }
+
+        // Set headers and stream file from GCS
+        res.setHeader('Content-Type', ContentType)
+        const fileStream = gcs.createReadStream(gcsPath)
+
+        fileStream.on('error', (error) => {
+          logger.warn4req(req, 'Error streaming file from GCS', gcsPath, error.message)
+          if (!res.headersSent) {
+            utils.giveup(req, res, 'Error retrieving file')
+          }
+        })
+
+        fileStream.pipe(res)
+        logger.log4req(req, 'Streaming file from GCS', gcsPath)
+      } catch (error) {
+        logger.warn4req(req, 'Could not retrieve file from GCS', error.message)
+        return utils.giveup(req, res, 'Sorry: file not available ' + dbentryvalue.file)
       }
     }
-    console.log('Content-Type', ContentType)
-    res.sendFile(dbentryvalue.file, options)
-    logger.log4req(req, 'Sending file', dbentryvalue.file)
   } catch (e) {
     utils.giveup(req, res, e.message)
   }
@@ -867,6 +957,101 @@ async function getPubSubmits (req, res, next) {
         dbsubmits = await dbflow.getSubmits()
       }
 
+      // OPTIMIZATION: Batch load all related data to avoid N+1 queries
+      // Extract all submit IDs
+      const submitIds = dbsubmits.map(s => s.id)
+
+      // Batch load gradings, entries, and reviewers (but not deep nested data yet)
+      const [allGradings, allEntries, allReviewers] = await Promise.all([
+        submitIds.length > 0 ? models.submitgradings.findAll({
+          where: { submitId: { [Sequelize.Op.in]: submitIds } }
+        }) : [],
+        submitIds.length > 0 ? models.entries.findAll({
+          where: { submitId: { [Sequelize.Op.in]: submitIds } },
+          include: [{ model: models.flowstages }],
+          order: [['dt', 'ASC']]
+        }) : [],
+        submitIds.length > 0 ? models.submitreviewers.findAll({
+          where: { submitId: { [Sequelize.Op.in]: submitIds } }
+        }) : []
+      ])
+
+      // Extract unique user IDs from submissions, gradings, and reviewers
+      const authorUserIds = [...new Set(dbsubmits.map(s => s.userId))]
+      const gradingUserIds = [...new Set(allGradings.map(g => g.userId))]
+      const reviewerUserIds = [...new Set(allReviewers.map(r => r.userId))]
+
+      // Only load users we need (authors for owners, grading users for permission checks)
+      // Also load reviewer users if current user is a lead reviewer on any submission
+      const iamLeadOnAny = allReviewers.some(r => r.userId === req.dbuser.id && r.lead)
+      const userIdsToLoad = req.isowner
+        ? [...new Set([...authorUserIds, ...gradingUserIds, ...reviewerUserIds])]
+        : iamLeadOnAny
+          ? [...new Set([...gradingUserIds, ...reviewerUserIds])]
+          : [...new Set([...gradingUserIds])]
+
+      const allUsers = userIdsToLoad.length > 0 ? await models.users.findAll({
+        where: { id: { [Sequelize.Op.in]: userIdsToLoad } },
+        include: req.isowner ? [] : [{ model: models.pubroles, as: 'Roles' }]
+      }) : []
+
+      // Build lookup maps for O(1) access
+      const gradingsBySubmit = {}
+      const entriesBySubmit = {}
+      const reviewersBySubmit = {}
+      const usersById = {}
+
+      allGradings.forEach(g => {
+        if (!gradingsBySubmit[g.submitId]) gradingsBySubmit[g.submitId] = []
+        gradingsBySubmit[g.submitId].push(g)
+      })
+      allEntries.forEach(e => {
+        if (!entriesBySubmit[e.submitId]) entriesBySubmit[e.submitId] = []
+        entriesBySubmit[e.submitId].push(e)
+      })
+      allReviewers.forEach(r => {
+        if (!reviewersBySubmit[r.submitId]) reviewersBySubmit[r.submitId] = []
+        reviewersBySubmit[r.submitId].push(r)
+      })
+      allUsers.forEach(u => { usersById[u.id] = u })
+
+      // Batch load action logs for all reviewers
+      const allActionLogs = submitIds.length > 0 ? await models.actionlogs.findAll({
+        where: {
+          submitId: { [Sequelize.Op.in]: submitIds },
+          sentReminderPubMailTemplateId: { [Sequelize.Op.ne]: null }
+        }
+      }) : []
+
+      // Group action logs by submit ID and user ID
+      const actionLogsBySubmitAndUser = {}
+      allActionLogs.forEach(log => {
+        const key = `${log.submitId}_${log.onUserId}`
+        if (!actionLogsBySubmitAndUser[key]) actionLogsBySubmitAndUser[key] = []
+        actionLogsBySubmitAndUser[key].push(log)
+      })
+
+      // Attach preloaded data to submissions and gradings
+      dbsubmits.forEach(submit => {
+        submit.Gradings = gradingsBySubmit[submit.id] || []
+        submit.Entries = entriesBySubmit[submit.id] || []
+        submit.Reviewers = reviewersBySubmit[submit.id] || []
+        submit.user = usersById[submit.userId]
+        // Attach users to gradings for later use
+        submit.Gradings.forEach(grading => {
+          grading.user = usersById[grading.userId]
+          grading.User = usersById[grading.userId]
+        })
+        // Attach users and action logs to reviewers
+        submit.Reviewers.forEach(reviewer => {
+          reviewer.user = usersById[reviewer.userId]
+          reviewer.User = usersById[reviewer.userId]
+          // Pre-attach action logs
+          const key = `${submit.id}_${reviewer.userId}`
+          reviewer._actionLogs = actionLogsBySubmitAndUser[key] || []
+        })
+      })
+
       // Get all possible flow statuses
       const dbstatuses = await dbflow.getFlowStatuses({ order: [['weight', 'ASC']] })
       flow.statuses = models.sanitiselist(dbstatuses, models.flowstatuses)
@@ -880,14 +1065,18 @@ async function getPubSubmits (req, res, next) {
 
       /// /////// Set up flow-level actions that are possible
       flow.actions = [] // Allowable actions
+      const logger = require('../logger')
+      logger.log('FLOW_ACTIONS_DEBUG', `user=${req.dbuser.id}`, `name=${req.dbuser.name}`, `isauthor=${req.isauthor}`, `acceptings=${flow.acceptings.length}`)
       for (const accepting of flow.acceptings) {
         if (_.isNull(accepting.flowstatusId) && accepting.open) {
           const addstage = _.find(flow.stages, stage => { return stage.id === accepting.flowstageId })
+          logger.log('FLOW_ACTIONS_DEBUG', `stage=${addstage?.name}`, `isauthor=${req.isauthor}`)
           if (addstage && req.isauthor) {
             flow.actions.push({
               name: 'Add new ' + addstage.name,
               route: '/panel/' + pubid + '/' + flow.id + '/add/' + addstage.id
             })
+            logger.log('FLOW_ACTIONS_DEBUG', `ADDED_ACTION: Add new ${addstage.name}`)
           }
         }
       }
@@ -897,15 +1086,15 @@ async function getPubSubmits (req, res, next) {
         req.dbsubmit = dbsubmit
         const submit = models.sanitise(models.submits, dbsubmit)
 
-        req.dbsubmitgradings = await dbsubmit.getGradings()
+        req.dbsubmitgradings = dbsubmit.Gradings || []
 
         submit.actionsdone = [] // Actions done
 
         submit.user = ''
         submit.ismine = true
         if (dbsubmit.userId !== req.dbuser.id) {
-          const dbauthor = await dbsubmit.getUser()
-          if (req.isowner) submit.user = dbauthor.name
+          const dbauthor = dbsubmit.user
+          if (req.isowner && dbauthor) submit.user = dbauthor.name
           submit.ismine = false
         }
 
@@ -923,36 +1112,33 @@ async function getPubSubmits (req, res, next) {
         }
 
         /// /////// We'll need the entries so we can get action links (ordered by date - used to be flowstage weight)
-        const dbentries = await dbsubmit.getEntries({
-          include: { model: models.flowstages },
-          order: [
-            ['dt', 'ASC'] // [models.flowstages, 'weight', 'ASC']
-          ]
-        })
+        const dbentries = (dbsubmit.Entries || []).sort((a, b) => new Date(a.dt) - new Date(b.dt))
         submit.entries = models.sanitiselist(dbentries, models.entries)
 
         /// /////// Filter submits
         req.iamgrading = false
         req.iamleadgrader = false
+        // Set lead grader flag from pre-loaded reviewer data regardless of actions
+        for (const dbreviewer of (req.dbsubmit.Reviewers || [])) {
+          if (dbreviewer.userId === req.dbuser.id && dbreviewer.lead) {
+            req.iamleadgrader = true
+            break
+          }
+        }
         if (!ihaveactions && !req.onlyanauthor && !req.isowner) {
           const includethissubmit = await dbutils.isReviewableSubmit(req, flow, submit)
           if (!includethissubmit) continue
         }
 
         const reviewers = []
-        for (const dbreviewer of await req.dbsubmit.getReviewers()) {
+        for (const dbreviewer of (req.dbsubmit.Reviewers || [])) {
           const reviewer = models.sanitise(models.submitreviewers, dbreviewer)
-          const dbuser = await dbreviewer.getUser()
+          const dbuser = dbreviewer.user || dbreviewer.User
           reviewer.username = dbuser ? dbuser.name : ''
 
+          // Use pre-loaded action logs
           reviewer.sentreminders = []
-          const dbsentreminders = await models.actionlogs.findAll({
-            where: {
-              onUserId: dbreviewer.userId,
-              submitId: req.dbsubmit.id,
-              sentReminderPubMailTemplateId: { [Sequelize.Op.ne]: null }
-            }
-          })
+          const dbsentreminders = dbreviewer._actionLogs || []
           for (const dbsentreminder of dbsentreminders) {
             reviewer.sentreminders.push({ id: dbsentreminder.id, dt: dbsentreminder.dt })
           }
@@ -1006,12 +1192,12 @@ async function getPubSubmits (req, res, next) {
               if (!req.onlyanauthor) {
                 const reviewer = _.find(reviewers, _reviewer => { return _reviewer.userId === grading.userId })
                 grading.lead = reviewer ? reviewer.lead : false
-                const dbgrader = await dbgrading.getUser()
+                const dbgrader = dbgrading.user || dbgrading.User
                 grading.username = ''
                 grading.hasReviewerRole = false
                 if (dbgrader) {
                   grading.username = dbgrader.name
-                  const dbgraderpubroles = await dbgrader.getRoles()
+                  const dbgraderpubroles = dbgrader.Roles || []
                   const isreviewerrole = _.find(dbgraderpubroles, (grader) => { return grader.isreviewer })
                   if (isreviewerrole) grading.hasReviewerRole = true
                 }

@@ -8,14 +8,10 @@ workflows:
       - test_coverage
 jobs:
   test_coverage:
-    executor: node/default
     docker:
-      - image: 'cimg/base:stable'
+      - image: 'cimg/node:22.11.0'
     steps:
       - checkout
-      - node/install:
-          lts: true
-          #node-version: '12.20'
       - run: npm -v
       - run: node -v
       - run: npm install coveralls
